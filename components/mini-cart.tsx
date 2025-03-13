@@ -113,7 +113,7 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                     {cartItems.map((item) => (
                       <div key={item.id} className="pb-6 border-b border-gray-200">
                         <div className="flex gap-4">
-                          <div className="w-[120px] h-[150px] relative flex-shrink-0 rounded-md overflow-hidden">
+                          <div className="w-[100px] h-[120px] relative flex-shrink-0 rounded-md overflow-hidden">
                             <Image
                               src={item.image || "/placeholder.svg"}
                               alt={item.name}
@@ -121,27 +121,27 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                               className="object-cover"
                             />
                           </div>
-                          <div className="flex-1">
-                            <h3 className="text-lg font-medium">{item.name}</h3>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-medium truncate">{item.name}</h3>
                             <div className="flex items-center mt-1">
-                              <span className="text-lg font-medium">₹{item.price.toFixed(2)}</span>
+                              <span className="text-base font-medium">₹{item.price.toFixed(2)}</span>
                               {item.originalPrice && (
-                                <span className="ml-2 text-gray-500 line-through text-sm">
+                                <span className="ml-2 text-gray-500 line-through text-xs">
                                   ₹{item.originalPrice.toFixed(2)}
                                 </span>
                               )}
                             </div>
 
-                            <div className="mt-3 space-y-2">
-                              <p className="text-gray-600 text-sm">Size: {item.size}</p>
-                              <p className="text-gray-600 text-sm">Qty: {item.quantity.toString().padStart(2, "0")}</p>
-                              <p className="text-gray-600 text-sm">Color: {item.color}</p>
+                            <div className="mt-2 space-y-1">
+                              <p className="text-gray-600 text-xs">Size: {item.size}</p>
+                              <p className="text-gray-600 text-xs">Qty: {item.quantity.toString().padStart(2, "0")}</p>
+                              <p className="text-gray-600 text-xs">Color: {item.color}</p>
                             </div>
 
-                            <div className="flex justify-between items-center mt-4">
+                            <div className="flex justify-between items-center mt-3">
                               <div className="flex items-center border border-gray-300 rounded">
                                 <button
-                                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+                                  className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
                                   onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
                                   aria-label="Decrease quantity"
                                 >
@@ -151,11 +151,11 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                                   type="text"
                                   value={item.quantity.toString().padStart(2, "0")}
                                   readOnly
-                                  className="w-10 text-center py-1 border-x border-gray-300 text-sm"
+                                  className="w-8 text-center py-1 border-x border-gray-300 text-xs"
                                   aria-label="Quantity"
                                 />
                                 <button
-                                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+                                  className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                   aria-label="Increase quantity"
                                 >
@@ -168,7 +168,7 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                                 className="text-red-500 hover:text-red-600 transition-colors"
                                 aria-label="Remove item"
                               >
-                                <Trash2 className="h-5 w-5" />
+                                <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
                           </div>
@@ -179,7 +179,7 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
 
                   {/* Cart Footer */}
                   <div className="border-t p-6 bg-gray-50">
-                    <div className="flex justify-between text-xl font-medium mb-6">
+                    <div className="flex justify-between text-lg font-medium mb-4">
                       <span>Subtotal</span>
                       <span>₹{calculateTotal().toFixed(0)}</span>
                     </div>
@@ -187,13 +187,16 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                     <div className="space-y-3">
                       <Link
                         href="/cart"
-                        className="block w-full py-3 text-center border border-[#a08452] text-[#a08452] rounded-md font-medium hover:bg-[#a08452]/5 transition-colors"
+                        className="block w-full py-2 text-center border border-[#a08452] text-[#a08452] rounded-md font-medium hover:bg-[#a08452]/5 transition-colors"
+                        onClick={onClose}
                       >
                         View Cart
                       </Link>
-                      <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white py-6 rounded-md transition-colors">
-                        Checkout
-                      </Button>
+                      <Link href="/checkout" onClick={onClose} className="block w-full">
+                        <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white py-2 rounded-md transition-colors">
+                          Checkout
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </>

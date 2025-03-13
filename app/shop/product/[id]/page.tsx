@@ -4,7 +4,7 @@ import type React from "react"
 
 import Image from "next/image"
 import Link from "next/link"
-import { Minus, Plus, Heart, Package, RefreshCw, HeadphonesIcon, CreditCard, Star } from "lucide-react"
+import { Minus, Plus, Heart, Package, RefreshCw, HeadphonesIcon, CreditCard, Star } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
@@ -251,14 +251,14 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center border border-gray-300 rounded-md">
                 <button
-                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
                   onClick={decreaseQuantity}
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="w-10 text-center">{quantity}</span>
+                <span className="w-8 text-center">{quantity}</span>
                 <button
-                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
                   onClick={increaseQuantity}
                 >
                   <Plus className="h-4 w-4" />
@@ -266,7 +266,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               </div>
 
               <Button
-                className="flex-1 bg-[#a08452] hover:bg-[#8c703d] text-white transition-colors h-10"
+                className="flex-1 bg-[#a08452] hover:bg-[#8c703d] text-white transition-colors h-auto py-2"
                 onClick={handleAddToCart}
               >
                 Add to Cart
@@ -274,9 +274,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
               <Button
                 variant="outline"
-                className="border-gray-300 hover:bg-gray-50 transition-colors w-10 h-10 p-0 flex items-center justify-center"
+                className="border-gray-300 hover:bg-gray-50 transition-colors w-8 h-8 p-0 flex items-center justify-center"
               >
-                <Heart className="h-5 w-5" />
+                <Heart className="h-4 w-4" />
               </Button>
             </div>
           </div>

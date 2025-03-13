@@ -8,7 +8,7 @@ import SiteFooter from "@/components/site-footer"
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white flex flex-col">
       <Navbar />
 
       {/* Hero Banner */}
@@ -21,7 +21,7 @@ export default function Home() {
       <BrowseCategorySection />
 
       {/* Best Sellers */}
-      <section className="py-12 max-w-7xl mx-auto px-6">
+      <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <h2 className="text-xl font-medium text-center mb-8">Our Best Seller</h2>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -32,7 +32,7 @@ export default function Home() {
       </section>
 
       {/* New Arrivals */}
-      <section className="py-12 max-w-7xl mx-auto px-6">
+      <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <h2 className="text-xl font-medium text-center mb-8">New Arrivals</h2>
 
         <div className="grid md:grid-cols-4 gap-6">
@@ -44,7 +44,7 @@ export default function Home() {
 
       {/* Features */}
       <section className="py-8 border-t border-b">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div className="flex flex-col items-center">
               <Package className="h-6 w-6 mb-2" />
