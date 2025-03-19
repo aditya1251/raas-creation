@@ -1,54 +1,70 @@
-"use client"
-import { useState } from "react"
-import type React from "react"
+"use client";
+import { useState } from "react";
+import type React from "react";
 
-import Image from "next/image"
-import Link from "next/link"
-import { Minus, Plus, Heart, Package, RefreshCw, HeadphonesIcon, CreditCard, Star } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/hooks/use-toast"
-import { useCart } from "@/context/cart-context"
-import Navbar from "@/components/navbar"
-import SiteFooter from "@/components/site-footer"
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Minus,
+  Plus,
+  Heart,
+  Package,
+  RefreshCw,
+  HeadphonesIcon,
+  CreditCard,
+  Star,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/context/cart-context";
+import Navbar from "@/components/navbar";
+import SiteFooter from "@/components/site-footer";
+import { useParams } from "next/navigation";
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
-  const { toast } = useToast()
-  const { addToCart } = useCart()
-  const [selectedColor, setSelectedColor] = useState("orange")
-  const [selectedSize, setSelectedSize] = useState("40")
-  const [quantity, setQuantity] = useState(1)
-  const [activeTab, setActiveTab] = useState("descriptions")
-  const [reviewRating, setReviewRating] = useState(0)
-  const [reviewName, setReviewName] = useState("")
-  const [reviewEmail, setReviewEmail] = useState("")
-  const [reviewText, setReviewText] = useState("")
+export default function ProductDetailPage() {
+  const { toast } = useToast();
+  const { addToCart } = useCart();
+  const { id } = useParams();
+  const [selectedColor, setSelectedColor] = useState("orange");
+  const [selectedSize, setSelectedSize] = useState("40");
+  const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState("descriptions");
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewName, setReviewName] = useState("");
+  const [reviewEmail, setReviewEmail] = useState("");
+  const [reviewText, setReviewText] = useState("");
+
+  if(!id){
+    console.log("ERROR ID IS NOT CORRECT")
+    return null;
+  }
 
   const decreaseQuantity = () => {
     if (quantity > 1) {
-      setQuantity(quantity - 1)
+      setQuantity(quantity - 1);
     }
-  }
+  };
 
   const increaseQuantity = () => {
-    setQuantity(quantity + 1)
-  }
+    setQuantity(quantity + 1);
+  };
 
   const handleReviewSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // Handle review submission
-    console.log({ reviewRating, reviewName, reviewEmail, reviewText })
+    console.log({ reviewRating, reviewName, reviewEmail, reviewText });
     // Reset form
-    setReviewRating(0)
-    setReviewName("")
-    setReviewEmail("")
-    setReviewText("")
-  }
+    setReviewRating(0);
+    setReviewName("");
+    setReviewEmail("");
+    setReviewText("");
+  };
 
   const handleAddToCart = () => {
     // Add item to cart
     addToCart({
-      id: params.id,
+      id : id as string,
       name: product.name,
       price: product.price,
       originalPrice: product.originalPrice,
@@ -56,18 +72,18 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       color: selectedColor,
       size: selectedSize,
       image: product.images[0],
-    })
+    });
 
     // Show success toast
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
-    })
-  }
+    });
+  };
 
   // Mock product data - in a real app, this would come from an API
   const product = {
-    id: params.id,
+    id:id ,
     name: "Raas - Velvet Embroidered Suit Set",
     description:
       "Discover our mid cotton anarkali set with pillan work yok paired with pant and back print dupatta. This outfit exudes a charming and delicate appeal, making it perfect for festive event, pooja, light gathering, day to day life.",
@@ -84,7 +100,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       "/placeholder.svg?height=100&width=100",
       "/placeholder.svg?height=100&width=100",
     ],
-  }
+  };
 
   // Mock customer reviews
   const customerReviews = [
@@ -110,7 +126,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       details:
         "I love this product! The fabric is soft, high-quality, and extremely comfortable. The craftsmanship is impressive, making it both durable and stylish. Highly recommended!",
     },
-  ]
+  ];
 
   const relatedProducts = [
     {
@@ -137,7 +153,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       price: 3490.0,
       image: "/placeholder.svg?height=300&width=250",
     },
-  ]
+  ];
 
   return (
     <main className="min-h-screen bg-white">
@@ -159,7 +175,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             </div>
             <div className="grid grid-cols-4 gap-2">
               {product.images.map((image, index) => (
-                <div key={index} className="aspect-square relative border rounded-md overflow-hidden">
+                <div
+                  key={index}
+                  className="aspect-square relative border rounded-md overflow-hidden"
+                >
                   <Image
                     src={image || "/placeholder.svg"}
                     alt={`${product.name} view ${index + 1}`}
@@ -174,7 +193,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           {/* Product Info */}
           <div>
             <h1 className="text-2xl font-medium mb-2">{product.name}</h1>
-            <p className="text-gray-600 mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do</p>
+            <p className="text-gray-600 mb-4">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+            </p>
 
             {/* Rating */}
             <div className="flex items-center mb-4">
@@ -182,7 +203,11 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 {[1, 2, 3, 4, 5].map((star) => (
                   <svg
                     key={star}
-                    className={`w-5 h-5 ${star <= Math.floor(product.rating) ? "text-yellow-400" : "text-gray-300"}`}
+                    className={`w-5 h-5 ${
+                      star <= Math.floor(product.rating)
+                        ? "text-yellow-400"
+                        : "text-gray-300"
+                    }`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -197,8 +222,12 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
             {/* Price */}
             <div className="flex items-center mb-6">
-              <span className="text-xl font-medium">₹{product.price.toFixed(2)}</span>
-              <span className="ml-2 text-gray-500 line-through">₹{product.originalPrice.toFixed(2)}</span>
+              <span className="text-xl font-medium">
+                ₹{product.price.toFixed(2)}
+              </span>
+              <span className="ml-2 text-gray-500 line-through">
+                ₹{product.originalPrice.toFixed(2)}
+              </span>
             </div>
 
             {/* Description */}
@@ -206,7 +235,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
             {/* Stock Status */}
             <div className="mb-6">
-              <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full">In Stock</span>
+              <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                In Stock
+              </span>
             </div>
 
             {/* Color Selection */}
@@ -217,7 +248,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                   <button
                     key={color}
                     className={`w-8 h-8 rounded-full ${
-                      selectedColor === color ? "ring-2 ring-offset-2 ring-[#a08452]" : ""
+                      selectedColor === color
+                        ? "ring-2 ring-offset-2 ring-[#a08452]"
+                        : ""
                     }`}
                     style={{ backgroundColor: color }}
                     onClick={() => setSelectedColor(color)}
@@ -288,21 +321,33 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <TabsList className="border-b w-full justify-start rounded-none bg-transparent mb-6">
               <TabsTrigger
                 value="descriptions"
-                className={`pb-2 rounded-none ${activeTab === "descriptions" ? "border-b-2 border-[#a08452] text-[#a08452]" : "text-gray-600"}`}
+                className={`pb-2 rounded-none ${
+                  activeTab === "descriptions"
+                    ? "border-b-2 border-[#a08452] text-[#a08452]"
+                    : "text-gray-600"
+                }`}
                 onClick={() => setActiveTab("descriptions")}
               >
                 Descriptions
               </TabsTrigger>
               <TabsTrigger
                 value="additional"
-                className={`pb-2 rounded-none ${activeTab === "additional" ? "border-b-2 border-[#a08452] text-[#a08452]" : "text-gray-600"}`}
+                className={`pb-2 rounded-none ${
+                  activeTab === "additional"
+                    ? "border-b-2 border-[#a08452] text-[#a08452]"
+                    : "text-gray-600"
+                }`}
                 onClick={() => setActiveTab("additional")}
               >
                 Additional Information
               </TabsTrigger>
               <TabsTrigger
                 value="reviews"
-                className={`pb-2 rounded-none ${activeTab === "reviews" ? "border-b-2 border-[#a08452] text-[#a08452]" : "text-gray-600"}`}
+                className={`pb-2 rounded-none ${
+                  activeTab === "reviews"
+                    ? "border-b-2 border-[#a08452] text-[#a08452]"
+                    : "text-gray-600"
+                }`}
                 onClick={() => setActiveTab("reviews")}
               >
                 Reviews
@@ -312,9 +357,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <TabsContent value="descriptions" className="mt-0">
               <div className="prose max-w-none">
                 <p>
-                  Discover our mid cotton anarkali set with pillan work yok paired with pant and back print dupatta.
-                  This outfit exudes a charming and delicate appeal, making it perfect for festive event, pooja, light
-                  gathering, day to day life.
+                  Discover our mid cotton anarkali set with pillan work yok
+                  paired with pant and back print dupatta. This outfit exudes a
+                  charming and delicate appeal, making it perfect for festive
+                  event, pooja, light gathering, day to day life.
                 </p>
                 <p>
                   <strong>Features:</strong>
@@ -335,7 +381,11 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                   <h3 className="text-sm font-medium mb-2">Color</h3>
                   <div className="flex space-x-2">
                     {product.colors.map((color) => (
-                      <div key={color} className="w-8 h-8 rounded-full" style={{ backgroundColor: color }} />
+                      <div
+                        key={color}
+                        className="w-8 h-8 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
                     ))}
                   </div>
                 </div>
@@ -360,7 +410,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Care Instructions</h3>
+                  <h3 className="text-sm font-medium mb-2">
+                    Care Instructions
+                  </h3>
                   <p>Dry clean only</p>
                 </div>
               </div>
@@ -401,9 +453,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                             ))}
                           </div>
                           <p className="font-medium mb-2">{review.text}</p>
-                          <p className="text-gray-600 text-sm mb-2">{review.details}</p>
+                          <p className="text-gray-600 text-sm mb-2">
+                            {review.details}
+                          </p>
                           <p className="text-xs text-gray-500">
-                            Verified by <span className="font-medium">Raas</span> (verified purchase) on {review.date}
+                            Verified by{" "}
+                            <span className="font-medium">Raas</span> (verified
+                            purchase) on {review.date}
                           </p>
                         </div>
                       </div>
@@ -421,10 +477,17 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                         <p className="text-sm font-medium mb-2">Your Rating</p>
                         <div className="flex space-x-2">
                           {[1, 2, 3, 4, 5].map((rating) => (
-                            <button key={rating} type="button" className="p-1" onClick={() => setReviewRating(rating)}>
+                            <button
+                              key={rating}
+                              type="button"
+                              className="p-1"
+                              onClick={() => setReviewRating(rating)}
+                            >
                               <Star
                                 className={`h-5 w-5 ${
-                                  rating <= reviewRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                  rating <= reviewRating
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300"
                                 }`}
                               />
                             </button>
@@ -433,7 +496,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                       </div>
 
                       <div>
-                        <label htmlFor="review-name" className="block text-sm font-medium mb-1">
+                        <label
+                          htmlFor="review-name"
+                          className="block text-sm font-medium mb-1"
+                        >
                           Name
                         </label>
                         <input
@@ -448,7 +514,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                       </div>
 
                       <div>
-                        <label htmlFor="review-email" className="block text-sm font-medium mb-1">
+                        <label
+                          htmlFor="review-email"
+                          className="block text-sm font-medium mb-1"
+                        >
                           Email Address
                         </label>
                         <input
@@ -463,7 +532,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                       </div>
 
                       <div>
-                        <label htmlFor="review-text" className="block text-sm font-medium mb-1">
+                        <label
+                          htmlFor="review-text"
+                          className="block text-sm font-medium mb-1"
+                        >
                           Your Review
                         </label>
                         <textarea
@@ -478,7 +550,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                       </div>
 
                       <div>
-                        <Button type="submit" className="bg-[#a08452] hover:bg-[#8c703d] text-white px-8">
+                        <Button
+                          type="submit"
+                          className="bg-[#a08452] hover:bg-[#8c703d] text-white px-8"
+                        >
                           Submit
                         </Button>
                       </div>
@@ -507,7 +582,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     />
                   </div>
                   <h3 className="text-sm font-medium">{product.name}</h3>
-                  <p className="text-[#a08452] text-sm font-medium mt-1">₹{product.price.toFixed(2)}</p>
+                  <p className="text-[#a08452] text-sm font-medium mt-1">
+                    ₹{product.price.toFixed(2)}
+                  </p>
                 </Link>
               </div>
             ))}
@@ -520,22 +597,30 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <div className="flex flex-col items-center">
               <Package className="h-10 w-10 mb-3 text-[#a08452]" />
               <h3 className="font-medium text-base mb-1">Free Shipping</h3>
-              <p className="text-sm text-gray-600">Free shipping for order above $150</p>
+              <p className="text-sm text-gray-600">
+                Free shipping for order above $150
+              </p>
             </div>
             <div className="flex flex-col items-center">
               <RefreshCw className="h-10 w-10 mb-3 text-[#a08452]" />
               <h3 className="font-medium text-base mb-1">Money Guarantee</h3>
-              <p className="text-sm text-gray-600">Within 30 days for an exchange</p>
+              <p className="text-sm text-gray-600">
+                Within 30 days for an exchange
+              </p>
             </div>
             <div className="flex flex-col items-center">
               <HeadphonesIcon className="h-10 w-10 mb-3 text-[#a08452]" />
               <h3 className="font-medium text-base mb-1">Online Support</h3>
-              <p className="text-sm text-gray-600">24 hours a day, 7 days a week</p>
+              <p className="text-sm text-gray-600">
+                24 hours a day, 7 days a week
+              </p>
             </div>
             <div className="flex flex-col items-center">
               <CreditCard className="h-10 w-10 mb-3 text-[#a08452]" />
               <h3 className="font-medium text-base mb-1">Flexible Payment</h3>
-              <p className="text-sm text-gray-600">Pay with multiple credit cards</p>
+              <p className="text-sm text-gray-600">
+                Pay with multiple credit cards
+              </p>
             </div>
           </div>
         </div>
@@ -543,6 +628,5 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
       <SiteFooter />
     </main>
-  )
+  );
 }
-

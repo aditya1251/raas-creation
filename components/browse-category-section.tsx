@@ -3,15 +3,15 @@ import { Button } from "@/components/ui/button"
 
 export default function BrowseCategorySection() {
   return (
-    <section className="py-12 bg-black">
+    <section className="py-12 ">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h2 className="text-3xl font-medium text-white mb-2">Browse The Category</h2>
-            <p className="text-gray-400">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            <h2 className="text-3xl font-bold text-[#333333] mb-2">Browse The Category</h2>
+            <p className="text-[#666666]">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline" size="icon" className="rounded-md bg-[#f8f3e9] border-none h-12 w-12">
+            <Button variant="outline" size="icon" className="rounded-md border border-[#795d2a] bg-[#f8f3e9] h-12 w-12">
               <ArrowLeft className="h-5 w-5 text-[#795d2a]" />
             </Button>
             <Button size="icon" className="rounded-md bg-[#795d2a] hover:bg-[#705526] border-none h-12 w-12">
