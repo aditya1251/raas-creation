@@ -1,70 +1,144 @@
-import { ArrowLeft, ArrowRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
+"use client"
+import React, { useRef, useState, useEffect } from 'react';
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import Image from 'next/image';
 
 export default function BrowseCategorySection() {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  // Category data with images and names
+  const categories = [
+    {
+      name: "Anarkali",
+      image: "lot_0009__PUN0747.png"
+    },
+    {
+      name: "Kurta Set",
+      image: "image 100.png"
+    },
+    {
+      name: "Suit Set",
+      image: "image 101.png"
+    },
+    {
+      name: "Lounge Wear",
+      image: "lot_0005__PUN0762.png"
+    },
+    {
+      name: "Kurtis & Dresses",
+      image: "image.png"
+    },
+    {
+      name: "Luxe Collection",
+      image: "image 19.png"
+    }
+  ];
+
+  // Handle scrolling left
+  const handleScrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: -650, // Adjust scroll distance as needed
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Handle scrolling right
+  const handleScrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: 650, // Adjust scroll distance as needed
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Check scroll position and update scroll button states
+  const checkScrollPosition = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth);
+    }
+  };
+
+  // Add scroll event listener
+  useEffect(() => {
+    const currentRef = scrollContainerRef.current;
+    if (currentRef) {
+      currentRef.addEventListener('scroll', checkScrollPosition);
+      return () => {
+        currentRef.removeEventListener('scroll', checkScrollPosition);
+      };
+    }
+  }, []);
+
   return (
-    <section className="py-12 ">
+    <div className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-[#333333] mb-2">Browse The Category</h2>
-            <p className="text-[#666666]">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">
+              Browse The Category
+            </h2>
+            <p className="text-gray-600">
+              Explore our diverse range of ethnic wear categories
+            </p>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline" size="icon" className="rounded-md border border-[#795d2a] bg-[#f8f3e9] h-12 w-12">
-              <ArrowLeft className="h-5 w-5 text-[#795d2a]" />
-            </Button>
-            <Button size="icon" className="rounded-md bg-[#795d2a] hover:bg-[#705526] border-none h-12 w-12">
+            <button
+              onClick={handleScrollLeft}
+              disabled={!canScrollLeft}
+              className={`rounded-md border border-amber-700 bg-amber-50 h-12 w-12 flex items-center justify-center hover:bg-amber-100 
+                ${!canScrollLeft ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <ArrowLeft className="h-5 w-5 text-amber-700" />
+            </button>
+            <button
+              onClick={handleScrollRight}
+              disabled={!canScrollRight}
+              className={`rounded-md bg-amber-700 hover:bg-amber-800 border-none h-12 w-12 flex items-center justify-center 
+                ${!canScrollRight ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
               <ArrowRight className="h-5 w-5 text-white" />
-            </Button>
+            </button>
           </div>
         </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-transparent rounded-xl overflow-hidden">
-            <div className="aspect-[3/4] relative rounded-xl overflow-hidden">
-              <div className="w-full h-full bg-[#f4f4f4]"></div>
+        
+        {/* Horizontally scrollable container */}
+        <div 
+          ref={scrollContainerRef}
+          className="grid grid-flow-col auto-cols-[calc(33.333%-1.5rem)] gap-6 overflow-x-hidden scroll-smooth pb-4"
+        >
+          {categories.map((category) => (
+            <div
+              key={category.name}
+              className="w-full"
+            >
+              <div className="bg-white rounded-xl overflow-hidden shadow-lg">
+                <div className="aspect-[3/4] relative rounded-xl overflow-hidden">
+                  <Image
+                    src={category.image}
+                    alt={category.name}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute bottom-5 w-4/6 left-1/2 transform -translate-x-1/2">
+                    <button
+                      className="rounded-lg bg-white text-gray-800 border-none px-8 py-3 text-xl font-bold w-full shadow-md hover:bg-gray-100"
+                    >
+                      {category.name}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="mt-4">
-              <Button
-                variant="outline"
-                className="rounded-full bg-white text-black border-none px-10 py-6 text-lg font-medium w-full"
-              >
-                Anarkali
-              </Button>
-            </div>
-          </div>
-
-          <div className="bg-transparent rounded-xl overflow-hidden">
-            <div className="aspect-[3/4] relative rounded-xl overflow-hidden">
-              <div className="w-full h-full bg-[#f4f4f4]"></div>
-            </div>
-            <div className="mt-4">
-              <Button
-                variant="outline"
-                className="rounded-full bg-white text-black border-none px-10 py-6 text-lg font-medium w-full"
-              >
-                Kurta Set
-              </Button>
-            </div>
-          </div>
-
-          <div className="bg-transparent rounded-xl overflow-hidden">
-            <div className="aspect-[3/4] relative rounded-xl overflow-hidden">
-              <div className="w-full h-full bg-[#f4f4f4]"></div>
-            </div>
-            <div className="mt-4">
-              <Button
-                variant="outline"
-                className="rounded-full bg-white text-black border-none px-10 py-6 text-lg font-medium w-full"
-              >
-                Suit Set
-              </Button>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
-    </section>
-  )
+    </div>
+  );
 }
-

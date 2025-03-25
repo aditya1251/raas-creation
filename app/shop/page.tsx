@@ -1,5 +1,6 @@
-import Image from "next/image"
-import Link from "next/link"
+"use client";
+import Image from "next/image";
+import Link from "next/link";
 import {
   ChevronDown,
   Heart,
@@ -10,11 +11,14 @@ import {
   HeadphonesIcon,
   CreditCard,
   ChevronRight,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import Navbar from "@/components/navbar"
-import SiteFooter from "@/components/site-footer"
+  Briefcase,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useCart } from "@/context/cart-context";
+import Navbar from "@/components/navbar";
+import SiteFooter from "@/components/site-footer";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ShopPage() {
   return (
@@ -63,19 +67,28 @@ export default function ShopPage() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox id="lounge-wear" />
-                  <label htmlFor="lounge-wear" className="text-sm cursor-pointer">
+                  <label
+                    htmlFor="lounge-wear"
+                    className="text-sm cursor-pointer"
+                  >
                     Lounge Wear
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox id="kurtis-dresses" />
-                  <label htmlFor="kurtis-dresses" className="text-sm cursor-pointer">
+                  <label
+                    htmlFor="kurtis-dresses"
+                    className="text-sm cursor-pointer"
+                  >
                     Kurtis & Dresses
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox id="luxe-collection" />
-                  <label htmlFor="luxe-collection" className="text-sm cursor-pointer">
+                  <label
+                    htmlFor="luxe-collection"
+                    className="text-sm cursor-pointer"
+                  >
                     Luxe Collection
                   </label>
                 </div>
@@ -95,7 +108,7 @@ export default function ShopPage() {
                   min="0"
                   max="6000"
                   defaultValue="6000"
-                  className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-1 bg-[#A08452] rounded-lg appearance-none cursor-pointer"
                 />
               </div>
             </div>
@@ -224,22 +237,30 @@ export default function ShopPage() {
             <div className="flex flex-col items-center">
               <Package className="h-10 w-10 mb-3 text-[#795d2a]" />
               <h3 className="font-medium text-base mb-1">Free Shipping</h3>
-              <p className="text-sm text-gray-600">Free shipping for order above $150</p>
+              <p className="text-sm text-gray-600">
+                Free shipping for order above $150
+              </p>
             </div>
             <div className="flex flex-col items-center">
               <RefreshCw className="h-10 w-10 mb-3 text-[#795d2a]" />
               <h3 className="font-medium text-base mb-1">Money Guarantee</h3>
-              <p className="text-sm text-gray-600">Within 30 days for an exchange</p>
+              <p className="text-sm text-gray-600">
+                Within 30 days for an exchange
+              </p>
             </div>
             <div className="flex flex-col items-center">
               <HeadphonesIcon className="h-10 w-10 mb-3 text-[#795d2a]" />
               <h3 className="font-medium text-base mb-1">Online Support</h3>
-              <p className="text-sm text-gray-600">24 hours a day, 7 days a week</p>
+              <p className="text-sm text-gray-600">
+                24 hours a day, 7 days a week
+              </p>
             </div>
             <div className="flex flex-col items-center">
               <CreditCard className="h-10 w-10 mb-3 text-[#795d2a]" />
               <h3 className="font-medium text-base mb-1">Flexible Payment</h3>
-              <p className="text-sm text-gray-600">Pay with multiple credit cards</p>
+              <p className="text-sm text-gray-600">
+                Pay with multiple credit cards
+              </p>
             </div>
           </div>
         </div>
@@ -247,27 +268,85 @@ export default function ShopPage() {
 
       <SiteFooter />
     </main>
-  )
+  );
 }
 
 // Product Card Component
 function ProductCard({ product }) {
+  const { toast } = useToast();
+  const { addToCart } = useCart();
+  const handleAddToCart = () => {
+    // Add item to cart
+    addToCart({
+      id: demoProduct.id as string,
+      name: demoProduct.name,
+      price: demoProduct.price,
+      originalPrice: demoProduct.originalPrice,
+      quantity: 1,
+      color: "orange",
+      size: "40",
+      image: demoProduct.images[0],
+    });
+
+    // Show success toast
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart.`,
+    });
+  };
+  // Mock product data - in a real app, this would come from an API
+  const demoProduct = {
+    id: product.id,
+    name: "Raas - Velvet Embroidered Suit Set",
+    description:
+      "Discover our mid cotton anarkali set with pillan work yok paired with pant and back print dupatta. This outfit exudes a charming and delicate appeal, making it perfect for festive event, pooja, light gathering, day to day life.",
+    price: 3490.0,
+    originalPrice: 4899.0,
+    rating: 4.9,
+    reviews: 2890,
+    inStock: true,
+    colors: ["orange", "blue", "black"],
+    sizes: ["38", "40", "44", "46", "48"],
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-22zL20iPWx4nVh3qQdh5EwkvzWf4H0.jpeg",
+      "/placeholder.svg?height=100&width=100",
+      "/placeholder.svg?height=100&width=100",
+      "/placeholder.svg?height=100&width=100",
+    ],
+  };
   return (
-    <div className="group">
-      <div className="relative overflow-hidden bg-gray-100">
+    <div className="group relative">
+      <div className="aspect-[3/4] relative overflow-hidden rounded-xl bg-gray-100">
         <Link href={`/shop/product/${product.id}`}>
-          <div className="aspect-[3/4] relative">
-            <Image
-              src={product.image || "/placeholder.svg"}
-              alt={product.name}
-              fill
-              className="object-cover transition-transform group-hover:scale-105"
-            />
-          </div>
+          <Image
+            src={product.image || "/placeholder.svg"}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
         </Link>
-        <button className="absolute top-3 right-3 h-8 w-8 bg-white rounded-full flex items-center justify-center shadow-sm">
-          <Heart className="h-4 w-4" />
+        <button
+          className="absolute top-3 right-3 aspect-square w-8 bg-[#795D2A] rounded-full flex items-center justify-center 
+          opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[100%] group-hover:translate-x-0"
+        >
+          <Heart className="aspect-square w-4 text-white hover:text-[#A08452]" />
         </button>
+
+        {/* Add to Cart Button */}
+        <div
+          onClick={handleAddToCart}
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
+          transform translate-y-full group-hover:translate-y-0 
+          transition-transform duration-300 ease-in-out"
+        >
+          <button
+            className="w-full flex justify-center gap-4 items-center rounded-lg bg-[#795D2A] text-white text-lg font-normal py-2 
+            opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          >
+            Add to Cart
+            <Briefcase />
+          </button>
+        </div>
       </div>
       <div className="mt-3">
         <Link href={`/shop/product/${product.id}`} className="block">
@@ -275,11 +354,13 @@ function ProductCard({ product }) {
         </Link>
         <div className="flex items-center mt-1">
           <span className="text-sm font-medium">₹{product.salePrice}</span>
-          <span className="text-xs text-gray-500 line-through ml-2">₹{product.regularPrice}</span>
+          <span className="text-xs text-gray-500 line-through ml-2">
+            ₹{product.regularPrice}
+          </span>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Sample Product Data
@@ -289,7 +370,8 @@ const products = [
     name: "Mirror Work Tangy Cotton Print Suit Set",
     salePrice: "1990",
     regularPrice: "2999",
-    image: "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
+    image:
+      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
     color: "orange",
   },
   {
@@ -297,7 +379,8 @@ const products = [
     name: "Mirror Work Tangy Cotton Print Suit Set",
     salePrice: "2500",
     regularPrice: "3499",
-    image: "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
+    image:
+      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
     color: "red",
   },
   {
@@ -305,7 +388,8 @@ const products = [
     name: "Mirror Work Tangy Cotton Print Suit Set",
     salePrice: "2950",
     regularPrice: "3800",
-    image: "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
+    image:
+      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
     color: "purple",
   },
   {
@@ -313,7 +397,8 @@ const products = [
     name: "Mirror Work Tangy Cotton Print Suit Set",
     salePrice: "2500",
     regularPrice: "3499",
-    image: "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
+    image:
+      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
     color: "red",
   },
   {
@@ -321,7 +406,8 @@ const products = [
     name: "Mirror Work Tangy Cotton Print Suit Set",
     salePrice: "1990",
     regularPrice: "2999",
-    image: "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
+    image:
+      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
     color: "orange",
   },
   {
@@ -329,7 +415,8 @@ const products = [
     name: "Mirror Work Tangy Cotton Print Suit Set",
     salePrice: "2950",
     regularPrice: "3800",
-    image: "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
+    image:
+      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
     color: "purple",
   },
   {
@@ -337,7 +424,8 @@ const products = [
     name: "Mirror Work Tangy Cotton Print Suit Set",
     salePrice: "1990",
     regularPrice: "2999",
-    image: "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
+    image:
+      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
     color: "orange",
   },
   {
@@ -345,7 +433,8 @@ const products = [
     name: "Mirror Work Tangy Cotton Print Suit Set",
     salePrice: "2500",
     regularPrice: "3499",
-    image: "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
+    image:
+      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
     color: "red",
   },
   {
@@ -353,8 +442,8 @@ const products = [
     name: "Mirror Work Tangy Cotton Print Suit Set",
     salePrice: "2950",
     regularPrice: "3800",
-    image: "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
+    image:
+      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
     color: "purple",
   },
-]
-
+];

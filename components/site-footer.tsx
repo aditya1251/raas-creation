@@ -1,3 +1,4 @@
+import { Mail, MapPin, PhoneCall } from "lucide-react";
 export default function SiteFooter() {
   return (
     <footer className="bg-[#fff3e3] py-12">
@@ -13,7 +14,8 @@ export default function SiteFooter() {
               />
             </a>
             <p className="text-sm text-gray-700 mb-6 max-w-xs">
-              Lorem Ipsum Dolor Sit Amet. Lorem Ipsum Dolor Sit Amet. Lorem Ipsum Dolor Sit Amet.
+              Lorem Ipsum Dolor Sit Amet. Lorem Ipsum Dolor Sit Amet. Lorem
+              Ipsum Dolor Sit Amet.
             </p>
             <div className="flex space-x-3">
               <a
@@ -84,22 +86,34 @@ export default function SiteFooter() {
             <h3 className="text-lg font-medium mb-4">Quick Links</h3>
             <ul className="space-y-3">
               <li>
-                <a href="/" className="text-gray-700 hover:text-[#795d2a] transition-colors">
+                <a
+                  href="/"
+                  className="text-gray-700 hover:text-[#795d2a] transition-colors"
+                >
                   Home
                 </a>
               </li>
               <li>
-                <a href="/shop" className="text-gray-700 hover:text-[#795d2a] transition-colors">
+                <a
+                  href="/shop"
+                  className="text-gray-700 hover:text-[#795d2a] transition-colors"
+                >
                   Shop
                 </a>
               </li>
               <li>
-                <a href="/about" className="text-gray-700 hover:text-[#795d2a] transition-colors">
+                <a
+                  href="/about"
+                  className="text-gray-700 hover:text-[#795d2a] transition-colors"
+                >
                   About
                 </a>
               </li>
               <li>
-                <a href="/contact" className="text-gray-700 hover:text-[#795d2a] transition-colors">
+                <a
+                  href="/contact"
+                  className="text-gray-700 hover:text-[#795d2a] transition-colors"
+                >
                   Contact
                 </a>
               </li>
@@ -110,17 +124,19 @@ export default function SiteFooter() {
           <div>
             <h3 className="text-lg font-medium mb-4">Support</h3>
             <ul className="space-y-3">
-              <li className="text-gray-700 flex items-start">
-                <span className="mr-2">📧</span>
+              <li className="text-gray-700 flex items-center">
+                <Mail className="mr-2 text-lg" />
                 <span>Raasthecreation@gmail.com</span>
               </li>
-              <li className="text-gray-700 flex items-start">
-                <span className="mr-2">📱</span>
+              <li className="text-gray-700 flex items-center">
+                <PhoneCall className="mr-2 text-lg" />
                 <span>+91 97116 20050</span>
               </li>
-              <li className="text-gray-700 flex items-start">
-                <span className="mr-2">🏬</span>
-                <span className="flex-1">204/2-c & d, basement, jeewan nagar, ashram, New Delhi-110014</span>
+              <li className="text-gray-700 flex items-center">
+                <MapPin className="mr-2 text-lg" />
+                <span className="flex-1">
+                  204/2-c & d, basement, jeewan nagar, ashram, New Delhi-110014
+                </span>
               </li>
             </ul>
           </div>
@@ -129,7 +145,8 @@ export default function SiteFooter() {
           <div>
             <h3 className="text-lg font-medium mb-4">Get In Touch</h3>
             <p className="text-gray-700 mb-4">
-              Sign up for our newsletter and get the latest updates, news and product offers via email.
+              Sign up for our newsletter and get the latest updates, news and
+              product offers via email.
             </p>
             <div className="flex">
               <input
@@ -158,10 +175,11 @@ export default function SiteFooter() {
         </div>
 
         <div className="mt-12 pt-4 border-t border-[#e5d9c3] text-center sm:text-left">
-          <p className="text-sm text-gray-700">© RAAS CREATION | 2025 | ALL RIGHTS RESERVED</p>
+          <p className="text-sm text-gray-700">
+            © RAAS CREATION | 2025 | ALL RIGHTS RESERVED
+          </p>
         </div>
       </div>
     </footer>
-  )
+  );
 }
-

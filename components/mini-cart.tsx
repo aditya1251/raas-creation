@@ -66,11 +66,11 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
 
           {/* Cart Panel */}
           <motion.div
-            initial={{ x: "100%" }}
+            initial={{ x: "150%" }}
             animate={{ x: 0 }}
-            exit={{ x: "100%" }}
+            exit={{ x: "150%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl z-50 overflow-hidden"
+            className="fixed top-14 right-20 h-5/6 w-full max-w-md bg-white shadow-xl z-50 overflow-hidden rounded-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col h-full">
