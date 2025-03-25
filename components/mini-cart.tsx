@@ -70,19 +70,19 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl z-50 overflow-hidden"
+            className="fixed inset-0 md:inset-y-14 md:inset-x-auto md:top-14 md:right-4 md:left-auto md:h-5/6 md:w-full md:max-w-md bg-white shadow-xl z-50 overflow-hidden md:rounded-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col h-full">
               {/* Header */}
-              <div className="flex justify-between items-center p-6 border-b">
-                <h2 className="text-xl font-medium">You have {cartItems.length} items in your cart</h2>
+              <div className="flex justify-between items-center p-4 md:p-6 border-b">
+                <h2 className="text-base md:text-xl font-medium">You have {cartItems.length} items in your cart</h2>
                 <button
                   onClick={onClose}
                   className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                   aria-label="Close cart"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4 md:h-5 md:w-5" />
                 </button>
               </div>
 
@@ -109,11 +109,11 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                 </div>
               ) : (
                 <>
-                  <div className="flex-grow overflow-y-auto p-6 space-y-6">
+                  <div className="flex-grow overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
                     {cartItems.map((item) => (
-                      <div key={item.id} className="pb-6 border-b border-gray-200">
+                      <div key={item.id} className="pb-4 md:pb-6 border-b border-gray-200">
                         <div className="flex gap-4">
-                          <div className="w-[100px] h-[120px] relative flex-shrink-0 rounded-md overflow-hidden">
+                          <div className="w-[80px] h-[100px] md:w-[100px] md:h-[120px] relative flex-shrink-0 rounded-md overflow-hidden">
                             <Image
                               src={item.image || "/placeholder.svg"}
                               alt={item.name}
@@ -122,9 +122,9 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-medium truncate">{item.name}</h3>
+                            <h3 className="text-sm md:text-base font-medium truncate">{item.name}</h3>
                             <div className="flex items-center mt-1">
-                              <span className="text-base font-medium">₹{item.price.toFixed(2)}</span>
+                              <span className="text-sm md:text-base font-medium">₹{item.price.toFixed(2)}</span>
                               {item.originalPrice && (
                                 <span className="ml-2 text-gray-500 line-through text-xs">
                                   ₹{item.originalPrice.toFixed(2)}
@@ -141,7 +141,7 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                             <div className="flex justify-between items-center mt-3">
                               <div className="flex items-center border border-gray-300 rounded">
                                 <button
-                                  className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+                                  className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
                                   onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
                                   aria-label="Decrease quantity"
                                 >
@@ -151,11 +151,11 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                                   type="text"
                                   value={item.quantity.toString().padStart(2, "0")}
                                   readOnly
-                                  className="w-8 text-center py-1 border-x border-gray-300 text-xs"
+                                  className="w-6 md:w-8 text-center py-1 border-x border-gray-300 text-xs"
                                   aria-label="Quantity"
                                 />
                                 <button
-                                  className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+                                  className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                   aria-label="Increase quantity"
                                 >
@@ -168,7 +168,7 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                                 className="text-red-500 hover:text-red-600 transition-colors"
                                 aria-label="Remove item"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                               </button>
                             </div>
                           </div>
@@ -178,8 +178,8 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                   </div>
 
                   {/* Cart Footer */}
-                  <div className="border-t p-6 bg-gray-50">
-                    <div className="flex justify-between text-lg font-medium mb-4">
+                  <div className="border-t p-4 md:p-6 bg-gray-50">
+                    <div className="flex justify-between text-base md:text-lg font-medium mb-4">
                       <span>Subtotal</span>
                       <span>₹{calculateTotal().toFixed(0)}</span>
                     </div>
@@ -187,13 +187,13 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                     <div className="space-y-3">
                       <Link
                         href="/cart"
-                        className="block w-full py-2 text-center border border-[#a08452] text-[#a08452] rounded-md font-medium hover:bg-[#a08452]/5 transition-colors"
+                        className="block w-full py-2 text-center border border-[#a08452] text-[#a08452] rounded-md font-medium hover:bg-[#a08452]/5 transition-colors text-sm md:text-base"
                         onClick={onClose}
                       >
                         View Cart
                       </Link>
                       <Link href="/checkout" onClick={onClose} className="block w-full">
-                        <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white py-2 rounded-md transition-colors">
+                        <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white py-2 rounded-md transition-colors text-sm md:text-base">
                           Checkout
                         </Button>
                       </Link>
@@ -208,4 +208,3 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
     </AnimatePresence>
   )
 }
-

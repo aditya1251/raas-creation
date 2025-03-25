@@ -1,7 +1,9 @@
+import Image from "next/image";
+
 export default function RaasKurtiesSection() {
   return (
     <section className="py-12 ">
-      <div className="w-full min-h-screen px-4">
+      <div className="w-full lg:min-h-screen px-4">
         {/* Heading */}
         <div className="text-center mb-8">
           <h2 className="text-xl text-[#a08452] mb-1">
@@ -17,47 +19,47 @@ export default function RaasKurtiesSection() {
           {/* 1 */}
           <div className="col-span-1">
             <div className="aspect-[3/4] relative mb-3">
-              <div className="w-full h-full bg-gray-200"></div>
+              <Image src="/lot_0016__PUN0716.png" fill alt="kurti" className="object-cover" />
             </div>
             <div className="aspect-[3/2] relative mb-3">
-              <div className="w-full h-full bg-gray-200"></div>
+            <Image src="/lot_0009__PUN0747.png" fill alt="kurti" className="object-cover" />
             </div>
           </div>
 
           {/* 2 */}
           <div className="col-span-1 mt-16">
             <div className="aspect-[3/4] relative mb-3">
-              <div className="w-full h-full bg-gray-200"></div>
+              <Image src="/image 107.png" fill alt="kurti" className="object-cover" />
             </div>
             <div className="aspect-[3/2] relative mb-3">
-              <div className="w-full h-full bg-gray-200"></div>
+            <Image src="/lot_0033__PUN0670.png" fill alt="kurti" className="object-cover" />
             </div>
           </div>
 
           {/* 3 */}
           <div className="col-span-1 mt-32">
             <div className="aspect-[3/4] relative mb-3">
-              <div className="w-full h-full bg-gray-200"></div>
+            <Image src="/lot_0028__PUN0687.png" fill alt="kurti" className="object-cover" />
             </div>
           </div>
 
           {/* 4 */}
           <div className="col-span-1 mt-16">
             <div className="aspect-[3/4] relative mb-3">
-              <div className="w-full h-full bg-gray-200"></div>
+            <Image src="/lot_0015__PUN0717.png" fill alt="kurti" className="object-cover" />
             </div>
             <div className="aspect-[3/2] relative mb-3">
-              <div className="w-full h-full bg-gray-200"></div>
+            <Image src="/lot_0000__PUN0768.png" fill alt="kurti" className="object-cover" />
             </div>
           </div>
 
           {/* 5 */}
           <div className="col-span-1">
             <div className="aspect-[3/4] relative mb-3">
-              <div className="w-full h-full bg-gray-200"></div>
+            <Image src="/lot_0005__PUN0762.png" fill alt="kurti" className="object-cover" />
             </div>
             <div className="aspect-[3/2] relative mb-3">
-              <div className="w-full h-full bg-gray-200"></div>
+            <Image src="/lot_0019__PUN0710.png" fill alt="kurti" className="object-cover" />
             </div>
           </div>
         </div>

@@ -133,25 +133,25 @@ export default function ProductDetailPage() {
       id: "1",
       name: "Raas Scarlet Red Ikkat Print Suit Set",
       price: 3490.0,
-      image: "/placeholder.svg?height=300&width=250",
+      image: "/lot_0005__PUN0762.png?height=300&width=250",
     },
     {
       id: "2",
       name: "Raas Scarlet Red Ikkat Print Suit Set",
       price: 3490.0,
-      image: "/placeholder.svg?height=300&width=250",
+      image: "/lot_0009__PUN0747.png?height=300&width=250",
     },
     {
       id: "3",
       name: "Raas Scarlet Red Ikkat Print Suit Set",
       price: 3490.0,
-      image: "/placeholder.svg?height=300&width=250",
+      image: "/image.png?height=300&width=250",
     },
     {
       id: "4",
       name: "Raas Scarlet Red Ikkat Print Suit Set",
       price: 3490.0,
-      image: "/placeholder.svg?height=300&width=250",
+      image: "/image 100.png?height=300&width=250",
     },
   ];
 
