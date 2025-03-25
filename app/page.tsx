@@ -47,7 +47,7 @@ export default function Home() {
       <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <h2 className="text-xl font-medium text-center mb-8">New Arrivals</h2>
 
-        <div className="grid md:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
           {newArrivals.map((product, index) => (
             <ProductCard key={index} product={product} />
           ))}
@@ -112,7 +112,6 @@ function ProductCard({ product }) {
       size: "40",
       image: demoProduct.images[0],
     });
-
     // Show success toast
     toast({
       title: "Added to cart",
@@ -149,32 +148,30 @@ function ProductCard({ product }) {
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
-
         {/* Wishlist Heart Button */}
         <button
-          className="absolute top-3 right-3 aspect-square w-10 bg-[#795D2A] rounded-full flex items-center justify-center 
-          opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[100%] group-hover:translate-x-0"
+          className="absolute top-3 right-3 aspect-square w-8 lg:w-10 bg-[#795D2A] rounded-full flex items-center justify-center
+          opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 
+          transform translate-x-0 lg:translate-x-[100%] lg:group-hover:translate-x-0"
         >
-          <Heart className="aspect-square w-6 text-white hover:text-[#A08452]" />
+          <Heart className="aspect-square w-4 lg:w-6 text-white hover:text-[#A08452]" />
         </button>
-
         {/* Add to Cart Button */}
         <div
           onClick={handleAddToCart}
           className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
-          transform translate-y-full group-hover:translate-y-0 
+          transform translate-y-0 lg:translate-y-full lg:group-hover:translate-y-0
           transition-transform duration-300 ease-in-out"
         >
           <button
-            className="w-full flex justify-center gap-4 items-center rounded-lg bg-[#795D2A] text-white text-2xl font-normal py-2 
-            opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            className="w-full flex justify-center gap-2 lg:gap-4 items-center rounded-lg bg-[#795D2A] text-white text-lg lg:text-2xl font-normal py-2
+            opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300"
           >
             Add to Cart
             <Briefcase />
           </button>
         </div>
       </div>
-
       {/* Product Details */}
       <div className="mt-3">
         <h3 className="text-xs font-medium">{product.name}</h3>

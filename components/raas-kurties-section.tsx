@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function RaasKurtiesSection() {
   return (
     <section className="py-12 ">
-      <div className="w-full min-h-screen px-4">
+      <div className="w-full lg:min-h-screen px-4">
         {/* Heading */}
         <div className="text-center mb-8">
           <h2 className="text-xl text-[#a08452] mb-1">

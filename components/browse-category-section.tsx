@@ -40,7 +40,7 @@ export default function BrowseCategorySection() {
   const handleScrollLeft = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({
-        left: -650, // Adjust scroll distance as needed
+        left: -350, // Adjusted for responsiveness
         behavior: 'smooth'
       });
     }
@@ -50,7 +50,7 @@ export default function BrowseCategorySection() {
   const handleScrollRight = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({
-        left: 650, // Adjust scroll distance as needed
+        left: 350, // Adjusted for responsiveness
         behavior: 'smooth'
       });
     }
@@ -78,13 +78,13 @@ export default function BrowseCategorySection() {
 
   return (
     <div className="py-12 bg-white">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-3 md:px-6">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
               Browse The Category
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm md:text-base">
               Explore our diverse range of ethnic wear categories
             </p>
           </div>
@@ -92,18 +92,18 @@ export default function BrowseCategorySection() {
             <button
               onClick={handleScrollLeft}
               disabled={!canScrollLeft}
-              className={`rounded-md border border-amber-700 bg-amber-50 h-12 w-12 flex items-center justify-center hover:bg-amber-100 
+              className={`rounded-md border border-amber-700 bg-amber-50 w-8 lg:w-12 aspect-square flex items-center justify-center hover:bg-amber-100 
                 ${!canScrollLeft ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <ArrowLeft className="h-5 w-5 text-amber-700" />
+              <ArrowLeft className="h-4 w-4 lg:h-5 lg:w-5 text-amber-700" />
             </button>
             <button
               onClick={handleScrollRight}
               disabled={!canScrollRight}
-              className={`rounded-md bg-amber-700 hover:bg-amber-800 border-none h-12 w-12 flex items-center justify-center 
+              className={`rounded-md bg-amber-700 hover:bg-amber-800 border-none w-8 lg:w-12 aspect-square flex items-center justify-center 
                 ${!canScrollRight ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <ArrowRight className="h-5 w-5 text-white" />
+              <ArrowRight className="h-4 w-4 lg:h-5 lg:w-5 text-white" />
             </button>
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function BrowseCategorySection() {
         {/* Horizontally scrollable container */}
         <div 
           ref={scrollContainerRef}
-          className="grid grid-flow-col auto-cols-[calc(33.333%-1.5rem)] gap-6 overflow-x-hidden scroll-smooth pb-4"
+          className="grid grid-flow-col auto-cols-[calc(100%-0rem)] md:auto-cols-[calc(33.333%-1.5rem)] gap-6 overflow-x-auto lg:overflow-x-hidden scroll-smooth pb-4"
         >
           {categories.map((category) => (
             <div
@@ -126,9 +126,9 @@ export default function BrowseCategorySection() {
                     fill
                     className="object-cover"
                   />
-                  <div className="absolute bottom-5 w-4/6 left-1/2 transform -translate-x-1/2">
+                  <div className="absolute bottom-5 w-11/12 lg:w-4/6 left-1/2 transform -translate-x-1/2">
                     <button
-                      className="rounded-lg bg-white text-gray-800 border-none px-8 py-3 text-xl font-bold w-full shadow-md hover:bg-gray-100"
+                      className="rounded-lg bg-white text-gray-800 border-none px-6 md:px-8 py-2 md:py-3 text-base lg:text-xl font-medium lg:font-bold w-full shadow-md hover:bg-gray-100"
                     >
                       {category.name}
                     </button>
