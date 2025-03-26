@@ -273,47 +273,47 @@ export default function ShopPage() {
 
 // Product Card Component
 function ProductCard({ product }) {
-  const { toast } = useToast();
-  const { addToCart } = useCart();
-  const handleAddToCart = () => {
-    // Add item to cart
-    addToCart({
-      id: demoProduct.id as string,
-      name: demoProduct.name,
-      price: demoProduct.price,
-      originalPrice: demoProduct.originalPrice,
-      quantity: 1,
-      color: "orange",
-      size: "40",
-      image: demoProduct.images[0],
-    });
+  // const { toast } = useToast();
+  // const { addToCart } = useCart();
+  // const handleAddToCart = () => {
+  //   // Add item to cart
+  //   addToCart({
+  //     id: demoProduct.id as string,
+  //     name: demoProduct.name,
+  //     price: demoProduct.price,
+  //     originalPrice: demoProduct.originalPrice,
+  //     quantity: 1,
+  //     color: "orange",
+  //     size: "40",
+  //     image: demoProduct.images[0],
+  //   });
 
-    // Show success toast
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    });
-  };
-  // Mock product data - in a real app, this would come from an API
-  const demoProduct = {
-    id: product.id,
-    name: "Raas - Velvet Embroidered Suit Set",
-    description:
-      "Discover our mid cotton anarkali set with pillan work yok paired with pant and back print dupatta. This outfit exudes a charming and delicate appeal, making it perfect for festive event, pooja, light gathering, day to day life.",
-    price: 3490.0,
-    originalPrice: 4899.0,
-    rating: 4.9,
-    reviews: 2890,
-    inStock: true,
-    colors: ["orange", "blue", "black"],
-    sizes: ["38", "40", "44", "46", "48"],
-    images: [
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-22zL20iPWx4nVh3qQdh5EwkvzWf4H0.jpeg",
-      "/placeholder.svg?height=100&width=100",
-      "/placeholder.svg?height=100&width=100",
-      "/placeholder.svg?height=100&width=100",
-    ],
-  };
+  //   // Show success toast
+  //   toast({
+  //     title: "Added to cart",
+  //     description: `${product.name} has been added to your cart.`,
+  //   });
+  // };
+  // // Mock product data - in a real app, this would come from an API
+  // const demoProduct = {
+  //   id: product.id,
+  //   name: "Raas - Velvet Embroidered Suit Set",
+  //   description:
+  //     "Discover our mid cotton anarkali set with pillan work yok paired with pant and back print dupatta. This outfit exudes a charming and delicate appeal, making it perfect for festive event, pooja, light gathering, day to day life.",
+  //   price: 3490.0,
+  //   originalPrice: 4899.0,
+  //   rating: 4.9,
+  //   reviews: 2890,
+  //   inStock: true,
+  //   colors: ["orange", "blue", "black"],
+  //   sizes: ["38", "40", "44", "46", "48"],
+  //   images: [
+  //     "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-22zL20iPWx4nVh3qQdh5EwkvzWf4H0.jpeg",
+  //     "/placeholder.svg?height=100&width=100",
+  //     "/placeholder.svg?height=100&width=100",
+  //     "/placeholder.svg?height=100&width=100",
+  //   ],
+  // };
   return (
     <div className="group relative">
       <div className="aspect-[3/4] relative overflow-hidden rounded-xl bg-gray-100">
@@ -334,7 +334,7 @@ function ProductCard({ product }) {
 
         {/* Add to Cart Button */}
         <div
-          onClick={handleAddToCart}
+          // onClick={handleAddToCart}
           className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
           transform translate-y-full group-hover:translate-y-0 
           transition-transform duration-300 ease-in-out"
