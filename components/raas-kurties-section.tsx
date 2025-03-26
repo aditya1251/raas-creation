@@ -15,9 +15,9 @@ export default function RaasKurtiesSection() {
         </div>
 
         {/* Image Grid */}
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-4">
           {/* 1 */}
-          <div className="col-span-1">
+          <div className="col-span-1 hidden lg:block">
             <div className="aspect-[3/4] relative mb-3">
               <Image src="/lot_0016__PUN0716.png" fill alt="kurti" className="object-cover" />
             </div>
@@ -54,7 +54,7 @@ export default function RaasKurtiesSection() {
           </div>
 
           {/* 5 */}
-          <div className="col-span-1">
+          <div className="col-span-1 hidden lg:block">
             <div className="aspect-[3/4] relative mb-3">
             <Image src="/lot_0005__PUN0762.png" fill alt="kurti" className="object-cover" />
             </div>
