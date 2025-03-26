@@ -6,15 +6,14 @@ import {
   RefreshCw,
   HeadphonesIcon,
   CreditCard,
-  Briefcase,
+  ShoppingBag,
 } from "lucide-react";
 import Navbar from "@/components/navbar";
 import HeroBanner from "@/components/hero-banner";
 import RaasKurtiesSection from "@/components/raas-kurties-section";
 import BrowseCategorySection from "@/components/browse-category-section";
 import SiteFooter from "@/components/site-footer";
-import { useToast } from "@/hooks/use-toast";
-import { useCart } from "@/context/cart-context";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
@@ -98,46 +97,6 @@ export default function Home() {
 
 // Product Card Component
 function ProductCard({ product }) {
-  const { toast } = useToast();
-  const { addToCart } = useCart();
-  const handleAddToCart = () => {
-    // Add item to cart
-    addToCart({
-      id: demoProduct.id as string,
-      name: demoProduct.name,
-      price: demoProduct.price,
-      originalPrice: demoProduct.originalPrice,
-      quantity: 1,
-      color: "orange",
-      size: "40",
-      image: demoProduct.images[0],
-    });
-    // Show success toast
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    });
-  };
-  // Mock product data - in a real app, this would come from an API
-  const demoProduct = {
-    id: product.id,
-    name: "Raas - Velvet Embroidered Suit Set",
-    description:
-      "Discover our mid cotton anarkali set with pillan work yok paired with pant and back print dupatta. This outfit exudes a charming and delicate appeal, making it perfect for festive event, pooja, light gathering, day to day life.",
-    price: 3490.0,
-    originalPrice: 4899.0,
-    rating: 4.9,
-    reviews: 2890,
-    inStock: true,
-    colors: ["orange", "blue", "black"],
-    sizes: ["38", "40", "44", "46", "48"],
-    images: [
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-22zL20iPWx4nVh3qQdh5EwkvzWf4H0.jpeg",
-      "/placeholder.svg?height=100&width=100",
-      "/placeholder.svg?height=100&width=100",
-      "/placeholder.svg?height=100&width=100",
-    ],
-  };
   return (
     <div className="group relative">
       <div className="aspect-[3/4] relative overflow-hidden rounded-xl bg-gray-100">
@@ -150,26 +109,24 @@ function ProductCard({ product }) {
         />
         {/* Wishlist Heart Button */}
         <button
-          className="absolute top-3 right-3 aspect-square w-8 lg:w-10 bg-[#795D2A] rounded-full flex items-center justify-center
+          className="absolute top-3 right-3 aspect-square w-8 lg:w-10 bg-[#a08452] hover:bg-[#8c703d] rounded-full flex items-center justify-center
           opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 
           transform translate-x-0 lg:translate-x-[100%] lg:group-hover:translate-x-0"
         >
-          <Heart className="aspect-square w-4 lg:w-6 text-white hover:text-[#A08452]" />
+          <Heart className="aspect-square w-4 lg:w-6 text-white" />
         </button>
         {/* Add to Cart Button */}
         <div
-          onClick={handleAddToCart}
           className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
           transform translate-y-0 lg:translate-y-full lg:group-hover:translate-y-0
           transition-transform duration-300 ease-in-out"
         >
-          <button
-            className="w-full flex justify-center gap-2 lg:gap-4 items-center rounded-lg bg-[#795D2A] text-white text-lg lg:text-2xl font-normal py-2
-            opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300"
+          <Button
+            className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white flex items-center justify-center gap-2 text-lg lg:text-xl font-normal opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300"
           >
+            <ShoppingBag />
             Add to Cart
-            <Briefcase />
-          </button>
+          </Button>
         </div>
       </div>
       {/* Product Details */}

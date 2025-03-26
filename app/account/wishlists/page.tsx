@@ -57,13 +57,13 @@ export default function WishlistsPage() {
 
           {/* Main Content */}
           <div className="flex-1">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Wishlist Item 1 */}
               <div className="border rounded-md overflow-hidden group">
                 <div className="relative">
                   <div className="aspect-[3/4] relative">
                     <Image
-                      src="/placeholder.svg?height=400&width=300"
+                      src="/image 100.png?height=400&width=300"
                       alt="Product Image"
                       fill
                       className="object-cover"
@@ -88,7 +88,7 @@ export default function WishlistsPage() {
                 <div className="relative">
                   <div className="aspect-[3/4] relative">
                     <Image
-                      src="/placeholder.svg?height=400&width=300"
+                      src="/image 19.png?height=400&width=300"
                       alt="Product Image"
                       fill
                       className="object-cover"
@@ -113,7 +113,7 @@ export default function WishlistsPage() {
                 <div className="relative">
                   <div className="aspect-[3/4] relative">
                     <Image
-                      src="/placeholder.svg?height=400&width=300"
+                      src="/lot_0005__PUN0762.png?height=400&width=300"
                       alt="Product Image"
                       fill
                       className="object-cover"

@@ -110,7 +110,7 @@ export default function Navbar() {
               <Search className="h-5 w-5" />
             </button>
             <Link
-              href="/wishlist"
+              href="/account/wishlists"
               aria-label="Wishlist"
               className="focus:outline-none p-1 rounded-full hover:bg-gray-100 transition-colors"
             >
