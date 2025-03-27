@@ -243,7 +243,7 @@ export default function ShopPage() {
                     <option>Sort by price: low to high</option>
                     <option>Sort by price: high to low</option>
                   </select>
-                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" />
+                  {/* <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 " /> */}
                 </div>
               </div>
             </div>
