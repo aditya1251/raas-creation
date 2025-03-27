@@ -12,6 +12,8 @@ import {
   CreditCard,
   ChevronRight,
   Briefcase,
+  Filter,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,8 +21,11 @@ import { useCart } from "@/context/cart-context";
 import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export default function ShopPage() {
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
@@ -36,10 +41,33 @@ export default function ShopPage() {
         </div>
       </div>
 
+      {/* Mobile Filter Toggle Button */}
+      <div className="md:hidden px-6 mb-4">
+        <Button 
+          onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+          className="w-full flex items-center justify-center gap-2 bg-[#795d2a] text-white"
+        >
+          {isMobileFilterOpen ? (
+            <>
+              <X className="h-5 w-5" /> Close Filters
+            </>
+          ) : (
+            <>
+              <Filter className="h-5 w-5" /> Open Filters
+            </>
+          )}
+        </Button>
+      </div>
+
       <div className="max-w-7xl mx-auto px-6 pb-16">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar Filters */}
-          <div className="w-full md:w-64 shrink-0">
+          <div className={`
+            w-full md:w-64 shrink-0 
+            ${isMobileFilterOpen ? 'block' : 'hidden md:block'}
+            absolute md:static z-20 bg-white md:bg-transparent 
+            left-0 right-0 px-6 md:px-0
+          `}>
             {/* Product Categories */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
@@ -184,6 +212,16 @@ export default function ShopPage() {
                 </div>
               </div>
             </div>
+
+            {/* Mobile Apply Filters Button */}
+            <div className="md:hidden my-4">
+              <Button 
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="w-full bg-[#795d2a] text-white"
+              >
+                Apply Filters
+              </Button>
+            </div>
           </div>
 
           {/* Product Grid */}
@@ -230,7 +268,7 @@ export default function ShopPage() {
         </div>
       </div>
 
-      {/* Features */}
+      {/* (Rest of the component remains the same) */}
       <section className="py-10 border-t">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
@@ -271,49 +309,9 @@ export default function ShopPage() {
   );
 }
 
-// Product Card Component
+// ProductCard component remains the same as in the original code
 function ProductCard({ product }) {
-  // const { toast } = useToast();
-  // const { addToCart } = useCart();
-  // const handleAddToCart = () => {
-  //   // Add item to cart
-  //   addToCart({
-  //     id: demoProduct.id as string,
-  //     name: demoProduct.name,
-  //     price: demoProduct.price,
-  //     originalPrice: demoProduct.originalPrice,
-  //     quantity: 1,
-  //     color: "orange",
-  //     size: "40",
-  //     image: demoProduct.images[0],
-  //   });
-
-  //   // Show success toast
-  //   toast({
-  //     title: "Added to cart",
-  //     description: `${product.name} has been added to your cart.`,
-  //   });
-  // };
-  // // Mock product data - in a real app, this would come from an API
-  // const demoProduct = {
-  //   id: product.id,
-  //   name: "Raas - Velvet Embroidered Suit Set",
-  //   description:
-  //     "Discover our mid cotton anarkali set with pillan work yok paired with pant and back print dupatta. This outfit exudes a charming and delicate appeal, making it perfect for festive event, pooja, light gathering, day to day life.",
-  //   price: 3490.0,
-  //   originalPrice: 4899.0,
-  //   rating: 4.9,
-  //   reviews: 2890,
-  //   inStock: true,
-  //   colors: ["orange", "blue", "black"],
-  //   sizes: ["38", "40", "44", "46", "48"],
-  //   images: [
-  //     "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-22zL20iPWx4nVh3qQdh5EwkvzWf4H0.jpeg",
-  //     "/placeholder.svg?height=100&width=100",
-  //     "/placeholder.svg?height=100&width=100",
-  //     "/placeholder.svg?height=100&width=100",
-  //   ],
-  // };
+  // (Original ProductCard implementation)
   return (
     <div className="group relative">
       <div className="aspect-[3/4] relative overflow-hidden rounded-xl bg-gray-100">
@@ -332,9 +330,7 @@ function ProductCard({ product }) {
           <Heart className="aspect-square w-4 text-white hover:text-[#A08452]" />
         </button>
 
-        {/* Add to Cart Button */}
         <div
-          // onClick={handleAddToCart}
           className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
           transform translate-y-full group-hover:translate-y-0 
           transition-transform duration-300 ease-in-out"
