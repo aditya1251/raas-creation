@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id            String         @id @default(cuid())
+  name          String
+  description   String
+  price         Float
+  discountPrice Float?
+  material      String
+  category_id   String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  status        ProductStatus  @default(DRAFT)
+  assets        ProductAsset[]
+  colors        ProductColor[]
+}
+
+model ProductColor {
+  id        String           @id @default(cuid())
+  color     String
+  productId String
+  assets    ProductAsset[]
+  product   Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sizes     ProductVariant[]
+}
+
+model ProductVariant {
+  id        String         @id @default(cuid())
+  size      VariantsValues
+  stock     Int
+  colorId   String
+  OrderItem OrderItem[]
+  color     ProductColor   @relation(fields: [colorId], references: [id], onDelete: Cascade)
+}
+
+model ProductAsset {
+  id        String        @id @default(cuid())
+  asset_url String
+  productId String?
+  type      AssetType     @default(IMAGE)
+  colorId   String?
+  color     ProductColor? @relation(fields: [colorId], references: [id], onDelete: Cascade)
+  product   Product?      @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  productCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model User {
+  id                String    @id @default(cuid())
+  name              String?
+  mobile_no         String    @unique
+  isPhoneNoVerified Boolean   @default(false)
+  phoneNoVerified   DateTime?
+  image             String?
+  password          String?
+  role              UserType  @default(USER)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  accounts          Account[]
+  Order             Order[]
+  sessions          Session[]
+
+  Address Address[]
+}
+
+model Address {
+  id        String  @id @default(uuid())
+  street    String
+  city      String
+  state     String
+  country   String
+  zipCode   String
+  userId    String  // Foreign key to User
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Order {
+  id          String           @id @default(cuid())
+  userId      String
+  total       Float
+  status      OrderStatus
+  fulfillment OrderFulfillment
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id               String         @id @default(cuid())
+  orderId          String
+  productVariantId String
+  quantity         Int
+  priceAtOrder     Float
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+}
+
+enum VariantsValues {
+  SIZE_5
+  SIZE_6
+  SIZE_7
+  SIZE_8
+  SIZE_9
+  SIZE_10
+  SIZE_11
+  SIZE_12
+}
+
+enum UserType {
+  ADMIN
+  USER
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum OrderFulfillment {
+  PENDING
+  SHIPPED
+  DELIVERED
+  RETURNED
+}
