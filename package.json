@@ -48,12 +48,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
-
     "cuid": "^3.0.0",
-    "date-fns": "4.1.0",
-
     "date-fns": "3.6.0",
-
     "embla-carousel-react": "8.5.1",
     "framer-motion": "^12.5.0",
     "input-otp": "1.4.1",
@@ -62,11 +58,7 @@
     "next-themes": "^0.4.4",
     "react": "^18.3.1",
     "react-day-picker": "8.10.1",
-
-    "react-dom": "^19",
-
     "react-dom": "^18.3.1",
-
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.54.1",
     "react-hot-toast": "^2.5.2",
@@ -89,6 +81,10 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma",
       "sharp"
     ]
   }
