@@ -35,8 +35,6 @@ export function AddProductForm() {
   interface Variant {
     isOpen: boolean;
     id: string;
-    color: string;
-    customColor: boolean;
     images: {
       url: string;
       type: "IMAGE" | "VIDEO";
@@ -63,7 +61,7 @@ export function AddProductForm() {
     description: "",
     price: 0,
     discountPrice: 1,
-    category_id: "",
+    categoryId: "",
     material: "",
     assets: [],
     status: "DRAFT",
@@ -95,7 +93,7 @@ export function AddProductForm() {
       newErrors.images = "At least one product image is required";
     }
 
-    if (!product.category_id.trim()) {
+    if (!product.categoryId.trim()) {
       newErrors.category = "Please select a category";
     }
 
@@ -106,7 +104,6 @@ export function AddProductForm() {
     if (variants.length > 0) {
       const hasInvalidVariant = variants.some(
         (variant) =>
-          !variant.color ||
           variant.images.length === 0 ||
           variant.sizes.length === 0
       );
@@ -124,8 +121,6 @@ export function AddProductForm() {
       ...variants,
       {
         id: cuid(),
-        color: "",
-        customColor: false,
         images: [],
         sizes: [
           {
@@ -227,7 +222,6 @@ export function AddProductForm() {
   const variantMutation = useMutation({
     mutationFn: (variant: {
       productId: string;
-      color: string;
       assets: {
         url: string;
         type: "IMAGE" | "VIDEO";
@@ -255,7 +249,6 @@ export function AddProductForm() {
         variants.forEach((variant) => {
           variantMutation.mutate({
             productId,
-            color: variant.color,
             assets: variant.images,
             sizes: variant.sizes.map((size) => ({
               size: size.name as
@@ -509,9 +502,7 @@ export function AddProductForm() {
                               src={image.url || "/logo.svg"}
                               width={200}
                               height={200}
-                              alt={`${variant.color} variant image ${
-                                index + 1
-                              }`}
+                              alt={`Variant image ${index + 1}`}
                               className="w-full h-28 object-contain rounded-md border border-gray-200"
                             />
                             <button
@@ -658,22 +649,22 @@ export function AddProductForm() {
                     <div
                       key={category.id}
                       onClick={() =>
-                        setProduct({ ...product, category_id: category.id })
+                        setProduct({ ...product, categoryId: category.id })
                       }
                       className={`flex items-center gap-2 p-2 rounded-md cursor-pointer ${
-                        product.category_id === category.id
+                        product.categoryId === category.id
                           ? "bg-[#edeefc] text-[#4f507f]"
                           : "hover:bg-gray-100"
                       }`}
                     >
                       <div
                         className={`w-5 h-5 rounded-md flex items-center justify-center ${
-                          product.category_id === category.id
+                          product.categoryId === category.id
                             ? "bg-[#4f507f] text-white"
                             : "border border-gray-300"
                         }`}
                       >
-                        {product.category_id === category.id && (
+                        {product.categoryId === category.id && (
                           <Check size={14} />
                         )}
                       </div>
