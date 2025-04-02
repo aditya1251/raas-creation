@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { Upload, X, Check, Plus, Trash2, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import UploadPopup from "../UploadPopup";
 import { Category, Product, Varient } from "@/types/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { productApi } from "@/lib/api/productdetails";
 import { varientApi } from "@/lib/api/varients";
 import { categoryApi } from "@/lib/api/categories";
+import MultiUploadPopup from "../MultiUploadPopup";
 
 export function EditProductForm({productId}: { productId: string }) {
   const [isUploadPopupOpen, setIsUploadPopupOpen] = useState(false);
@@ -225,13 +225,13 @@ export function EditProductForm({productId}: { productId: string }) {
     );
   };
 
-  const handleAddVarientImage = (imageUrl: string) => {
+  const handleAddVarientImage = (Urls : string[]) => {
     setVariants(
       variants.map((variant) => {
         if (variant.id === varientId) {
           return {
             ...variant,
-            images: [...variant.images, { url: imageUrl, type: "IMAGE" }],
+            images: [...variant.images, ...Urls.map((url) => ({ url, type: "IMAGE" as const }))],
           };
         }
         return variant;
@@ -264,10 +264,10 @@ export function EditProductForm({productId}: { productId: string }) {
     }
   });
 
-  const handleAddImage = (imageUrl: string) => {
+  const handleAddImage = (Urls : string[]) => {
     setProduct({
       ...product,
-      assets: [...(product.assets || []), { url: imageUrl, type: "IMAGE" }],
+      assets: [...(product.assets || []), ...Urls.map((url) => ({ url, type: "IMAGE" as const }))],
     });
     setIsUploadPopupOpen(false);
   };
@@ -303,7 +303,8 @@ export function EditProductForm({productId}: { productId: string }) {
               stock: size.quantity,
             })),
           });
-        });      }
+        });      
+      }
 
       router.push(`/product/${productId}`);
     },
@@ -314,17 +315,20 @@ export function EditProductForm({productId}: { productId: string }) {
     productMutation.mutate(product as Product);
   };
 
-  if (isLoading) return <div>Loading...</div>;
-  if (productError) return <div>Error loading product</div>;
+  if (isLoading) return <div className="p-4 text-center">Loading...</div>;
+  if (productError) return <div className="p-4 text-center text-red-500">Error loading product</div>;
+  
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-6">
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-4 text-[#4f507f]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+      {/* Main content section - takes 2 columns on large screens */}
+      <div className="lg:col-span-2 space-y-4 md:space-y-6">
+        {/* Product Information */}
+        <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">
             Product Information
           </h2>
 
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Product Name
@@ -339,7 +343,7 @@ export function EditProductForm({productId}: { productId: string }) {
                 placeholder="Enter product name"
               />
               {errors.name && (
-                <p className="text-red-500 text-xs">{errors.name}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.name}</p>
               )}
             </div>
 
@@ -357,38 +361,17 @@ export function EditProductForm({productId}: { productId: string }) {
                 placeholder="Enter product description"
               />
               {errors.description && (
-                <p className="text-red-500 text-xs">{errors.description}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.description}</p>
               )}
             </div>
-
-            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  SKU
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]"
-                  placeholder="Enter SKU"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Barcode
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]"
-                  placeholder="Enter barcode"
-                />
-              </div>
-            </div> */}
           </div>
         </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-4 text-[#4f507f]">Media</h2>
+        
+        {/* Media Section */}
+        <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">Media</h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
             {product.assets?.map((image, index) => (
               <div key={index} className="relative group">
                 <Image
@@ -396,11 +379,11 @@ export function EditProductForm({productId}: { productId: string }) {
                   alt={`Product image ${index + 1}`}
                   width={200}
                   height={200}
-                  className="w-full h-32 object-contain rounded-md border border-gray-200"
+                  className="w-full h-24 sm:h-28 md:h-32 object-contain rounded-md border border-gray-200"
                 />
                 <button
                   onClick={() => handleRemoveImage(index)}
-                  className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+                  className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <X size={14} />
                 </button>
               </div>
@@ -408,19 +391,21 @@ export function EditProductForm({productId}: { productId: string }) {
 
             <button
               onClick={() => setIsUploadPopupOpen(true)}
-              className="w-full h-32 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors">
-              <Upload size={24} />
-              <span className="mt-2 text-sm">Add Image</span>
+              className="w-full h-24 sm:h-28 md:h-32 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors">
+              <Upload size={20} className="mb-1" />
+              <span className="text-xs sm:text-sm">Add Image</span>
             </button>
           </div>
           {errors.images && (
-            <p className="text-red-500 text-xs">{errors.images}</p>
+            <p className="text-red-500 text-xs mt-2">{errors.images}</p>
           )}
         </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-4 text-[#4f507f]">Pricing</h2>
+        
+        {/* Pricing Section */}
+        <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">Pricing</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Base Price
@@ -490,29 +475,31 @@ export function EditProductForm({productId}: { productId: string }) {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-[#4f507f]">
+        
+        {/* Product Variants Section */}
+        <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-3 sm:gap-0">
+            <h2 className="text-lg md:text-xl font-semibold text-[#4f507f]">
               Product Variants
             </h2>
             <button
               onClick={addVariant}
-              className="px-4 py-2 text-sm bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] transition-colors duration-200 flex items-center gap-2">
+              className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] transition-colors duration-200 flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center">
               <Plus size={16} />
               Add Color Variant
             </button>
           </div>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-xs sm:text-sm text-gray-500 mb-4 md:mb-6">
             Add different color variants and their corresponding sizes and
             quantities for your product.
           </p>
-          <div className="grid gap-6">
+          <div className="grid gap-4 md:gap-6">
             {variants.map((variant) => (
               <div
                 key={variant.id}
-                className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:border-[#4f507f] transition-colors duration-200">
+                className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm hover:border-[#4f507f] transition-colors duration-200">
                 <div
-                  className="flex justify-between items-center mb-6 cursor-pointer"
+                  className="flex justify-between items-center mb-4 sm:mb-6 cursor-pointer"
                   onClick={() => {
                     setVariants(
                       variants.map((v) =>
@@ -520,22 +507,22 @@ export function EditProductForm({productId}: { productId: string }) {
                       )
                     );
                   }}>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 sm:gap-4">
                     <div
                       className={`transform transition-transform ${
                         variant.isOpen ? "rotate-90" : ""
                       }`}>
-                      <ChevronRight size={20} />
+                      <ChevronRight size={18} />
                     </div>
-                    <div className="w-64">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="w-full max-w-[14rem]">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Color Variant
                       </label>
                       {variant.customColor ? (
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <input
                             type="text"
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm"
+                            className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
                             value={variant.color}
                             onClick={(e) => e.stopPropagation()}
                             onChange={(e) => {
@@ -560,14 +547,14 @@ export function EditProductForm({productId}: { productId: string }) {
                                 )
                               );
                             }}
-                            className="px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
+                            className="px-3 py-1.5 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 mt-1 sm:mt-0"
                           >
                             Back
                           </button>
                         </div>
                       ) : (
                         <select
-                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm"
+                          className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
                           value={variant.color}
                           onClick={(e) => e.stopPropagation()}
                           onChange={(e) => {
@@ -605,18 +592,18 @@ export function EditProductForm({productId}: { productId: string }) {
                       e.stopPropagation();
                       removeVariant(variant.id);
                     }}
-                    className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-2 rounded-full hover:bg-red-50"
+                    className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-red-50"
                     title="Remove Color Variant">
-                    <Trash2 size={18} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
                 {variant.isOpen && (
-                  <div className="space-y-6">
+                  <div className="space-y-4 md:space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                         Variant Images
                       </label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4">
                         {variant.images?.map((image, index) => (
                           <div key={index} className="relative group">
                             <Image
@@ -626,14 +613,14 @@ export function EditProductForm({productId}: { productId: string }) {
                               alt={`${variant.color} variant image ${
                                 index + 1
                               }`}
-                              className="w-full h-28 object-contain rounded-md border border-gray-200"
+                              className="w-full h-20 sm:h-24 md:h-28 object-contain rounded-md border border-gray-200"
                             />
                             <button
                               onClick={() =>
                                 handleRemoveVariantImage(variant.id, index)
                               }
-                              className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
-                              <X size={14} />
+                              className="absolute top-1 right-1 bg-white rounded-full p-1 sm:p-1.5 shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                              <X size={12} />
                             </button>
                           </div>
                         ))}
@@ -643,27 +630,27 @@ export function EditProductForm({productId}: { productId: string }) {
                             setVarientId(variant.id);
                             setVarientImgPopUp(true);
                           }}
-                          className="w-full h-28 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors">
-                          <Upload size={20} />
-                          <span className="mt-2 text-sm">Add Image</span>
+                          className="w-full h-20 sm:h-24 md:h-28 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors">
+                          <Upload size={16} className="mb-1" />
+                          <span className="text-xs">Add Image</span>
                         </button>
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                         Size Options
                       </label>
-                      <div className="grid gap-4">
+                      <div className="grid gap-3 sm:gap-4">
                         {variant.sizes.map((size) => (
                           <div
                             key={size.id}
-                            className="flex gap-6 items-center bg-gray-50 p-4 rounded-lg">
-                            <div className="w-48">
-                              <label className="block text-xs text-gray-500 mb-1.5">
+                            className="flex flex-col sm:flex-row gap-3 sm:gap-6 sm:items-center bg-gray-50 p-3 sm:p-4 rounded-lg">
+                            <div className="w-full sm:w-48">
+                              <label className="block text-xs text-gray-500 mb-1">
                                 Size
                               </label>
                               <select
-                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm"
+                                className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
                                 value={size.name}
                                 onChange={(e) => {
                                   setVariants(
@@ -689,14 +676,14 @@ export function EditProductForm({productId}: { productId: string }) {
                                 ))}
                               </select>
                             </div>
-                            <div className="w-48">
-                              <label className="block text-xs text-gray-500 mb-1.5">
+                            <div className="w-full sm:w-48">
+                              <label className="block text-xs text-gray-500 mb-1">
                                 Stock Quantity
                               </label>
                               <input
                                 type="number"
                                 placeholder="Enter quantity"
-                                className="w-full px-4 py-2 border bg-white rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] shadow-sm"
+                                className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border bg-white rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] shadow-sm text-sm"
                                 value={size.quantity}
                                 onChange={(e) => {
                                   setVariants(
@@ -724,7 +711,7 @@ export function EditProductForm({productId}: { productId: string }) {
                             </div>
                             <button
                               onClick={() => removeSize(variant.id, size.id)}
-                              className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-2 rounded-full hover:bg-red-50 mt-6"
+                              className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-red-50 mx-auto sm:mt-6"
                               title="Remove Size Option">
                               <X size={16} />
                             </button>
@@ -733,8 +720,8 @@ export function EditProductForm({productId}: { productId: string }) {
                       </div>
                       <button
                         onClick={() => addSize(variant.id)}
-                        className="mt-4 text-sm text-[#4f507f] hover:text-[#3e3f63] flex items-center gap-2 px-4 py-2 rounded-md hover:bg-[#edeefc] transition-colors duration-200">
-                        <Plus size={16} />
+                        className="mt-3 sm:mt-4 text-xs sm:text-sm text-[#4f507f] hover:text-[#3e3f63] flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-[#edeefc] transition-colors duration-200">
+                        <Plus size={14} />
                         Add Size Option
                       </button>
                     </div>
@@ -743,22 +730,24 @@ export function EditProductForm({productId}: { productId: string }) {
               </div>
             ))}
           </div>
-        </div>{" "}
-      </div>{" "}
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-4 text-[#4f507f]">
+        </div>
+      </div>
+      
+      {/* Sidebar section */}
+      <div className="space-y-4 md:space-y-6">
+        {/* Organization section */}
+        <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">
             Organization
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Categories
               </label>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1 sm:gap-2">
                 {categoryQuery.isLoading ? (
-                  <div className="flex items-center flex-1 justify-start">
-                    {" "}
+                  <div className="flex items-center flex-1 justify-start py-2">
                     Loading...
                   </div>
                 ) : (
@@ -774,22 +763,22 @@ export function EditProductForm({productId}: { productId: string }) {
                           : "hover:bg-gray-100"
                       }`}>
                       <div
-                        className={`w-5 h-5 rounded-md flex items-center justify-center ${
+                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded-md flex items-center justify-center ${
                           product.category_id === category.id
                             ? "bg-[#4f507f] text-white"
                             : "border border-gray-300"
                         }`}>
                         {product.category_id === category.id && (
-                          <Check size={14} />
+                          <Check size={12} />
                         )}
                       </div>
-                      <span>{category.name}</span>
+                      <span className="text-sm">{category.name}</span>
                     </div>
                   ))
                 )}
               </div>
               {errors.category && (
-                <p className="text-red-500 text-xs">{errors.category}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.category}</p>
               )}
             </div>
 
@@ -799,7 +788,7 @@ export function EditProductForm({productId}: { productId: string }) {
               </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-sm"
                 placeholder="Enter material"
                 value={product.material}
                 onChange={(e) =>
@@ -807,7 +796,7 @@ export function EditProductForm({productId}: { productId: string }) {
                 }
               />
               {errors.material && (
-                <p className="text-red-500 text-xs">{errors.material}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.material}</p>
               )}
             </div>
 
@@ -817,78 +806,25 @@ export function EditProductForm({productId}: { productId: string }) {
               </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-sm"
                 placeholder="Enter tags separated by commas"
               />
-            </div>
-          </div>{" "}
-        </div>
-
-        <div className="bg-white rounded-lg p-6 shadow-sm hidden ">
-          <h2 className="text-lg font-medium mb-4 text-[#4f507f]">Inventory</h2>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Stock Quantity
-              </label>
-              <input
-                type="number"
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]"
-                placeholder="0"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Low Stock Threshold
-              </label>
-              <input
-                type="number"
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]"
-                placeholder="0"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="track-inventory"
-                className="w-4 h-4 text-[#4f507f] bg-white rounded focus:ring-[#4f507f]"
-              />
-              <label
-                htmlFor="track-inventory"
-                className="text-sm text-gray-700">
-                Track inventory
-              </label>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="continue-selling"
-                className="w-4 h-4 bg-white text-[#4f507f] rounded focus:ring-[#4f507f]"
-              />
-              <label
-                htmlFor="continue-selling"
-                className="text-sm text-gray-700">
-                Continue selling when out of stock
-              </label>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-8 shadow-lg border border-gray-100">
-          <h2 className="text-xl font-semibold mb-6 text-[#4f507f] flex items-center">
+        {/* Status section */}
+        <div className="bg-white rounded-lg p-4 md:p-8 shadow-lg border border-gray-100">
+          <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6 text-[#4f507f] flex items-center">
             <span className="inline-block w-2 h-2 bg-[#4f507f] rounded-full mr-2"></span>
             Status
           </h2>
 
           <div>
-            <div className="flex space-x-4">
+            <div className="flex gap-2 sm:gap-4">
               <button
                 onClick={() => setProduct({ ...product, status: "DRAFT" })}
-                className={`px-4 py-2 rounded-md ${
+                className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-sm ${
                   product.status === "DRAFT"
                     ? "bg-yellow-100 text-yellow-800"
                     : "bg-gray-100 text-gray-800"
@@ -897,7 +833,7 @@ export function EditProductForm({productId}: { productId: string }) {
               </button>
               <button
                 onClick={() => setProduct({ ...product, status: "PUBLISHED" })}
-                className={`px-4 py-2 rounded-md ${
+                className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-sm ${
                   product.status === "PUBLISHED"
                     ? "bg-green-100 text-green-800"
                     : "bg-gray-100 text-gray-800"
@@ -907,28 +843,32 @@ export function EditProductForm({productId}: { productId: string }) {
             </div>
           </div>
         </div>
-        <div className="flex gap-3">
+        
+        {/* Action buttons */}
+        <div className="flex gap-2 sm:gap-3">
           <button
             type="submit"
-            className="flex-1 bg-[#4f507f] text-white py-2 px-4 rounded-md hover:bg-[#3e3f63] transition-colors"
+            className="flex-1 bg-[#4f507f] text-white py-2 px-3 sm:px-4 rounded-md hover:bg-[#3e3f63] transition-colors text-sm sm:text-base"
             onClick={saveProduct}>
             Save Product
           </button>
           <button
             type="button"
-            className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 transition-colors">
+            className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-3 sm:px-4 rounded-md hover:bg-gray-50 transition-colors text-sm sm:text-base">
             Cancel
           </button>
         </div>
       </div>
+      
+      {/* Popups */}
       {isUploadPopupOpen && (
-        <UploadPopup
+        <MultiUploadPopup
           onSuccess={handleAddImage}
           onClose={() => setIsUploadPopupOpen(false)}
         />
       )}
       {varientImgPopUp && (
-        <UploadPopup
+        <MultiUploadPopup
           onSuccess={handleAddVarientImage}
           onClose={() => setVarientImgPopUp(false)}
         />

@@ -27,7 +27,7 @@ interface MonthlySalesData {
 
 export function SalesChart() {
   // Fetch products using React Query
-  const { data: products = [] } = useQuery<Product[]>({
+  const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["productPerformance"],
     queryFn: async () => {
       try {
@@ -66,8 +66,6 @@ export function SalesChart() {
       return acc;
     }, []);
 
-  console.log("Monthly Sales:", monthlySales);
-
   const [activeTab, setActiveTab] = useState<"Daily" | "Weekly" | "Monthly" | "Yearly">("Monthly");
 
   const tabs: ("Daily" | "Weekly" | "Monthly" | "Yearly")[] = ["Daily", "Weekly", "Monthly", "Yearly"];
@@ -76,34 +74,73 @@ export function SalesChart() {
   const chartData = monthlySales.length > 0 ? monthlySales : monthNames.map((month) => ({ name: month, sales: 0 }));
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-medium text-[#4f507f]">Sales Trend</h2>
-        <div className="flex space-x-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              className={`px-3 py-1 text-sm rounded-md ${
-                activeTab === tab ? "bg-[#4f507f] text-white" : "text-gray-500 hover:bg-gray-100"
-              }`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-            </button>
-          ))}
+    <div className="bg-white rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 space-y-3 sm:space-y-0">
+        <h2 className="text-base sm:text-lg font-medium text-[#4f507f]">Sales Trend</h2>
+        
+        {/* Scrollable Tab Container for Mobile */}
+        <div className="w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 -mx-3 px-3 sm:mx-0 sm:px-0">
+          <div className="flex space-x-2 min-w-max">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md whitespace-nowrap ${
+                  activeTab === tab ? "bg-[#4f507f] text-white" : "text-gray-500 hover:bg-gray-100"
+                }`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-      <div className="h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-            <XAxis dataKey="name" axisLine={false} tickLine={false} />
-            <YAxis axisLine={false} tickLine={false} />
-            <Tooltip />
-            <Line type="monotone" dataKey="sales" stroke="#4f507f" strokeWidth={2} dot={false} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      
+      {isLoading ? (
+        <div className="h-[200px] sm:h-[250px] md:h-[300px] flex items-center justify-center">
+          <div className="text-gray-400 text-sm">Loading chart data...</div>
+        </div>
+      ) : (
+        <div className="h-[200px] sm:h-[250px] md:h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="name" 
+                axisLine={false} 
+                tickLine={false} 
+                fontSize={12}
+                tick={{ fill: '#6b7280' }}
+                padding={{ left: 10, right: 10 }}
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false}
+                fontSize={12}
+                width={30}
+                tick={{ fill: '#6b7280' }}
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  borderRadius: '6px',
+                  border: '1px solid #f0f0f0',
+                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+                  fontSize: '12px',
+                }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="sales" 
+                stroke="#4f507f" 
+                strokeWidth={2} 
+                dot={false}
+                activeDot={{ r: 5, fill: '#4f507f', stroke: 'white', strokeWidth: 2 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }

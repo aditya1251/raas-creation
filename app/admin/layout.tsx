@@ -22,7 +22,7 @@ export default function AdminLayout({
     <div className="flex min-h-screen bg-[#f9f9fa]">
       <Sidebar />
       <main className="flex-1 overflow-auto relative">
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-4 right-16 xl:right-4 z-10">
           <button
             onClick={() => setIsNotificationSidebarOpen(!isNotificationSidebarOpen)}
             className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
