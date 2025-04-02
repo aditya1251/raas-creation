@@ -1,11 +1,29 @@
+<<<<<<< HEAD
 import { AssetType, VariantsValues } from "@prisma/client";
 import { z } from "zod";
 export const product = z.object({
+=======
+import { z } from "zod";
+export const category = z.object({
+    id: z.string().cuid("Invalid category ID"),
+    name: z.string().min(1, "Category name is required"),
+    productCount: z.number().positive("Product count must be a positive number").optional(),
+    description: z.string().min(1, "Category description is required").optional(),
+  });
+  
+  export type Category = z.infer<typeof category>;
+
+  export const product = z.object({
+>>>>>>> 9c5000243007bd318c219055af0463441e4c2690
     name: z.string().min(1, "Product name is required"),
     description: z.string().min(1, "Description is required"),
     price: z.number().positive("Price must be a positive number"),
     discountPrice: z.number().positive("Discount Prize must be a positive number").optional(),
+<<<<<<< HEAD
     category_id: z.string().cuid("Invalid category ID"),
+=======
+    categoryId: z.string().cuid("Invalid category ID"),
+>>>>>>> 9c5000243007bd318c219055af0463441e4c2690
     material: z.string().min(1, "Material is required"),
     assets: z
       .array(
@@ -18,6 +36,7 @@ export const product = z.object({
     status: z.enum(['DRAFT', 'PUBLISHED']),
   });
 
+<<<<<<< HEAD
 export const varient = z.object({
   id: z.string().cuid("Invalid variant ID").optional(),
   productId: z.string().cuid("Invalid product ID"),
@@ -35,10 +54,21 @@ export const varient = z.object({
       size: z.nativeEnum(VariantsValues, {
         errorMap: () => ({ message: "Invalid size value" }),
       }),
+=======
+export const SizeEnum = z.enum(["SMALL", "MEDIUM", "LARGE", "EXTRA_LARGE"]);
+
+export const varients = z.object({
+  id: z.string().cuid("Invalid variant ID").optional(),
+  productId: z.string().cuid("Invalid product ID"),
+  sizes: z.array(
+    z.object({
+      size: SizeEnum,
+>>>>>>> 9c5000243007bd318c219055af0463441e4c2690
       stock: z.number().int().min(0, "Stock must be a non-negative integer"),
     })
   ),
 })
+<<<<<<< HEAD
 
 export const review = z.object({
   rating: z.number().min(1, "Rating must be a positive number"),
@@ -104,3 +134,8 @@ export const SignUpSchema = z
     message: "Passwords don't match",
     path: ["confirmPassword"],
   })
+=======
+export type Varient = z.infer<typeof varients>;
+
+export type Product = z.infer<typeof product>;
+>>>>>>> 9c5000243007bd318c219055af0463441e4c2690

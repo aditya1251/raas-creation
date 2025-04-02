@@ -1,3 +1,4 @@
+import { product } from "@/types/types";
 import { apiClient } from "../axiosClient";
 import { Varient } from "@/types/types";
 
@@ -48,29 +49,17 @@ const updateStock = async (variantId: string, stock: number): Promise<Size> => {
 
 const addNewSize = async (colorId: string, sizes: Array<{ size: string; stock: number }>): Promise<Varient[]> => {
   const response = await apiClient.post(`/api/products/sizes`, {
-    colorId,
+    productId: product,
     sizes
   });
   return response.data.variants;
 };
 
-const addNewColor = async (productId: string, newColorData: {name : string,imageUrl:string, sizes: Array<{ size: string; stock: number }>}): Promise<Varient[]> => {
-  const response = await apiClient.post(`/api/products/color`, {
-    productId,
-    color: newColorData.name,
-    assets : [{
-      type : "IMAGE",
-      url : newColorData.imageUrl
-    }],
-    sizes : newColorData.sizes
-  });
-  return response.data.productColor;
-};
+
 
 export const inventoryApi = {
   getInventoryOverview,
   getInventory,
   updateStock,
   addNewSize,
-  addNewColor,
 };
