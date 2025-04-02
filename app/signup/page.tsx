@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type React from "react";
 
 import Image from "next/image";
@@ -8,8 +8,8 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
-import { LoginSchema } from "@/types/types";
 import { z } from "zod";
+import { SignUpSchema } from "@/types/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -19,65 +19,54 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import { loginFunction } from "./actions/sign-in-action";
+import { Input } from "@/components/ui/input";
+import { handleSignup } from "./actions/sign-up-action";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 
-export default function LoginPage() {
-  const [rememberMe, setRememberMe] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+export default function RegisterPage() {
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
-  const { data: session, status } = useSession();
-
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/");
-    }
-  }, [status]);
-
-  if (session?.user) {
-    router.push("/account");
-  }
-
-  // Initialize react-hook-form with Zod resolver
-  const form = useForm<z.infer<typeof LoginSchema>>({
-    resolver: zodResolver(LoginSchema),
+   // Initialize react-hook-form with Zod resolver
+  const form = useForm<z.infer<typeof SignUpSchema>>({
+    resolver: zodResolver(SignUpSchema),
     defaultValues: {
+      name: "",
       mobileNumber: "",
       password: "",
-      email: "",
+      confirmPassword: "",
+      email : ""
     },
   });
 
-  if (status === "loading") {
-    return (
-      <div className="text-center text-white">Checking authentication...</div>
-    );
-  }
-
-  const onSubmit = async (values: z.infer<typeof LoginSchema>) => {
+  const onSubmit = async (values: z.infer<typeof SignUpSchema>) => {
     try {
-      setIsLoading(true);
-      const data: any = await loginFunction(values);
-
-      if (data === "Login successful") {
-        toast.success("Login successful");
-        setTimeout(() => {
-          router.refresh();
-        }, 500);
-        router.push("/");
-      } else {
-        toast.error(data);
+      if (!agreeTerms) {
+        toast.error("Agree to out terms & condition first.");
+        return;
       }
+      const promise = handleSignup(values);
+
+      toast.promise(promise, {
+        loading: "Signing up...", // Show while waiting
+        success: (response) => {
+          if (response?.error) {
+            throw new Error(response.error); // Throw error to trigger rejection
+          }
+          return "Verify Mobile Number"; // Success message
+        },
+        error: (error) => error.message || "Something went wrong", // Show on error
+      });
+      const response = await promise;
+      console.log("RES ===> ", response.response);
+
+      // if (response.jwt) {
+      //   router.push(`/otp/${response.jwt}`); // Redirect if signup is successful
+      // }
+      return true;
     } catch (error) {
       console.log(error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -96,8 +85,8 @@ export default function LoginPage() {
         </div>
         <div className="h-full">
           <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-PV5mpa6zcw0FG7ukipYJTnUgW7UFVv.jpeg"
-            alt="Model in purple traditional outfit"
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-EnKXsCtriLdoNHbNFmoqbDz6G92pVj.jpeg"
+            alt="Model in orange traditional outfit"
             fill
             className="object-cover object-center"
             priority
@@ -105,7 +94,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Section - Login Form */}
+      {/* Right Section - Registration Form */}
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-12 bg-white">
         <div className="w-full max-w-md">
           <div className="flex justify-between items-center mb-8">
@@ -129,15 +118,38 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-8">
-            <h1 className="text-3xl font-medium mb-2">WELCOME 👋</h1>
-            <p className="text-gray-500">Please login here</p>
+            <h1 className="text-3xl font-medium mb-2">CREATE NEW ACCOUNT</h1>
+            <p className="text-gray-500">Please enter details</p>
           </div>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <div className="space-y-6">
-                {/* Email */}
-                {/* <div>
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="FullName" aria-label="nameLabel">
+                          Full Name
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Full Name"
+                            className="w-full px-4 py-3 border  border-gray-300 rounded-md  focus-visible:ring-transparent focus:outline-none focus:ring-1 focus:ring-[#a08452] "
+                            required
+                            aria-required
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400 text-sm ml-2" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div>
                   <FormField
                     control={form.control}
                     name="email"
@@ -153,10 +165,7 @@ export default function LoginPage() {
                           <Input
                             type="email"
                             placeholder="example@gmail.com"
-                            disabled={isLoading}
                             className="w-full px-4 py-3 border border-gray-300 rounded-md  focus-visible:ring-transparent focus:outline-none focus:ring-1 focus:ring-[#a08452]"
-                            required
-                            aria-required
                             {...field}
                           />
                         </FormControl>
@@ -164,9 +173,8 @@ export default function LoginPage() {
                       </FormItem>
                     )}
                   />
-                </div> */}
+                </div>
 
-                {/* Mobile  Number */}
                 <div>
                   <FormField
                     control={form.control}
@@ -184,7 +192,7 @@ export default function LoginPage() {
                             country={"in"}
                             value={field.value}
                             onChange={(phone) => onChange(phone)}
-                            disabled={isLoading}
+                            // disabled={isLoading}
                             inputClass="!w-full !px-10 !py-3 !border !border-gray-300 !rounded-md !focus:outline-none !focus:ring-1 !focus:ring-[#a08452]"
                             buttonClass="!bg-[#a08452] !rounded-md !border-0"
                             dropdownClass="!bg-white  !text-black"
@@ -201,7 +209,6 @@ export default function LoginPage() {
                   />
                 </div>
 
-                {/* Password */}
                 <div>
                   <FormField
                     control={form.control}
@@ -218,7 +225,7 @@ export default function LoginPage() {
                           <Input
                             type="password"
                             placeholder="Password"
-                            disabled={isLoading}
+                            // disabled={isLoading}
                             className="w-full px-4 py-3 border border-gray-300 rounded-md  focus-visible:ring-transparent focus:outline-none focus:ring-1 focus:ring-[#a08452]"
                             required
                             aria-required
@@ -231,47 +238,69 @@ export default function LoginPage() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember-me"
-                      checked={rememberMe}
-                      onCheckedChange={(checked) =>
-                        setRememberMe(checked as boolean)
-                      }
-                    />
-                    <label
-                      htmlFor="remember-me"
-                      className="text-sm cursor-pointer"
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel
+                          htmlFor="ConfirmPassowrd"
+                          className="block text-sm font-medium mb-1"
+                        >
+                          Confirm Password
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder="Confirm Password"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus-visible:ring-transparent focus:outline-none focus:ring-1 focus:ring-[#a08452]"
+                            required
+                            aria-required
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400 text-sm ml-2" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={agreeTerms}
+                    onCheckedChange={(checked) =>
+                      setAgreeTerms(checked as boolean)
+                    }
+                    required
+                  />
+                  <label htmlFor="terms" className="text-sm cursor-pointer">
+                    I agree to the{" "}
+                    <Link
+                      href="/terms"
+                      className="text-[#a08452] hover:underline"
                     >
-                      Remember Me
-                    </label>
-                  </div>
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm text-gray-600 hover:text-[#a08452]"
-                  >
-                    Forgot Password?
-                  </Link>
+                      Terms & Conditions
+                    </Link>
+                  </label>
                 </div>
 
                 <Button
                   type="submit"
-                  disabled={isLoading}
-                  aria-disabled={isLoading}
                   className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white py-3"
                 >
-                  {isLoading ? "Logging in..." : "Login"}
+                  Signup
                 </Button>
 
                 <div className="text-center mt-4">
                   <p className="text-sm text-gray-600">
-                    Don&apos;t have an account?{" "}
+                    Already have an account?{" "}
                     <Link
-                      href="/signup"
+                      href="/login"
                       className="text-[#a08452] hover:underline"
                     >
-                      Register
+                      Login
                     </Link>
                   </p>
                 </div>
