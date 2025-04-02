@@ -5,13 +5,16 @@ export const product = z.object({
 =======
 import { z } from "zod";
 export const category = z.object({
-    id: z.string().cuid("Invalid category ID"),
-    name: z.string().min(1, "Category name is required"),
-    productCount: z.number().positive("Product count must be a positive number").optional(),
-    description: z.string().min(1, "Category description is required").optional(),
-  });
-  
-  export type Category = z.infer<typeof category>;
+  id: z.string().cuid("Invalid category ID"),
+  name: z.string().min(1, "Category name is required"),
+  productCount: z
+    .number()
+    .positive("Product count must be a positive number")
+    .optional(),
+  description: z.string().min(1, "Category description is required").optional(),
+});
+
+export type Category = z.infer<typeof category>;
 
   export const product = z.object({
 >>>>>>> 9c5000243007bd318c219055af0463441e4c2690
@@ -138,4 +141,48 @@ export const SignUpSchema = z
 export type Varient = z.infer<typeof varients>;
 
 export type Product = z.infer<typeof product>;
->>>>>>> 9c5000243007bd318c219055af0463441e4c2690
+
+export const LoginSchema = z.object({
+  mobileNumber: z
+    .string()
+    .min(1, "Mobile number is required")
+    .regex(/^(\+?\d{1,3})?\d{10}$/, "Invalid mobile number format"),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+      "Invalid email address"
+    )
+    .or(z.literal("")) // Allow empty string
+    .optional(),
+
+  password: z.string().min(6, "Password is required"),
+});
+
+export const SignUpSchema = z
+  .object({
+    name: z.string().min(2, "Name is required"),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+        "Invalid email address"
+      )
+      .or(z.literal("")) // Allow empty string
+      .optional(),
+
+    mobileNumber: z
+      .string()
+      .min(1, "Mobile number is required")
+      .regex(/^(\+?\d{1,3})?\d{10}$/, "Invalid mobile number format"),
+    password: z.string().min(6, "Password is required"),
+    confirmPassword: z.string().min(6, "Confirm password is required"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
