@@ -21,11 +21,18 @@ import { useCart } from "@/context/cart-context";
 import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { productApi } from "@/lib/api/productdetails";
 
 export default function ShopPage() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-
+  //  const queryClient = useQueryClient()
+  
+    const { data:products, isLoading } = useQuery({
+      queryKey: ["products"],
+      queryFn: productApi.getAll,
+    })
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
@@ -43,7 +50,7 @@ export default function ShopPage() {
 
       {/* Mobile Filter Toggle Button */}
       <div className="md:hidden px-6 mb-4">
-        <Button 
+        <Button
           onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
           className="w-full flex items-center justify-center gap-2 bg-[#795d2a] text-white"
         >
@@ -62,12 +69,14 @@ export default function ShopPage() {
       <div className="max-w-7xl mx-auto px-6 pb-16">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar Filters */}
-          <div className={`
+          <div
+            className={`
             w-full md:w-64 shrink-0 
-            ${isMobileFilterOpen ? 'block' : 'hidden md:block'}
+            ${isMobileFilterOpen ? "block" : "hidden md:block"}
             absolute md:static z-20 bg-white md:bg-transparent 
             left-0 right-0 px-6 md:px-0
-          `}>
+          `}
+          >
             {/* Product Categories */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
@@ -215,7 +224,7 @@ export default function ShopPage() {
 
             {/* Mobile Apply Filters Button */}
             <div className="md:hidden my-4">
-              <Button 
+              <Button
                 onClick={() => setIsMobileFilterOpen(false)}
                 className="w-full bg-[#795d2a] text-white"
               >
@@ -250,7 +259,7 @@ export default function ShopPage() {
 
             {/* Products Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {products.map((product, index) => (
+              {products?.map((product, index) => (
                 <ProductCard key={index} product={product} />
               ))}
             </div>
@@ -317,7 +326,7 @@ function ProductCard({ product }) {
       <div className="aspect-[3/4] relative overflow-hidden rounded-xl bg-gray-100">
         <Link href={`/shop/product/${product.id}`}>
           <Image
-            src={product.image || "/placeholder.svg"}
+            src={product.assets[0].asset_url || "/placeholder.svg"}
             alt={product.name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -349,97 +358,12 @@ function ProductCard({ product }) {
           <h3 className="text-sm font-medium">{product.name}</h3>
         </Link>
         <div className="flex items-center mt-1">
-          <span className="text-sm font-medium">₹{product.salePrice}</span>
+          <span className="text-sm font-medium">₹{product.discount}</span>
           <span className="text-xs text-gray-500 line-through ml-2">
-            ₹{product.regularPrice}
+            ₹{product.price}
           </span>
         </div>
       </div>
     </div>
   );
 }
-
-// Sample Product Data
-const products = [
-  {
-    id: 1,
-    name: "Mirror Work Tangy Cotton Print Suit Set",
-    salePrice: "1990",
-    regularPrice: "2999",
-    image:
-      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
-    color: "orange",
-  },
-  {
-    id: 2,
-    name: "Mirror Work Tangy Cotton Print Suit Set",
-    salePrice: "2500",
-    regularPrice: "3499",
-    image:
-      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
-    color: "red",
-  },
-  {
-    id: 3,
-    name: "Mirror Work Tangy Cotton Print Suit Set",
-    salePrice: "2950",
-    regularPrice: "3800",
-    image:
-      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
-    color: "purple",
-  },
-  {
-    id: 4,
-    name: "Mirror Work Tangy Cotton Print Suit Set",
-    salePrice: "2500",
-    regularPrice: "3499",
-    image:
-      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
-    color: "red",
-  },
-  {
-    id: 5,
-    name: "Mirror Work Tangy Cotton Print Suit Set",
-    salePrice: "1990",
-    regularPrice: "2999",
-    image:
-      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
-    color: "orange",
-  },
-  {
-    id: 6,
-    name: "Mirror Work Tangy Cotton Print Suit Set",
-    salePrice: "2950",
-    regularPrice: "3800",
-    image:
-      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
-    color: "purple",
-  },
-  {
-    id: 7,
-    name: "Mirror Work Tangy Cotton Print Suit Set",
-    salePrice: "1990",
-    regularPrice: "2999",
-    image:
-      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
-    color: "orange",
-  },
-  {
-    id: 8,
-    name: "Mirror Work Tangy Cotton Print Suit Set",
-    salePrice: "2500",
-    regularPrice: "3499",
-    image:
-      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
-    color: "red",
-  },
-  {
-    id: 9,
-    name: "Mirror Work Tangy Cotton Print Suit Set",
-    salePrice: "2950",
-    regularPrice: "3800",
-    image:
-      "https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713850/t2p30xzk3gixgprfvwbn.png",
-    color: "purple",
-  },
-];
