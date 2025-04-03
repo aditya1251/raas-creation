@@ -67,19 +67,19 @@ export default function ProductDetailPage() {
     // Add item to cart
     addToCart({
       id : id as string,
-      name: product.name,
-      price: product.price,
-      originalPrice: product.originalPrice,
+      name: product?.name,
+      price: product?.discountPrice,
+      originalPrice: product?.price,
       quantity: quantity,
       color: selectedColor,
       size: selectedSize,
-      image: product.images[0],
+      image: product?.assets[0].asset_url,
     });
 
     // Show success toast
     toast({
       title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
+      description: `${product?.name} has been added to your cart.`,
     });
   };
 
@@ -153,7 +153,7 @@ export default function ProductDetailPage() {
             <div className="mb-4 aspect-[3/4] relative">
               <Image
                 src={product?.assets[0].asset_url || "/placeholder.svg"}
-                alt={product?.name}
+                alt={product?.name?product.name:"image"}
                 fill
                 className="object-cover rounded-md"
                 priority
@@ -209,7 +209,7 @@ export default function ProductDetailPage() {
             {/* Price */}
             <div className="flex items-center mb-6">
               <span className="text-xl font-medium">
-                ₹{product?.discount.toFixed(2)}
+                ₹{product?.discountPrice?.toFixed(2)}
               </span>
               <span className="ml-2 text-gray-500 line-through">
                 ₹{product?.price.toFixed(2)}
@@ -229,7 +229,7 @@ export default function ProductDetailPage() {
             {/* Size Selection */}
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-2">Size</h3>
-              <div className="flex flex-wrap gap-2">
+              {/* <div className="flex flex-wrap gap-2">
                 {product?.sizes.map((size) => (
                   <button
                     key={size}
@@ -243,7 +243,7 @@ export default function ProductDetailPage() {
                     {size}
                   </button>
                 ))}
-              </div>
+              </div> */}
             </div>
 
             {/* Quantity and Add to Cart */}
@@ -345,7 +345,7 @@ export default function ProductDetailPage() {
               <div className="space-y-4">
                 <div>
                   <h3 className="text-sm font-medium mb-2">Size</h3>
-                  <div className="flex flex-wrap gap-2">
+                  {/* <div className="flex flex-wrap gap-2">
                     {product?.sizes.map((size) => (
                       <div
                         key={size}
@@ -354,7 +354,7 @@ export default function ProductDetailPage() {
                         {size}
                       </div>
                     ))}
-                  </div>
+                  </div> */}
                 </div>
 
                 <div>
@@ -528,8 +528,8 @@ export default function ProductDetailPage() {
                 <Link href={`/shop/product/${product.id}`}>
                   <div className="aspect-[3/4] relative overflow-hidden bg-gray-100 rounded-md mb-3">
                     <Image
-                      src={product?.assets[0].asset_url || "/placeholder.svg"}
-                      alt={product?.name?product?.name:"image"}
+                      src={product?.image || "/placeholder.svg"}
+                      alt={product?.name ? product.name :"image"}
                       fill
                       className="object-cover transition-transform group-hover:scale-105"
                     />

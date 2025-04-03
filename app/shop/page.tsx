@@ -22,7 +22,7 @@ import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { productApi } from "@/lib/api/productdetails";
 
 export default function ShopPage() {
