@@ -66,6 +66,9 @@ model User {
   isPhoneNoVerified Boolean   @default(false)
   phoneNoVerified   DateTime?
   image             String?
+  email             String?    @unique
+  isEmailVerified Boolean @default(false)
+  emailVerified     DateTime?
   password          String?
   role              UserType  @default(USER)
   createdAt         DateTime  @default(now())
@@ -75,6 +78,17 @@ model User {
   sessions          Session[]
 
   Address Address[]
+   Otp Otp[]
+}
+
+model Otp {
+  id        String   @id @default(cuid())
+  otp       String   @unique
+  userphone String   @unique
+  user      User     @relation(fields: [userphone], references: [mobile_no], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  jwt     String?
 }
 
 model Address {

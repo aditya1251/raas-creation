@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/cart-context";
-import { Toaster } from "@/components/ui/toaster";
+import { SessionProvider } from "next-auth/react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,18 +19,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <QueryProvider>
+    <SessionProvider>
+      <html lang="en">
+        <body className={inter.className}>
           <CartProvider>
             {children}
             <Toaster />
           </CartProvider>
-        </QueryProvider>
-      </body>
-    </html>
+        </body>
+      </html>
+    </SessionProvider>
   );
 }
 
-import "./globals.css";
-import QueryProvider from "@/lib/queryclient";
+import "./globals.css";import { Toaster } from "react-hot-toast";
+
