@@ -24,9 +24,11 @@ import "react-phone-input-2/lib/style.css";
 import { Input } from "@/components/ui/input";
 import { handleSignup } from "./actions/sign-up-action";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const router = useRouter();
 
    // Initialize react-hook-form with Zod resolver
   const form = useForm<z.infer<typeof SignUpSchema>>({
@@ -59,11 +61,10 @@ export default function RegisterPage() {
         error: (error) => error.message || "Something went wrong", // Show on error
       });
       const response = await promise;
-      console.log("RES ===> ", response.response);
 
-      // if (response.jwt) {
-      //   router.push(`/otp/${response.jwt}`); // Redirect if signup is successful
-      // }
+      if (response.jwt) {
+        router.push(`/otp/${response.jwt}`); // Redirect if signup is successful
+      }
       return true;
     } catch (error) {
       console.log(error);
@@ -85,7 +86,7 @@ export default function RegisterPage() {
         </div>
         <div className="h-full">
           <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-EnKXsCtriLdoNHbNFmoqbDz6G92pVj.jpeg"
+            src="lot_0009__PUN0747.png  "
             alt="Model in orange traditional outfit"
             fill
             className="object-cover object-center"
