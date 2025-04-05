@@ -96,7 +96,7 @@ export default function LoginPage() {
         </div>
         <div className="h-full">
           <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-PV5mpa6zcw0FG7ukipYJTnUgW7UFVv.jpeg"
+            src="lot_0005__PUN0762.png"
             alt="Model in purple traditional outfit"
             fill
             className="object-cover object-center"
