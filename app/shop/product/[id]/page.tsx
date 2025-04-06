@@ -21,6 +21,8 @@ import { useCart } from "@/context/cart-context";
 import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
 import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { productApi } from "@/lib/api/productdetails";
 
 export default function ProductDetailPage() {
   const { toast } = useToast();
@@ -65,42 +67,26 @@ export default function ProductDetailPage() {
     // Add item to cart
     addToCart({
       id : id as string,
-      name: product.name,
-      price: product.price,
-      originalPrice: product.originalPrice,
+      name: product?.name,
+      price: product?.discountPrice,
+      originalPrice: product?.price,
       quantity: quantity,
       color: selectedColor,
       size: selectedSize,
-      image: product.images[0],
+      image: product?.assets[0].asset_url,
     });
 
     // Show success toast
     toast({
       title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
+      description: `${product?.name} has been added to your cart.`,
     });
   };
 
-  // Mock product data - in a real app, this would come from an API
-  const product = {
-    id:id ,
-    name: "Raas - Velvet Embroidered Suit Set",
-    description:
-      "Discover our mid cotton anarkali set with pillan work yok paired with pant and back print dupatta. This outfit exudes a charming and delicate appeal, making it perfect for festive event, pooja, light gathering, day to day life.",
-    price: 3490.0,
-    originalPrice: 4899.0,
-    rating: 4.9,
-    reviews: 2890,
-    inStock: true,
-    colors: ["orange", "blue", "black"],
-    sizes: ["38", "40", "44", "46", "48"],
-    images: [
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-22zL20iPWx4nVh3qQdh5EwkvzWf4H0.jpeg",
-      "/placeholder.svg?height=100&width=100",
-      "/placeholder.svg?height=100&width=100",
-      "/placeholder.svg?height=100&width=100",
-    ],
-  };
+  const { data:product, isLoading } = useQuery({
+    queryKey: ["product", id],
+    queryFn: ({ queryKey }) => productApi.getById(queryKey[1] as string),
+  })
 
   // Mock customer reviews
   const customerReviews = [
@@ -166,22 +152,22 @@ export default function ProductDetailPage() {
           <div>
             <div className="mb-4 aspect-[3/4] relative">
               <Image
-                src={product.images[0] || "/placeholder.svg"}
-                alt={product.name}
+                src={product?.assets[0].asset_url || "/placeholder.svg"}
+                alt={product?.name?product.name:"image"}
                 fill
                 className="object-cover rounded-md"
                 priority
               />
             </div>
             <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => (
+              {product?.assets.map((image, index) => (
                 <div
                   key={index}
                   className="aspect-square relative border rounded-md overflow-hidden"
                 >
                   <Image
-                    src={image || "/placeholder.svg"}
-                    alt={`${product.name} view ${index + 1}`}
+                    src={image.asset_url || "/placeholder.svg"}
+                    alt={`${product?.name?product?.name:"image"} view ${index + 1}`}
                     fill
                     className="object-cover"
                   />
@@ -192,13 +178,13 @@ export default function ProductDetailPage() {
 
           {/* Product Info */}
           <div>
-            <h1 className="text-2xl font-medium mb-2">{product.name}</h1>
+            <h1 className="text-2xl font-medium mb-2">{product?.name}</h1>
             <p className="text-gray-600 mb-4">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
             </p>
 
             {/* Rating */}
-            <div className="flex items-center mb-4">
+            {/* <div className="flex items-center mb-4">
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <svg
@@ -218,20 +204,20 @@ export default function ProductDetailPage() {
               <span className="ml-2 text-sm text-gray-600">
                 {product.rating} ({product.reviews} Reviews)
               </span>
-            </div>
+            </div> */}
 
             {/* Price */}
             <div className="flex items-center mb-6">
               <span className="text-xl font-medium">
-                ₹{product.price.toFixed(2)}
+                ₹{product?.discountPrice?.toFixed(2)}
               </span>
               <span className="ml-2 text-gray-500 line-through">
-                ₹{product.originalPrice.toFixed(2)}
+                ₹{product?.price.toFixed(2)}
               </span>
             </div>
 
             {/* Description */}
-            <p className="text-gray-700 mb-6">{product.description}</p>
+            <p className="text-gray-700 mb-6">{product?.description}</p>
 
             {/* Stock Status */}
             <div className="mb-6">
@@ -240,31 +226,11 @@ export default function ProductDetailPage() {
               </span>
             </div>
 
-            {/* Color Selection */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2">Color</h3>
-              <div className="flex space-x-2">
-                {product.colors.map((color) => (
-                  <button
-                    key={color}
-                    className={`w-8 h-8 rounded-full ${
-                      selectedColor === color
-                        ? "ring-2 ring-offset-2 ring-[#a08452]"
-                        : ""
-                    }`}
-                    style={{ backgroundColor: color }}
-                    onClick={() => setSelectedColor(color)}
-                    aria-label={`Select ${color} color`}
-                  />
-                ))}
-              </div>
-            </div>
-
             {/* Size Selection */}
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-2">Size</h3>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
+              {/* <div className="flex flex-wrap gap-2">
+                {product?.sizes.map((size) => (
                   <button
                     key={size}
                     className={`w-10 h-10 flex items-center justify-center border rounded-md ${
@@ -277,7 +243,7 @@ export default function ProductDetailPage() {
                     {size}
                   </button>
                 ))}
-              </div>
+              </div> */}
             </div>
 
             {/* Quantity and Add to Cart */}
@@ -378,22 +344,9 @@ export default function ProductDetailPage() {
             <TabsContent value="additional" className="mt-0">
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Color</h3>
-                  <div className="flex space-x-2">
-                    {product.colors.map((color) => (
-                      <div
-                        key={color}
-                        className="w-8 h-8 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div>
                   <h3 className="text-sm font-medium mb-2">Size</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {product.sizes.map((size) => (
+                  {/* <div className="flex flex-wrap gap-2">
+                    {product?.sizes.map((size) => (
                       <div
                         key={size}
                         className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-md"
@@ -401,7 +354,7 @@ export default function ProductDetailPage() {
                         {size}
                       </div>
                     ))}
-                  </div>
+                  </div> */}
                 </div>
 
                 <div>
@@ -575,8 +528,8 @@ export default function ProductDetailPage() {
                 <Link href={`/shop/product/${product.id}`}>
                   <div className="aspect-[3/4] relative overflow-hidden bg-gray-100 rounded-md mb-3">
                     <Image
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name}
+                      src={product?.image || "/placeholder.svg"}
+                      alt={product?.name ? product.name :"image"}
                       fill
                       className="object-cover transition-transform group-hover:scale-105"
                     />
