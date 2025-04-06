@@ -1,17 +1,15 @@
 "use client";
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ProductPerformanceApi } from "@/lib/api/productperformance";
+import { analyticApi } from "@/lib/api/analyticApi";
 
 export function TopSellingProducts() {
-
   // Fetch products using React Query
   const { data: products = [], isLoading, isError } = useQuery({
     queryKey: ["productPerformance"],
     queryFn: async () => {
       try {
-        const data = await ProductPerformanceApi.getAll();
-        console.log("Fetched products:", data);
+        const data = await analyticApi.getTopProducts();
         if (!data) throw new Error("No data returned");
         return data;
       } catch (error) {
@@ -29,6 +27,19 @@ export function TopSellingProducts() {
         </h2>
         <div className="text-center py-8 text-red-500">
           Error loading products data. Please try again later.
+        </div>
+      </div>
+    );
+  }
+  
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <h2 className="text-lg font-medium mb-4 text-[#4f507f]">
+          Top Selling Products
+        </h2>
+        <div className="text-center py-8 text-gray-500">
+          Loading products data...
         </div>
       </div>
     );
@@ -71,7 +82,7 @@ export function TopSellingProducts() {
                     {product.sales}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${product.revenue}
+                    ₹{product.revenue}
                   </td>
                 </tr>
               ))
@@ -82,14 +93,6 @@ export function TopSellingProducts() {
                 </td>
               </tr>
             )}
-            {!isLoading && products.map((product, index) => (
-              <tr key={index}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.sales}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹{product.revenue}</td>
-              </tr>
-            ))}
-
           </tbody>
         </table>
       </div>
