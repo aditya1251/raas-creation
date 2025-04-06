@@ -192,29 +192,6 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
     },
   });
 
-  const NewColorMutation = useMutation({
-    mutationFn: async (
-      newColors: Array<{
-        name: string;
-        imageUrl: string;
-        sizes: Array<{ size: string; stock: number }>;
-      }>
-    ) => {
-      const promises = newColors.map((newColorData) =>
-        inventoryApi.addNewColor(productId, newColorData)
-      );
-      return Promise.all(promises);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["product", productId] });
-      setSaving(false);
-    },
-    onError: (error) => {
-      console.error("Failed to update stock:", error);
-      setSaving(false);
-    },
-  });
-
   const handleSave = async () => {
     setSaving(true);
 
@@ -230,15 +207,6 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
 
       try {
         await NewSizeMutation.mutateAsync(newSizes);
-      } catch (error) {
-        console.error("Failed to update stock:", error);
-        setSaving(false);
-        return;
-      }
-
-      // Add new colors with their sizes
-      try {
-        await NewColorMutation.mutateAsync(newColors);
       } catch (error) {
         console.error("Failed to update stock:", error);
         setSaving(false);

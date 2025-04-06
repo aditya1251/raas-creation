@@ -3,15 +3,16 @@
 import { useEffect, useState } from "react";
 import { Upload, X, Check, Plus, Trash2, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import { Category, Product, Varient } from "@/types/types";
+import UploadPopup from "../UploadPopup";
+import { Category, Product, Variants } from "@/types/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { productApi } from "@/lib/api/productdetails";
-import { varientApi } from "@/lib/api/varients";
+import { variantApi } from "@/lib/api/variants";
 import { categoryApi } from "@/lib/api/categories";
 import MultiUploadPopup from "../MultiUploadPopup";
 
-export function EditProductForm({productId}: { productId: string }) {
+export function EditProductForm({ productId }: { productId: string }) {
   const [isUploadPopupOpen, setIsUploadPopupOpen] = useState(false);
   const [varientId, setVarientId] = useState<string>("");
   const [varientImgPopUp, setVarientImgPopUp] = useState<boolean>(false);
@@ -23,21 +24,19 @@ export function EditProductForm({productId}: { productId: string }) {
   const router = useRouter();
 
   const Sizes = [
-    "SIZE_5",
-    "SIZE_6",
-    "SIZE_7",
-    "SIZE_8",
-    "SIZE_9",
-    "SIZE_10",
-    "SIZE_11",
-    "SIZE_12",
+    { label: "SIZE_5", value: "5" },
+    { label: "SIZE_6", value: "6" },
+    { label: "SIZE_7", value: "7" },
+    { label: "SIZE_8", value: "8" },
+    { label: "SIZE_9", value: "9" },
+    { label: "SIZE_10", value: "10" },
+    { label: "SIZE_11", value: "11" },
+    { label: "SIZE_12", value: "12" },
   ];
 
   interface Variant {
     isOpen: boolean;
     id: string;
-    color: string;
-    customColor: boolean;
     images: {
       url: string;
       type: "IMAGE" | "VIDEO";
@@ -63,8 +62,8 @@ export function EditProductForm({productId}: { productId: string }) {
     name: "",
     description: "",
     price: 0,
-    discountPrice: 0,
-    category_id: "",
+    discount: 0,
+    categoryId: "",
     material: "",
     assets: [],
     status: "DRAFT",
@@ -96,7 +95,7 @@ export function EditProductForm({productId}: { productId: string }) {
       newErrors.images = "At least one product image is required";
     }
 
-    if (!product.category_id.trim()) {
+    if (!product.categoryId.trim()) {
       newErrors.category = "Please select a category";
     }
 
@@ -104,12 +103,9 @@ export function EditProductForm({productId}: { productId: string }) {
       newErrors.material = "Please select a material";
     }
 
-    if (variants.length > 0) {
+    if (variants?.length > 0) {
       const hasInvalidVariant = variants.some(
-        (variant) =>
-          !variant.color ||
-          variant.images.length === 0 ||
-          variant.sizes.length === 0
+        (variant) => variant.images.length === 0 || variant.sizes.length === 0
       );
       if (hasInvalidVariant) {
         newErrors.variants = "All variants must have color, images and sizes";
@@ -120,11 +116,15 @@ export function EditProductForm({productId}: { productId: string }) {
     return Object.values(newErrors).every((error) => !error);
   };
 
-  const { data, isLoading, error: productError } = useQuery({
+  const {
+    data,
+    isLoading,
+    error: productError,
+  } = useQuery({
     queryKey: ["product", productId],
     queryFn: async () => {
       const res = await productApi.getById(productId);
-      return res
+      return res;
     },
   });
 
@@ -134,57 +134,64 @@ export function EditProductForm({productId}: { productId: string }) {
         name: data.name,
         description: data.description,
         price: data.price,
-        category_id: data.category_id,
+        categoryId: data.categoryId,
         material: data.material,
         status: data.status,
-        discountPrice: data.discountPrice ?? 1,
-        assets: data.assets?.map((asset: { asset_url: string; type?: "IMAGE" | "VIDEO" }) => ({
-          ...asset,
-          url: asset.asset_url || "",
-          type: asset.type || "IMAGE", // Ensuring type is present
-        })),
+        discountPrice: data.discount ?? 1,
+        assets: data.assets?.map(
+          (asset: { asset_url: string; type?: "IMAGE" | "VIDEO" }) => ({
+            ...asset,
+            url: asset.asset_url || "",
+            type: asset.type || "IMAGE", // Ensuring type is present
+          })
+        ),
       };
-  
+
       setProduct(product);
       setPrice(product.price);
       setDiscountPrice(product.discountPrice);
-  
-      const variants = data.colors.map((color: { id: string; color: string; assets: { asset_url: string, }[]; sizes: {id:string, size: string; stock: number }[] }) => ({
-        id: color.id, 
-        color: color.color, 
-        isOpen: false,
-        customColor: true,
-        images: color.assets?.map((asset) => ({
-          ...asset,
-          url: asset.asset_url || "",
-          type: "IMAGE" as "IMAGE" | "VIDEO",
-        })),
-        sizes: color.sizes?.map((size) => ({
-          ...size,
-          id: size.id,
-          name: size.size,
-          quantity: size.stock
-        })),
-      }));
-  
+
+      const variants = data?.varients?.map(
+        (variant: {
+          id: string;
+          images: string[];
+          size: string;
+          stock: number;
+        }) => ({
+          id: variant.id,
+          isOpen: false,
+          images: variant.images.map((url) => ({
+            url,
+            type: "IMAGE" as "IMAGE" | "VIDEO",
+          })),
+          sizes: [
+            {
+              id: variant.id,
+              name: variant.size,
+              quantity: variant.stock,
+            },
+          ],
+        })
+      );
+
       setVariants(variants);
     }
   }, [data]);
-  
 
+  // Removed duplicate saveProduct function
   const addVariant = () => {
     setVariants([
-      ...variants,
+      ...(variants || []), // 🛠️ Ensure variants is an array
       {
         id: crypto.randomUUID(),
-        color: "",
-        customColor: false,
         images: [],
-        sizes: [{
-          id: crypto.randomUUID(),
-          name: "SIZE_5",
-          quantity: 0
-        }],
+        sizes: [
+          {
+            id: crypto.randomUUID(),
+            name: "SIZE_5",
+            quantity: 0,
+          },
+        ],
         isOpen: true,
       },
     ]);
@@ -259,9 +266,9 @@ export function EditProductForm({productId}: { productId: string }) {
   const categoryQuery = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
-      const response = await categoryApi.getAll()
+      const response = await categoryApi.getAll();
       return response;
-    }
+    },
   });
 
   const handleAddImage = (Urls : string[]) => {
@@ -281,32 +288,39 @@ export function EditProductForm({productId}: { productId: string }) {
     });
   };
   const variantMutation = useMutation({
-    mutationFn: async (variant: Varient) => {
-      await varientApi.updateVarient(variant.id,variant);
-    }
+    mutationFn: async (variant: Variants) => {
+      await variantApi.updateVariant(variant.id, variant);
+    },
   });
 
   const productMutation = useMutation({
-    mutationFn: (newProduct:Product)=>productApi.updateProduct(productId,newProduct),
+    mutationFn: (newProduct: Product) =>
+      productApi.updateProduct(productId, newProduct),
     onSuccess: (data) => {
       if (data) {
         const productId = data.id;
-        // Iterate through variants and call the mutation for each one
+
         variants.forEach((variant) => {
           variantMutation.mutate({
             id: variant.id,
             productId,
-            color: variant.color,
-            assets: variant.images,
             sizes: variant.sizes.map((size) => ({
-              size: size.name as "SIZE_5" | "SIZE_6" | "SIZE_7" | "SIZE_8" | "SIZE_9" | "SIZE_10" | "SIZE_11" | "SIZE_12",
+              size: size.id as
+                | "SIZE_5"
+                | "SIZE_6"
+                | "SIZE_7"
+                | "SIZE_8"
+                | "SIZE_9"
+                | "SIZE_10"
+                | "SIZE_11"
+                | "SIZE_12",
               stock: size.quantity,
             })),
           });
-        });      
-      }
+        });
 
-      router.push(`/product/${productId}`);
+        router.push(`/product/${productId}`);
+      }
     },
   });
 
@@ -383,7 +397,8 @@ export function EditProductForm({productId}: { productId: string }) {
                 />
                 <button
                   onClick={() => handleRemoveImage(index)}
-                  className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                >
                   <X size={14} />
                 </button>
               </div>
@@ -391,9 +406,10 @@ export function EditProductForm({productId}: { productId: string }) {
 
             <button
               onClick={() => setIsUploadPopupOpen(true)}
-              className="w-full h-24 sm:h-28 md:h-32 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors">
-              <Upload size={20} className="mb-1" />
-              <span className="text-xs sm:text-sm">Add Image</span>
+              className="w-full h-32 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors"
+            >
+              <Upload size={24} />
+              <span className="mt-2 text-sm">Add Image</span>
             </button>
           </div>
           {errors.images && (
@@ -461,7 +477,7 @@ export function EditProductForm({productId}: { productId: string }) {
                     setderror("");
                     setProduct({
                       ...product,
-                      discountPrice: value ? parseFloat(value) : 0,
+                      discount: value ? parseFloat(value) : 0,
                     });
                     setDiscountPrice(value ? parseFloat(value) : 0);
                   }}
@@ -484,7 +500,8 @@ export function EditProductForm({productId}: { productId: string }) {
             </h2>
             <button
               onClick={addVariant}
-              className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] transition-colors duration-200 flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center">
+              className="px-4 py-2 text-sm bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] transition-colors duration-200 flex items-center gap-2"
+            >
               <Plus size={16} />
               Add Color Variant
             </button>
@@ -493,11 +510,12 @@ export function EditProductForm({productId}: { productId: string }) {
             Add different color variants and their corresponding sizes and
             quantities for your product.
           </p>
-          <div className="grid gap-4 md:gap-6">
-            {variants.map((variant) => (
+          <div className="grid gap-6">
+            {variants?.map((variant) => (
               <div
                 key={variant.id}
-                className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm hover:border-[#4f507f] transition-colors duration-200">
+                className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:border-[#4f507f] transition-colors duration-200"
+              >
                 <div
                   className="flex justify-between items-center mb-4 sm:mb-6 cursor-pointer"
                   onClick={() => {
@@ -506,16 +524,18 @@ export function EditProductForm({productId}: { productId: string }) {
                         v.id === variant.id ? { ...v, isOpen: !v.isOpen } : v
                       )
                     );
-                  }}>
-                  <div className="flex items-center gap-2 sm:gap-4">
+                  }}
+                >
+                  <div className="flex items-center gap-4">
                     <div
                       className={`transform transition-transform ${
                         variant.isOpen ? "rotate-90" : ""
-                      }`}>
-                      <ChevronRight size={18} />
+                      }`}
+                    >
+                      <ChevronRight size={20} />
                     </div>
-                    <div className="w-full max-w-[14rem]">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    {/* <div className="w-64">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Color Variant
                       </label>
                       {variant.customColor ? (
@@ -585,16 +605,17 @@ export function EditProductForm({productId}: { productId: string }) {
                           <option value="custom">Custom Color...</option>
                         </select>
                       )}
-                    </div>
+                    </div> */}
                   </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       removeVariant(variant.id);
                     }}
-                    className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-red-50"
-                    title="Remove Color Variant">
-                    <Trash2 size={16} />
+                    className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-2 rounded-full hover:bg-red-50"
+                    title="Remove Color Variant"
+                  >
+                    <Trash2 size={18} />
                   </button>
                 </div>
                 {variant.isOpen && (
@@ -610,17 +631,16 @@ export function EditProductForm({productId}: { productId: string }) {
                               src={image.url || "/logo.svg"}
                               width={200}
                               height={200}
-                              alt={`${variant.color} variant image ${
-                                index + 1
-                              }`}
-                              className="w-full h-20 sm:h-24 md:h-28 object-contain rounded-md border border-gray-200"
+                              alt={`Variant image ${index + 1}`}
+                              className="w-full h-28 object-contain rounded-md border border-gray-200"
                             />
                             <button
                               onClick={() =>
                                 handleRemoveVariantImage(variant.id, index)
                               }
-                              className="absolute top-1 right-1 bg-white rounded-full p-1 sm:p-1.5 shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                              <X size={12} />
+                              className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X size={14} />
                             </button>
                           </div>
                         ))}
@@ -630,9 +650,10 @@ export function EditProductForm({productId}: { productId: string }) {
                             setVarientId(variant.id);
                             setVarientImgPopUp(true);
                           }}
-                          className="w-full h-20 sm:h-24 md:h-28 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors">
-                          <Upload size={16} className="mb-1" />
-                          <span className="text-xs">Add Image</span>
+                          className="w-full h-28 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors"
+                        >
+                          <Upload size={20} />
+                          <span className="mt-2 text-sm">Add Image</span>
                         </button>
                       </div>
                     </div>
@@ -644,9 +665,10 @@ export function EditProductForm({productId}: { productId: string }) {
                         {variant.sizes.map((size) => (
                           <div
                             key={size.id}
-                            className="flex flex-col sm:flex-row gap-3 sm:gap-6 sm:items-center bg-gray-50 p-3 sm:p-4 rounded-lg">
-                            <div className="w-full sm:w-48">
-                              <label className="block text-xs text-gray-500 mb-1">
+                            className="flex gap-6 items-center bg-gray-50 p-4 rounded-lg"
+                          >
+                            <div className="w-48">
+                              <label className="block text-xs text-gray-500 mb-1.5">
                                 Size
                               </label>
                               <select
@@ -668,10 +690,11 @@ export function EditProductForm({productId}: { productId: string }) {
                                       return v;
                                     })
                                   );
-                                }}>
+                                }}
+                              >
                                 {Sizes.map((size) => (
-                                  <option key={size} value={size}>
-                                    {size.replace(/[^0-9]/g, "")}
+                                  <option key={size.value} value={size.value}>
+                                    {size.label}
                                   </option>
                                 ))}
                               </select>
@@ -711,8 +734,9 @@ export function EditProductForm({productId}: { productId: string }) {
                             </div>
                             <button
                               onClick={() => removeSize(variant.id, size.id)}
-                              className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-red-50 mx-auto sm:mt-6"
-                              title="Remove Size Option">
+                              className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-2 rounded-full hover:bg-red-50 mt-6"
+                              title="Remove Size Option"
+                            >
                               <X size={16} />
                             </button>
                           </div>
@@ -720,8 +744,9 @@ export function EditProductForm({productId}: { productId: string }) {
                       </div>
                       <button
                         onClick={() => addSize(variant.id)}
-                        className="mt-3 sm:mt-4 text-xs sm:text-sm text-[#4f507f] hover:text-[#3e3f63] flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-[#edeefc] transition-colors duration-200">
-                        <Plus size={14} />
+                        className="mt-4 text-sm text-[#4f507f] hover:text-[#3e3f63] flex items-center gap-2 px-4 py-2 rounded-md hover:bg-[#edeefc] transition-colors duration-200"
+                      >
+                        <Plus size={16} />
                         Add Size Option
                       </button>
                     </div>
@@ -755,21 +780,23 @@ export function EditProductForm({productId}: { productId: string }) {
                     <div
                       key={category.id}
                       onClick={() =>
-                        setProduct({ ...product, category_id: category.id })
+                        setProduct({ ...product, categoryId: category.id })
                       }
                       className={`flex items-center gap-2 p-2 rounded-md cursor-pointer ${
-                        product.category_id === category.id
+                        product.categoryId === category.id
                           ? "bg-[#edeefc] text-[#4f507f]"
                           : "hover:bg-gray-100"
-                      }`}>
+                      }`}
+                    >
                       <div
-                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded-md flex items-center justify-center ${
-                          product.category_id === category.id
+                        className={`w-5 h-5 rounded-md flex items-center justify-center ${
+                          product.categoryId === category.id
                             ? "bg-[#4f507f] text-white"
                             : "border border-gray-300"
-                        }`}>
-                        {product.category_id === category.id && (
-                          <Check size={12} />
+                        }`}
+                      >
+                        {product.categoryId === category.id && (
+                          <Check size={14} />
                         )}
                       </div>
                       <span className="text-sm">{category.name}</span>
@@ -813,9 +840,49 @@ export function EditProductForm({productId}: { productId: string }) {
           </div>
         </div>
 
-        {/* Status section */}
-        <div className="bg-white rounded-lg p-4 md:p-8 shadow-lg border border-gray-100">
-          <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6 text-[#4f507f] flex items-center">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Low Stock Threshold
+              </label>
+              <input
+                type="number"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]"
+                placeholder="0"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="track-inventory"
+                className="w-4 h-4 text-[#4f507f] bg-white rounded focus:ring-[#4f507f]"
+              />
+              <label
+                htmlFor="track-inventory"
+                className="text-sm text-gray-700"
+              >
+                Track inventory
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="continue-selling"
+                className="w-4 h-4 bg-white text-[#4f507f] rounded focus:ring-[#4f507f]"
+              />
+              <label
+                htmlFor="continue-selling"
+                className="text-sm text-gray-700"
+              >
+                Continue selling when out of stock
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg p-8 shadow-lg border border-gray-100">
+          <h2 className="text-xl font-semibold mb-6 text-[#4f507f] flex items-center">
             <span className="inline-block w-2 h-2 bg-[#4f507f] rounded-full mr-2"></span>
             Status
           </h2>
@@ -828,7 +895,8 @@ export function EditProductForm({productId}: { productId: string }) {
                   product.status === "DRAFT"
                     ? "bg-yellow-100 text-yellow-800"
                     : "bg-gray-100 text-gray-800"
-                }`}>
+                }`}
+              >
                 Draft
               </button>
               <button
@@ -837,7 +905,8 @@ export function EditProductForm({productId}: { productId: string }) {
                   product.status === "PUBLISHED"
                     ? "bg-green-100 text-green-800"
                     : "bg-gray-100 text-gray-800"
-                }`}>
+                }`}
+              >
                 Published
               </button>
             </div>
@@ -848,13 +917,15 @@ export function EditProductForm({productId}: { productId: string }) {
         <div className="flex gap-2 sm:gap-3">
           <button
             type="submit"
-            className="flex-1 bg-[#4f507f] text-white py-2 px-3 sm:px-4 rounded-md hover:bg-[#3e3f63] transition-colors text-sm sm:text-base"
-            onClick={saveProduct}>
+            className="flex-1 bg-[#4f507f] text-white py-2 px-4 rounded-md hover:bg-[#3e3f63] transition-colors"
+            onClick={saveProduct}
+          >
             Save Product
           </button>
           <button
             type="button"
-            className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-3 sm:px-4 rounded-md hover:bg-gray-50 transition-colors text-sm sm:text-base">
+            className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 transition-colors"
+          >
             Cancel
           </button>
         </div>

@@ -4,13 +4,13 @@ import { useState } from "react";
 import { Upload, X, Check, Plus, Trash2, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import UploadPopup from "../UploadPopup";
-import { Category, Product,varient } from "@/types/types";
+import { Category, Product, variants } from "@/types/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { categoryApi } from "@/lib/api/categories";
 import cuid from "cuid";
-import { varientApi } from "@/lib/api/varients";
 import { productApi } from "@/lib/api/productdetails";
+import { variantApi } from "@/lib/api/variants";
 
 export function AddProductForm() {
   const [isUploadPopupOpen, setIsUploadPopupOpen] = useState(false);
@@ -22,15 +22,12 @@ export function AddProductForm() {
   const router = useRouter();
 
   const Sizes = [
-    "SIZE_5",
-    "SIZE_6",
-    "SIZE_7",
-    "SIZE_8",
-    "SIZE_9",
-    "SIZE_10",
-    "SIZE_11",
-    "SIZE_12",
-  ];
+  "SIZE_5_5_M",
+  "SIZE_6_M",
+  "SIZE_6_5_M",
+  "FREE_SIZE"
+];
+
 
   interface Variant {
     isOpen: boolean;
@@ -63,7 +60,7 @@ export function AddProductForm() {
     name: "",
     description: "",
     price: 0,
-    discountPrice: 1,
+    discount: 1,
     categoryId: "",
     material: "",
     assets: [],
@@ -206,6 +203,7 @@ export function AddProductForm() {
     queryFn: () => categoryApi.getAll(),
   });
 
+
   const handleAddImage = (Urls: string[]) => {
     setProduct({
       ...product,
@@ -243,7 +241,7 @@ export function AddProductForm() {
           | "SIZE_12";
         stock: number;
       }[];
-    }) => varientApi.addVarient(variant),
+    }) => variantApi.addVariant(variant),
   });
 
   const productMutation = useMutation({
@@ -423,7 +421,10 @@ export function AddProductForm() {
                       return;
                     }
                     setderror("");
-                    setProduct({ ...product, discountPrice: value ? parseFloat(value) : 0 });
+                    setProduct({
+                      ...product,
+                      discount: value ? parseFloat(value) : 0,
+                    });
                   }}
                   className={`w-full pl-8 pr-3 py-2 bg-white border ${derror ? "border-red-500" : "border-gray-300"} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]`}
                   placeholder="0.00"

@@ -13,56 +13,47 @@ export const category = z.object({
 
 export type Category = z.infer<typeof category>;
 
-export const product = z.object({
-  name: z.string().min(1, "Product name is required"),
-  description: z.string().min(1, "Description is required"),
-  price: z.number().positive("Price must be a positive number"),
-  discountPrice: z.number().positive("Discount Prize must be a positive number").optional(),
-  categoryId: z.string().cuid("Invalid category ID"),
-  material: z.string().min(1, "Material is required"),
-  assets: z
-    .array(
+  export const product = z.object({
+    name: z.string().min(1, "Product name is required"),
+    description: z.string().min(1, "Description is required"),
+    price: z.number().positive("Price must be a positive number"),
+    discount: z.number().positive("Discount Prize must be a positive number").optional(),
+    categoryId: z.string().cuid("Invalid category ID"),
+    material: z.string().min(1, "Material is required"),
+    assets: z
+      .array(
+        z.object({
+          url: z.string().url("Invalid asset URL"),
+          type: z.enum(["IMAGE", "VIDEO"]),
+        })
+      )
+      .optional(),
+    status: z.enum(['DRAFT', 'PUBLISHED']),
+  });
+
+export const SizeEnum = z.enum(["SIZE_5",
+  "SIZE_6",
+  "SIZE_7",
+  "SIZE_8",
+  "SIZE_9",
+  "SIZE_10",
+  "SIZE_11",
+  "SIZE_12",]);
+
+  export const variants = z.object({
+    id: z.string().cuid("Invalid variant ID").optional(),
+    productId: z.string().cuid("Invalid product ID"),
+    sizes: z.array(
       z.object({
-        url: z.string().url("Invalid asset URL"),
-        type: z.enum(["IMAGE", "VIDEO"]),
+        size: SizeEnum,
+        stock: z.number().int().min(0, "Stock must be a non-negative integer"),
       })
-    )
-    .optional(),
-  status: z.enum(['DRAFT', 'PUBLISHED']),
-});
+    ),
+  });
 
-export const varient = z.object({
-  id: z.string().cuid("Invalid variant ID").optional(),
-  productId: z.string().cuid("Invalid product ID"),
-  color: z.string().min(1, "Color is required"),
-  assets: z.array(
-    z.object({
-      url: z.string().url("Invalid asset URL"),
-      type: z.nativeEnum(AssetType, {
-        errorMap: () => ({ message: "Invalid asset type" }),
-      }),
-    })
-  ),
-  sizes: z.array(
-    z.object({
-      size: z.nativeEnum(VariantsValues, {
-        errorMap: () => ({ message: "Invalid size value" }),
-      }),
-      stock: z.number().int().min(0, "Stock must be a non-negative integer"),
-    })
-  ),
-});
 
-export const SizeEnum = z.enum(["SMALL", "MEDIUM", "LARGE", "EXTRA_LARGE"]);
+export type Variants = z.infer<typeof variants>;
 
-export const review = z.object({
-  rating: z.number().min(1, "Rating must be a positive number"),
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-});
-
-export type Review = z.infer<typeof review>;
-export type Varient = z.infer<typeof varient>;
 export type Product = z.infer<typeof product>;
 
 export const addressSchema = z.object({
