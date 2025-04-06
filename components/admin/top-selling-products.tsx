@@ -10,7 +10,6 @@ export function TopSellingProducts() {
     queryFn: async () => {
       try {
         const data = await analyticApi.getTopProducts();
-        const data = await analyticApi.getTopProducts();
         if (!data) throw new Error("No data returned");
         return data;
       } catch (error) {
