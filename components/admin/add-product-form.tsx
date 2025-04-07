@@ -21,13 +21,7 @@ export function AddProductForm() {
 
   const router = useRouter();
 
-  const Sizes = [
-  "SIZE_5_5_M",
-  "SIZE_6_M",
-  "SIZE_6_5_M",
-  "FREE_SIZE"
-];
-
+  const Sizes = ["SIZE_5_5_M", "SIZE_6_M", "SIZE_6_5_M", "FREE_SIZE"];
 
   interface Variant {
     isOpen: boolean;
@@ -103,9 +97,7 @@ export function AddProductForm() {
 
     if (variants.length > 0) {
       const hasInvalidVariant = variants.some(
-        (variant) =>
-          variant.images.length === 0 ||
-          variant.sizes.length === 0
+        (variant) => variant.sizes.length === 0
       );
       if (hasInvalidVariant) {
         newErrors.variants = "All variants must have color, images and sizes";
@@ -203,7 +195,6 @@ export function AddProductForm() {
     queryFn: () => categoryApi.getAll(),
   });
 
-
   const handleAddImage = (Urls: string) => {
     setProduct({
       ...product,
@@ -296,11 +287,15 @@ export function AddProductForm() {
               <input
                 type="text"
                 value={product.name}
-                onChange={(e) => setProduct({ ...product, name: e.target.value })}
+                onChange={(e) =>
+                  setProduct({ ...product, name: e.target.value })
+                }
                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]"
                 placeholder="Enter product name"
               />
-              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              {errors.name && (
+                <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+              )}
             </div>
 
             <div>
@@ -310,11 +305,17 @@ export function AddProductForm() {
               <textarea
                 rows={4}
                 value={product.description}
-                onChange={(e) => setProduct({ ...product, description: e.target.value })}
+                onChange={(e) =>
+                  setProduct({ ...product, description: e.target.value })
+                }
                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]"
                 placeholder="Enter product description"
               />
-              {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
+              {errors.description && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.description}
+                </p>
+              )}
             </div>
 
             {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -344,7 +345,9 @@ export function AddProductForm() {
 
         {/* Media Section */}
         <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">Media</h2>
+          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">
+            Media
+          </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
             {product.assets?.map((image, index) => (
               <div key={index} className="relative group">
@@ -371,12 +374,16 @@ export function AddProductForm() {
               <span className="mt-2 text-sm">Add Image</span>
             </button>
           </div>
-          {errors.images && <p className="text-red-500 text-xs mt-2">{errors.images}</p>}
+          {errors.images && (
+            <p className="text-red-500 text-xs mt-2">{errors.images}</p>
+          )}
         </div>
 
         {/* Pricing Section */}
         <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">Pricing</h2>
+          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">
+            Pricing
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -395,14 +402,21 @@ export function AddProductForm() {
                       return;
                     }
                     setError("");
-                    setProduct({ ...product, price: value ? parseFloat(value) : 0 });
+                    setProduct({
+                      ...product,
+                      price: value ? parseFloat(value) : 0,
+                    });
                   }}
-                  className={`w-full pl-8 pr-3 py-2 bg-white border ${error ? "border-red-500" : "border-gray-300"} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]`}
+                  className={`w-full pl-8 pr-3 py-2 bg-white border ${
+                    error ? "border-red-500" : "border-gray-300"
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]`}
                   placeholder="0.00"
                 />
               </div>
               {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
-              {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
+              {errors.price && (
+                <p className="mt-1 text-sm text-red-500">{errors.price}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -426,7 +440,9 @@ export function AddProductForm() {
                       discount: value ? parseFloat(value) : 0,
                     });
                   }}
-                  className={`w-full pl-8 pr-3 py-2 bg-white border ${derror ? "border-red-500" : "border-gray-300"} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]`}
+                  className={`w-full pl-8 pr-3 py-2 bg-white border ${
+                    derror ? "border-red-500" : "border-gray-300"
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]`}
                   placeholder="0.00"
                 />
               </div>
@@ -450,7 +466,8 @@ export function AddProductForm() {
             </button>
           </div>
           <p className="text-xs sm:text-sm text-gray-500 mb-4 md:mb-6">
-            Add different color variants and their corresponding sizes and quantities.
+            Add different color variants and their corresponding sizes and
+            quantities.
           </p>
           <div className="grid gap-6">
             {variants.map((variant) => (
@@ -460,160 +477,116 @@ export function AddProductForm() {
               >
                 <div
                   className="flex justify-between items-center mb-4 sm:mb-6 cursor-pointer"
-                  onClick={() => setVariants(variants.map((v) => v.id === variant.id ? { ...v, isOpen: !v.isOpen } : v))}>
+                  onClick={() =>
+                    setVariants(
+                      variants.map((v) =>
+                        v.id === variant.id ? { ...v, isOpen: !v.isOpen } : v
+                      )
+                    )
+                  }
+                >
                   <div className="flex items-center gap-2 sm:gap-4">
-                    <div className={`transform transition-transform ${variant.isOpen ? "rotate-90" : ""}`}>
+                    <div
+                      className={`transform transition-transform ${
+                        variant.isOpen ? "rotate-90" : ""
+                      }`}
+                    >
                       <ChevronRight size={18} />
-                    </div>
-                    <div className="w-full max-w-[14rem]">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                        Color Variant
-                      </label>
-                      {variant.customColor ? (
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <input
-                            type="text"
-                            className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
-                            value={variant.color}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => setVariants(variants.map((v) => v.id === variant.id ? { ...v, color: e.target.value } : v))}
-                            placeholder="Enter custom color"
-                          />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setVariants(variants.map((v) => v.id === variant.id ? { ...v, customColor: false, color: "" } : v));
-                            }}
-                            className="px-3 py-1.5 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 mt-1 sm:mt-0"
-                          >
-                            Back
-                          </button>
-                        </div>
-                      ) : (
-                        <select
-                          className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
-                          value={variant.color}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => {
-                            if (e.target.value === "custom") {
-                              setVariants(variants.map((v) => v.id === variant.id ? { ...v, customColor: true, color: "" } : v));
-                            } else {
-                              setVariants(variants.map((v) => v.id === variant.id ? { ...v, color: e.target.value } : v));
-                            }
-                          }}>
-                          <option value="">Select Color</option>
-                          <option value="Red">Red</option>
-                          <option value="Blue">Blue</option>
-                          <option value="Green">Green</option>
-                          <option value="Black">Black</option>
-                          <option value="White">White</option>
-                          <option value="custom">Custom Color...</option>
-                        </select>
-                      )}
                     </div>
                   </div>
                 </div>
                 {variant.isOpen && (
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Variant Images
-                      </label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        {variant.images?.map((image, index) => (
-                          <div key={index} className="relative group">
-                            <Image
-                              src={image.url || "/logo.svg"}
-                              width={200}
-                              height={200}
-                              alt={`${variant.color} variant image ${index + 1}`}
-                              className="w-full h-20 sm:h-24 md:h-28 object-contain rounded-md border border-gray-200"
-                            />
-                            <button
-                              onClick={() => handleRemoveVariantImage(variant.id, index)}
-                              className="absolute top-1 right-1 bg-white rounded-full p-1 sm:p-1.5 shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                              <X size={12} />
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => {
-                            setVarientId(variant.id);
-                            setVarientImgPopUp(true);
-                          }}
-                          className="w-full h-28 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors"
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Size Options
+                    </label>
+                    <div className="grid gap-4">
+                      {variant.sizes.map((size) => (
+                        <div
+                          key={size.id}
+                          className="flex flex-col sm:flex-row gap-3 sm:gap-6 sm:items-center bg-gray-50 p-3 sm:p-4 rounded-lg"
                         >
-                          <Upload size={20} />
-                          <span className="mt-2 text-sm">Add Image</span>
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Size Options
-                      </label>
-                      <div className="grid gap-4">
-                        {variant.sizes.map((size) => (
-                          <div
-                            key={size.id}
-                            className="flex flex-col sm:flex-row gap-3 sm:gap-6 sm:items-center bg-gray-50 p-3 sm:p-4 rounded-lg">
-                            <div className="w-full sm:w-48">
-                              <label className="block text-xs text-gray-500 mb-1">Size</label>
-                              <select
-                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm"
-                                value={size.name}
-                                onChange={(e) => setVariants(variants.map((v) => {
-                                  if (v.id === variant.id) {
-                                    return {
-                                      ...v,
-                                      sizes: v.sizes.map((s) => s.id === size.id ? { ...s, name: e.target.value } : s)
-                                    };
-                                  }
-                                  return v;
-                                }))}>
-                                {Sizes.map((size) => (
-                                  <option key={size} value={size}>
-                                    {size.replace(/[^0-9]/g, "")}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="w-full sm:w-48">
-                              <label className="block text-xs text-gray-500 mb-1">Stock Quantity</label>
-                              <input
-                                type="number"
-                                placeholder="Enter quantity"
-                                className="w-full px-4 py-2 border bg-white rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] shadow-sm"
-                                value={size.quantity}
-                                onChange={(e) => setVariants(variants.map((v) => {
-                                  if (v.id === variant.id) {
-                                    return {
-                                      ...v,
-                                      sizes: v.sizes.map((s) => s.id === size.id ? { ...s, quantity: parseInt(e.target.value) || 0 } : s)
-                                    };
-                                  }
-                                  return v;
-                                }))}
-                              />
-                            </div>
-                            <button
-                              onClick={() => removeSize(variant.id, size.id)}
-                              className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-2 rounded-full hover:bg-red-50 mt-6"
-                              title="Remove Size Option"
+                          <div className="w-full sm:w-48">
+                            <label className="block text-xs text-gray-500 mb-1">
+                              Size
+                            </label>
+                            <select
+                              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm"
+                              value={size.name}
+                              onChange={(e) =>
+                                setVariants(
+                                  variants.map((v) => {
+                                    if (v.id === variant.id) {
+                                      return {
+                                        ...v,
+                                        sizes: v.sizes.map((s) =>
+                                          s.id === size.id
+                                            ? { ...s, name: e.target.value }
+                                            : s
+                                        ),
+                                      };
+                                    }
+                                    return v;
+                                  })
+                                )
+                              }
                             >
-                              <X size={16} />
-                            </button>
+                              {Sizes.map((size) => (
+                                <option key={size} value={size}>
+                                  {size.replace(/[^0-9]/g, "")}
+                                </option>
+                              ))}
+                            </select>
                           </div>
-                        ))}
-                      </div>
-                      <button
-                        onClick={() => addSize(variant.id)}
-                        className="mt-4 text-sm text-[#4f507f] hover:text-[#3e3f63] flex items-center gap-2 px-4 py-2 rounded-md hover:bg-[#edeefc] transition-colors duration-200"
-                      >
-                        <Plus size={16} />
-                        Add Size Option
-                      </button>
+                          <div className="w-full sm:w-48">
+                            <label className="block text-xs text-gray-500 mb-1">
+                              Stock Quantity
+                            </label>
+                            <input
+                              type="number"
+                              placeholder="Enter quantity"
+                              className="w-full px-4 py-2 border bg-white rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] shadow-sm"
+                              value={size.quantity}
+                              onChange={(e) =>
+                                setVariants(
+                                  variants.map((v) => {
+                                    if (v.id === variant.id) {
+                                      return {
+                                        ...v,
+                                        sizes: v.sizes.map((s) =>
+                                          s.id === size.id
+                                            ? {
+                                                ...s,
+                                                quantity:
+                                                  parseInt(e.target.value) || 0,
+                                              }
+                                            : s
+                                        ),
+                                      };
+                                    }
+                                    return v;
+                                  })
+                                )
+                              }
+                            />
+                          </div>
+                          <button
+                            onClick={() => removeSize(variant.id, size.id)}
+                            className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-2 rounded-full hover:bg-red-50 mt-6"
+                            title="Remove Size Option"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
+                    <button
+                      onClick={() => addSize(variant.id)}
+                      className="mt-4 text-sm text-[#4f507f] hover:text-[#3e3f63] flex items-center gap-2 px-4 py-2 rounded-md hover:bg-[#edeefc] transition-colors duration-200"
+                    >
+                      <Plus size={16} />
+                      Add Size Option
+                    </button>
                   </div>
                 )}
               </div>
@@ -626,45 +599,69 @@ export function AddProductForm() {
       <div className="space-y-4 md:space-y-6">
         {/* Organization section */}
         <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">Organization</h2>
+          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">
+            Organization
+          </h2>
           <div className="space-y-3 md:space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Categories</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Categories
+              </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1 sm:gap-2">
                 {categoryQuery.isLoading ? (
-                  <div className="flex items-center flex-1 justify-start py-2">Loading...</div>
+                  <div className="flex items-center flex-1 justify-start py-2">
+                    Loading...
+                  </div>
                 ) : (
                   categoryQuery.data?.map((category: Category) => (
                     <div
                       key={category.id}
-                      onClick={() => setProduct({ ...product, categoryId: category.id })}
+                      onClick={() =>
+                        setProduct({ ...product, categoryId: category.id })
+                      }
                       className={`flex items-center gap-2 p-2 rounded-md cursor-pointer ${
-                        product.categoryId === category.id ? "bg-[#edeefc] text-[#4f507f]" : "hover:bg-gray-100"
-                      }`}>
+                        product.categoryId === category.id
+                          ? "bg-[#edeefc] text-[#4f507f]"
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
                       <div
                         className={`w-4 h-4 sm:w-5 sm:h-5 rounded-md flex items-center justify-center ${
-                          product.categoryId === category.id ? "bg-[#4f507f] text-white" : "border border-gray-300"
-                        }`}>
-                        {product.categoryId === category.id && <Check size={12} />}
+                          product.categoryId === category.id
+                            ? "bg-[#4f507f] text-white"
+                            : "border border-gray-300"
+                        }`}
+                      >
+                        {product.categoryId === category.id && (
+                          <Check size={12} />
+                        )}
                       </div>
                       <span>{category.name}</span>
                     </div>
                   ))
                 )}
               </div>
-              {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
+              {errors.category && (
+                <p className="text-red-500 text-xs mt-1">{errors.category}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Material</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Material
+              </label>
               <input
                 type="text"
                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]"
                 placeholder="Enter material"
                 value={product.material}
-                onChange={(e) => setProduct({ ...product, material: e.target.value })}
+                onChange={(e) =>
+                  setProduct({ ...product, material: e.target.value })
+                }
               />
-              {errors.material && <p className="text-red-500 text-xs mt-1">{errors.material}</p>}
+              {errors.material && (
+                <p className="text-red-500 text-xs mt-1">{errors.material}</p>
+              )}
             </div>
 
             <div>
@@ -745,15 +742,21 @@ export function AddProductForm() {
             <button
               onClick={() => setProduct({ ...product, status: "DRAFT" })}
               className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-sm ${
-                product.status === "DRAFT" ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"
-              }`}>
+                product.status === "DRAFT"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
               Draft
             </button>
             <button
               onClick={() => setProduct({ ...product, status: "PUBLISHED" })}
               className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-sm ${
-                product.status === "PUBLISHED" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-              }`}>
+                product.status === "PUBLISHED"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
               Published
             </button>
           </div>
