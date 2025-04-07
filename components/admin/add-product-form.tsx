@@ -167,13 +167,13 @@ export function AddProductForm() {
     );
   };
 
-  const handleAddVarientImage = (Urls: string[]) => {
+  const handleAddVarientImage = (Urls: string) => {
     setVariants(
       variants.map((variant) => {
         if (variant.id === varientId) {
           return {
             ...variant,
-            images: [...variant.images, { url: imageUrl, type: "IMAGE" }],
+            images: [...variant.images, { url: Urls, type: "IMAGE" }],
           };
         }
         return variant;
@@ -204,10 +204,10 @@ export function AddProductForm() {
   });
 
 
-  const handleAddImage = (Urls: string[]) => {
+  const handleAddImage = (Urls: string) => {
     setProduct({
       ...product,
-      assets: [...(product.assets || []), { url: imageUrl, type: "IMAGE" }],
+      assets: [...(product.assets || []), { url: Urls, type: "IMAGE" }],
     });
     setIsUploadPopupOpen(false);
   };

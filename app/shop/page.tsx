@@ -33,6 +33,7 @@ export default function ShopPage() {
       queryKey: ["products"],
       queryFn: productApi.getAll,
     })
+    console.log("products", products);
   return (
     <main className="min-h-screen bg-white">
       <Navbar />

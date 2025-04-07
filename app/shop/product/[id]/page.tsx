@@ -68,7 +68,7 @@ export default function ProductDetailPage() {
     addToCart({
       id : id as string,
       name: product?.name,
-      price: product?.discountPrice,
+      price: product?.discount,
       originalPrice: product?.price,
       quantity: quantity,
       color: selectedColor,
@@ -209,7 +209,7 @@ export default function ProductDetailPage() {
             {/* Price */}
             <div className="flex items-center mb-6">
               <span className="text-xl font-medium">
-                ₹{product?.discountPrice?.toFixed(2)}
+                ₹{product?.discount?.toFixed(2)}
               </span>
               <span className="ml-2 text-gray-500 line-through">
                 ₹{product?.price.toFixed(2)}
