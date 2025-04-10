@@ -7,6 +7,7 @@
   import { prisma } from "@/lib/prisma-client";
   import bcryptjs from "bcryptjs";
 import { Prisma } from "@prisma/client";
+import { apiClient } from "@/lib/axiosClient";
 
   export async function handleSignOut() {
     await signOut();
@@ -37,7 +38,12 @@ import { Prisma } from "@prisma/client";
       });
       // console.log(response);
 
-      return {response}
+      const otpResponse = await apiClient.post("/api/customers/otp", { mobile_no: response.mobile_no, type: "verify" });
+      console.log(otpResponse.data);
+     
+      
+      
+      return {  jwt: otpResponse.data.jwt };
 
     } catch (error: any) {
       if(error instanceof Prisma.PrismaClientKnownRequestError){
