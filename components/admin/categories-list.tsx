@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Plus, Edit, Trash2 } from "lucide-react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Category } from "@/types/types";
+import { Category } from "@/types/types"
 import { categoryApi } from "@/lib/api/categories"
 
 export function CategoriesList() {

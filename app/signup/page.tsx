@@ -30,7 +30,6 @@ export default function RegisterPage() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const router = useRouter();
 
-   // Initialize react-hook-form with Zod resolver
   const form = useForm<z.infer<typeof SignUpSchema>>({
     resolver: zodResolver(SignUpSchema),
     defaultValues: {
@@ -38,7 +37,6 @@ export default function RegisterPage() {
       mobileNumber: "",
       password: "",
       confirmPassword: "",
-      email : ""
     },
   });
 
@@ -51,19 +49,19 @@ export default function RegisterPage() {
       const promise = handleSignup(values);
 
       toast.promise(promise, {
-        loading: "Signing up...", // Show while waiting
+        loading: "Signing up...",
         success: (response) => {
           if (response?.error) {
-            throw new Error(response.error); // Throw error to trigger rejection
+            throw new Error(response.error);
           }
-          return "Verify Mobile Number"; // Success message
+          return "Verify Mobile Number";
         },
-        error: (error) => error.message || "Something went wrong", // Show on error
+        error: (error) => error.message || "Something went wrong",
       });
       const response = await promise;
 
       if (response.jwt) {
-        router.push(`/otp/${response.jwt}`); // Redirect if signup is successful
+        router.push(`/otp/${response.jwt}`);
       }
       return true;
     } catch (error) {
@@ -73,7 +71,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Left Section - Image */}
       <div className="relative w-full md:w-1/2 bg-[#f8f3e9] hidden md:block">
         <div className="absolute top-6 left-6 z-10">
           <Image
@@ -95,11 +92,9 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* Right Section - Registration Form */}
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-12 bg-white">
         <div className="w-full max-w-md">
           <div className="flex justify-between items-center mb-8">
-            {/* Logo for mobile view */}
             <div className="md:hidden">
               <Image
                 src="https://res.cloudinary.com/dklqhgo8r/image/upload/v1741713365/omez9tvbpnwgmsnj3q3w.png"
@@ -153,32 +148,6 @@ export default function RegisterPage() {
                 <div>
                   <FormField
                     control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel
-                          htmlFor="email"
-                          className="block text-sm font-medium mb-1"
-                        >
-                          Email
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="example@gmail.com"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-md  focus-visible:ring-transparent focus:outline-none focus:ring-1 focus:ring-[#a08452]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-red-400 text-sm ml-2" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div>
-                  <FormField
-                    control={form.control}
                     name="mobileNumber"
                     render={({ field: { onChange, ...field } }) => (
                       <FormItem>
@@ -193,7 +162,6 @@ export default function RegisterPage() {
                             country={"in"}
                             value={field.value}
                             onChange={(phone) => onChange(phone)}
-                            // disabled={isLoading}
                             inputClass="!w-full !px-10 !py-3 !border !border-gray-300 !rounded-md !focus:outline-none !focus:ring-1 !focus:ring-[#a08452]"
                             buttonClass="!bg-[#a08452] !rounded-md !border-0"
                             dropdownClass="!bg-white  !text-black"
@@ -226,7 +194,6 @@ export default function RegisterPage() {
                           <Input
                             type="password"
                             placeholder="Password"
-                            // disabled={isLoading}
                             className="w-full px-4 py-3 border border-gray-300 rounded-md  focus-visible:ring-transparent focus:outline-none focus:ring-1 focus:ring-[#a08452]"
                             required
                             aria-required

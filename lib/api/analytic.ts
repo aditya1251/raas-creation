@@ -7,7 +7,7 @@ interface TopProducts {
     revenue: number;
 }
 
-interface BestSellers {
+export interface BestSellers {
     productid: string;
     name: string;
     price: number;
@@ -16,7 +16,7 @@ interface BestSellers {
     img : string
 }
 
-interface NewArrivals {
+export interface NewArrivals {
     id : string;
     name : string,
     img : string,

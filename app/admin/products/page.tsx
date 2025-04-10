@@ -1,14 +1,12 @@
-import Link from "next/link";
-import { Plus } from "lucide-react";
-import { ProductsTable } from "@/components/admin/products-table";
+import Link from "next/link"
+import { Plus } from "lucide-react"
+import { ProductsTable } from "@/components/admin/products-table"
 
 export default function ProductsPage() {
   return (
     <div className="p-6">
       <div className="xl:flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-[#1c1c1c] mb-2 xl:mb-0">
-          Products
-        </h1>
+        <h1 className="text-2xl font-semibold text-[#1c1c1c] mb-2 xl:mb-0">Products</h1>
         <Link
           href="/admin/products/add"
           className="flex items-center gap-2 px-4 py-2 bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] transition-colors"
@@ -19,5 +17,6 @@ export default function ProductsPage() {
       </div>
       <ProductsTable />
     </div>
-  );
+  )
 }
+

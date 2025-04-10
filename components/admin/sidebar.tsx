@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import type React from "react"
+import { useState, useEffect } from "react";
+import type React from "react";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Home,
   ShoppingCart,
-  Package,
+  LogOut,
   BarChart2,
   Tag,
   Layers,
@@ -21,89 +21,117 @@ import {
   ChevronRight,
   ChevronLeft,
   Menu,
-  X
-} from "lucide-react"
+  X,
+} from "lucide-react";
+import { signOut } from "next-auth/react";
 
 export function Sidebar() {
-  const pathname = usePathname()
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const pathname = usePathname();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Check window width and set collapsed and mobile state on initial load and resize
   useEffect(() => {
     const handleResize = () => {
-      const mobileView = window.innerWidth <= 1180
-      setIsMobile(mobileView)
-      setIsCollapsed(mobileView)
-    }
-    
-    // Set initial state
-    handleResize()
-    
-    // Add event listener
-    window.addEventListener("resize", handleResize)
-    
-    // Clean up
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+      const mobileView = window.innerWidth <= 1180;
+      setIsMobile(mobileView);
+      setIsCollapsed(mobileView);
+    };
 
-  const isActive = (path: string) => pathname.startsWith(path)
+    // Set initial state
+    handleResize();
+
+    // Add event listener
+    window.addEventListener("resize", handleResize);
+
+    // Clean up
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const isActive = (path: string) => pathname.startsWith(path);
 
   return (
     <>
       {/* Mobile menu button - always visible on mobile, now on right side */}
       {isMobile && (
-        <button 
+        <button
           className="fixed top-4 right-4 z-50 bg-white p-2 rounded-md shadow-md"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? <Menu size={20} /> : <X size={20} />}
         </button>
       )}
-      
+
       {/* Backdrop - only visible when expanded on mobile */}
       {isMobile && !isCollapsed && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setIsCollapsed(true)}
         />
       )}
 
       {/* Sidebar */}
-      <div 
+      <div
         className={`fixed h-full bg-white border-r border-gray-200 flex flex-col z-40 transition-all duration-300 ${
-          isCollapsed 
-            ? "w-[64px]" 
-            : isMobile 
-              ? "w-[260px] shadow-xl" 
-              : "w-[220px]"
-        } ${
-          isCollapsed && isMobile 
-            ? "translate-x-[-100%]" 
-            : "translate-x-0"
-        }`}
+          isCollapsed
+            ? "w-[64px]"
+            : isMobile
+            ? "w-[260px] shadow-xl"
+            : "w-[220px]"
+        } ${isCollapsed && isMobile ? "translate-x-[-100%]" : "translate-x-0"}`}
       >
         <div className="p-4 border-b border-gray-200 flex items-center gap-2 font-semibold">
           <span className="h-6 w-6 rounded-full bg-[#4f507f] flex-shrink-0"></span>
           {!isCollapsed && <span>Arvan</span>}
           {!isMobile && (
-            <button 
+            <button
               className="ml-auto text-gray-500 hover:text-gray-700"
               onClick={() => setIsCollapsed(!isCollapsed)}
             >
-              {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+              {isCollapsed ? (
+                <ChevronRight size={18} />
+              ) : (
+                <ChevronLeft size={18} />
+              )}
             </button>
           )}
         </div>
 
         <div className="overflow-y-auto flex-grow">
           <div className="p-4">
-            {!isCollapsed && <div className="text-sm text-gray-500 mb-2">Main</div>}
+            <div className="space-y-1 mb-2">
+              <NavItem
+                href="/"
+                icon={<Home size={18} />}
+                label="Home"
+                collapsed={isCollapsed}
+              />
+              <div
+                onClick={() => signOut({redirectTo:"/"})}
+                className={`flex cursor-pointer items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-all text-gray-700 hover:bg-gray-100 ${
+                  isCollapsed ? "justify-center" : ""
+                }`}
+              >
+                <div className="flex-shrink-0">
+                  <LogOut size={18} />
+                </div>
+                {!isCollapsed && <span>Logout</span>}
+              </div>
+            </div>
+            {!isCollapsed && (
+              <div className="text-sm text-gray-500 mb-2">Main</div>
+            )}
             <div className="space-y-1">
-              <NavItem href="/admin" icon={<Home size={18} />} label="Dashboard" active={isActive("/admin")} collapsed={isCollapsed} />
+              <NavItem
+                href="/admin"
+                icon={<Home size={18} />}
+                label="Dashboard"
+                active={isActive("/admin")}
+                collapsed={isCollapsed}
+              />
               <NavItem
                 href="/admin/products"
-                icon={<Package size={18} />}
+                icon={<LogOut size={18} />}
                 label="Products"
                 active={isActive("/admin/products")}
                 collapsed={isCollapsed}
@@ -119,7 +147,9 @@ export function Sidebar() {
           </div>
 
           <div className="p-4">
-            {!isCollapsed && <div className="text-sm text-gray-500 mb-2">Products</div>}
+            {!isCollapsed && (
+              <div className="text-sm text-gray-500 mb-2">Products</div>
+            )}
             <div className="space-y-1">
               <NavItem
                 href="/admin/products"
@@ -153,7 +183,9 @@ export function Sidebar() {
           </div>
 
           <div className="p-4">
-            {!isCollapsed && <div className="text-sm text-gray-500 mb-2">Orders</div>}
+            {!isCollapsed && (
+              <div className="text-sm text-gray-500 mb-2">Orders</div>
+            )}
             <div className="space-y-1">
               <NavItem
                 href="/admin/orders"
@@ -166,7 +198,9 @@ export function Sidebar() {
           </div>
 
           <div className="p-4">
-            {!isCollapsed && <div className="text-sm text-gray-500 mb-2">Customers</div>}
+            {!isCollapsed && (
+              <div className="text-sm text-gray-500 mb-2">Customers</div>
+            )}
             <div className="space-y-1">
               <NavItem
                 href="/admin/customers"
@@ -186,7 +220,9 @@ export function Sidebar() {
           </div>
 
           <div className="p-4">
-            {!isCollapsed && <div className="text-sm text-gray-500 mb-2">Analytics</div>}
+            {!isCollapsed && (
+              <div className="text-sm text-gray-500 mb-2">Analytics</div>
+            )}
             <div className="space-y-1">
               <NavItem
                 href="/admin/analytics/sales"
@@ -206,7 +242,9 @@ export function Sidebar() {
           </div>
 
           <div className="p-4">
-            {!isCollapsed && <div className="text-sm text-gray-500 mb-2">Communication</div>}
+            {!isCollapsed && (
+              <div className="text-sm text-gray-500 mb-2">Communication</div>
+            )}
             <div className="space-y-1">
               <NavItem
                 href="/admin/contacts"
@@ -221,11 +259,19 @@ export function Sidebar() {
       </div>
 
       {/* Main content wrapper - adds margin to accommodate the fixed sidebar */}
-      <div className={`transition-all duration-300 ${!isCollapsed && !isMobile ? "ml-[220px]" : isMobile ? "ml-0" : "ml-[64px]"}`}>
+      <div
+        className={`transition-all duration-300 ${
+          !isCollapsed && !isMobile
+            ? "ml-[220px]"
+            : isMobile
+            ? "ml-0"
+            : "ml-[64px]"
+        }`}
+      >
         {/* Your main content goes here */}
       </div>
     </>
-  )
+  );
 }
 
 function NavItem({
@@ -234,10 +280,10 @@ function NavItem({
   label,
   active = false,
   collapsed = false,
-}: { 
-  href: string; 
-  icon: React.ReactNode; 
-  label: string; 
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
   active?: boolean;
   collapsed?: boolean;
 }) {
@@ -245,12 +291,14 @@ function NavItem({
     <Link
       href={href}
       className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-all ${
-        active ? "bg-[#edeefc] text-[#4f507f] font-medium" : "text-gray-700 hover:bg-gray-100"
+        active
+          ? "bg-[#edeefc] text-[#4f507f] font-medium"
+          : "text-gray-700 hover:bg-gray-100"
       } ${collapsed ? "justify-center" : ""}`}
       title={collapsed ? label : ""}
     >
       <div className="flex-shrink-0">{icon}</div>
       {!collapsed && <span>{label}</span>}
     </Link>
-  )
+  );
 }

@@ -11,7 +11,6 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           <ProductOverview />
           <InventoryAlerts />
-
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           <TopSellingProducts />

@@ -1,10 +1,6 @@
-import axios from "axios";
+import axios from 'axios';
 
 export const apiClient = axios.create({
-  baseURL: `${
-    process.env.NEXT_PUBLIC_FRONTEND_URL
-      ? process.env.NEXT_PUBLIC_FRONTEND_URL
-      : ""
-  }/backend`,
-  withCredentials: true,
-});
+    baseURL: `${process.env.NEXT_PUBLIC_FRONTEND_URL? process.env.NEXT_PUBLIC_FRONTEND_URL:""}/backend`,
+    withCredentials: true
+})
