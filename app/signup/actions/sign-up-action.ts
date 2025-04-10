@@ -33,10 +33,8 @@ import { apiClient } from "@/lib/axiosClient";
           name: data.name,
           mobile_no: data.mobileNumber,
           password: hashedPassword,
-          email : data.email ??  ""
         },
       });
-      // console.log(response);
 
       const otpResponse = await apiClient.post("/api/customers/otp", { mobile_no: response.mobile_no, type: "verify" });
       console.log(otpResponse.data);

@@ -1,6 +1,7 @@
 import { apiClient } from "../axiosClient";
 
 export interface OrderItems {
+  id?: string;
   productId: string;
   quantity: number;
   priceAtOrder: number;

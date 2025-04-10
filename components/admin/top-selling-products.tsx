@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { analyticApi } from "@/lib/api/analyticApi";
+import { analyticApi } from "@/lib/api/analytic";
 
 export function TopSellingProducts() {
   // Fetch products using React Query
@@ -34,12 +34,14 @@ export function TopSellingProducts() {
   
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg p-6 shadow-sm">
-        <h2 className="text-lg font-medium mb-4 text-[#4f507f]">
+      <div className="bg-white rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+        <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-[#4f507f]">
           Top Selling Products
         </h2>
-        <div className="text-center py-8 text-gray-500">
-          Loading products data...
+        <div className="text-center py-4 sm:py-6 md:py-8 text-gray-500 text-sm sm:text-base">
+          <div className="inline-block animate-pulse">
+            <div className="h-4 w-28 bg-gray-200 rounded"></div>
+          </div>
         </div>
       </div>
     );
@@ -77,8 +79,8 @@ export function TopSellingProducts() {
                   <td className="px-2 sm:px-4 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                     {product.sales}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ₹{product.revenue}
+                  <td className="px-2 sm:px-4 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                    ₹{typeof product.revenue === 'number' ? product.revenue.toLocaleString() : product.revenue}
                   </td>
                 </tr>
               ))

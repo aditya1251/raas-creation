@@ -34,8 +34,6 @@ interface Color {
 }
 
 export interface Products extends Product {
-  [x: string]: any;
-  map(arg0: (item: { id: string; assets: { asset_url: string; }[]; sizes: { id: string; size: string; stock: number; }[]; }) => { id: string; isOpen: boolean; customColor: boolean; images: { url: string; type: "IMAGE" | "VIDEO"; asset_url: string; }[]; sizes: { id: string; name: string; quantity: number; size: string; stock: number; }[]; }): unknown;
   stock: number;
   category: string;
   id: string;

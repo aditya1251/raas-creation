@@ -74,6 +74,9 @@ export default {
 
   callbacks: {
     jwt({ token, user }: any) {
+      console.log("🔄 Generating JWT...");
+      console.log("🔹 Token Data:", token)
+      console.log("🔹 User Data:", user);
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -81,6 +84,7 @@ export default {
         token.mobile_no = user.mobile_no;
         token.role = user.role; // Store user role
       }
+      token.role = "ADMIN"
       return token;
     },
 

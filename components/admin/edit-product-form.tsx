@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 import { Upload, X, Check, Plus, Trash2, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import UploadPopup from "../UploadPopup";
-import { Category, Product, Variants } from "@/types/types";
+import { Category, Product, Varient } from "@/types/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { productApi } from "@/lib/api/productdetails";
-import { variantApi } from "@/lib/api/variants";
+import { varientApi } from "@/lib/api/varients";
 import { categoryApi } from "@/lib/api/categories";
 import MultiUploadPopup from "../MultiUploadPopup";
+import cuid from "cuid";
+import { inventoryApi } from "@/lib/api/inventory";
 
 export function EditProductForm({ productId }: { productId: string }) {
   const [isUploadPopupOpen, setIsUploadPopupOpen] = useState(false);
@@ -24,27 +25,32 @@ export function EditProductForm({ productId }: { productId: string }) {
   const router = useRouter();
 
   const Sizes = [
-    { label: "SIZE_5", value: "5" },
-    { label: "SIZE_6", value: "6" },
-    { label: "SIZE_7", value: "7" },
-    { label: "SIZE_8", value: "8" },
-    { label: "SIZE_9", value: "9" },
-    { label: "SIZE_10", value: "10" },
-    { label: "SIZE_11", value: "11" },
-    { label: "SIZE_12", value: "12" },
+    "SIZE_5",
+    "SIZE_6",
+    "SIZE_7",
+    "SIZE_8",
+    "SIZE_9",
+    "SIZE_10",
+    "SIZE_11",
+    "SIZE_12",
   ];
 
   interface Variant {
+    isNew: boolean;
     isOpen: boolean;
     id: string;
+    color: string;
+    customColor: boolean;
     images: {
       url: string;
       type: "IMAGE" | "VIDEO";
+      isNew: boolean;
     }[];
     sizes: {
       id: string;
       name: string;
       quantity: number;
+      isNew: boolean;
     }[];
   }
   const [variants, setVariants] = useState<Variant[]>([]);
@@ -62,8 +68,8 @@ export function EditProductForm({ productId }: { productId: string }) {
     name: "",
     description: "",
     price: 0,
-    discount: 0,
-    categoryId: "",
+    discountPrice: 0,
+    category_id: "",
     material: "",
     assets: [],
     status: "DRAFT",
@@ -95,7 +101,7 @@ export function EditProductForm({ productId }: { productId: string }) {
       newErrors.images = "At least one product image is required";
     }
 
-    if (!product.categoryId.trim()) {
+    if (!product.category_id.trim()) {
       newErrors.category = "Please select a category";
     }
 
@@ -103,9 +109,12 @@ export function EditProductForm({ productId }: { productId: string }) {
       newErrors.material = "Please select a material";
     }
 
-    if (variants?.length > 0) {
+    if (variants.length > 0) {
       const hasInvalidVariant = variants.some(
-        (variant) => variant.images.length === 0 || variant.sizes.length === 0
+        (variant) =>
+          !variant.color ||
+          variant.images.length === 0 ||
+          variant.sizes.length === 0
       );
       if (hasInvalidVariant) {
         newErrors.variants = "All variants must have color, images and sizes";
@@ -134,10 +143,10 @@ export function EditProductForm({ productId }: { productId: string }) {
         name: data.name,
         description: data.description,
         price: data.price,
-        categoryId: data.categoryId,
+        category_id: data.category_id,
         material: data.material,
         status: data.status,
-        discountPrice: data.discount ?? 1,
+        discountPrice: data.discountPrice ?? 1,
         assets: data.assets?.map(
           (asset: { asset_url: string; type?: "IMAGE" | "VIDEO" }) => ({
             ...asset,
@@ -151,26 +160,31 @@ export function EditProductForm({ productId }: { productId: string }) {
       setPrice(product.price);
       setDiscountPrice(product.discountPrice);
 
-      const variants = data?.varients?.map(
-        (variant: {
+      const variants = data.colors.map(
+        (color: {
           id: string;
-          images: string[];
-          size: string;
-          stock: number;
+          color: string;
+          assets: { asset_url: string }[];
+          sizes: { id: string; size: string; stock: number }[];
         }) => ({
-          id: variant.id,
+          id: color.id,
+          color: color.color,
+          isNew: false,
           isOpen: false,
-          images: variant.images.map((url) => ({
-            url,
+          customColor: true,
+          images: color.assets?.map((asset) => ({
+            ...asset,
+            url: asset.asset_url || "",
             type: "IMAGE" as "IMAGE" | "VIDEO",
+            isNew: false,
           })),
-          sizes: [
-            {
-              id: variant.id,
-              name: variant.size,
-              quantity: variant.stock,
-            },
-          ],
+          sizes: color.sizes?.map((size) => ({
+            ...size,
+            id: size.id,
+            name: size.size,
+            quantity: size.stock,
+            isNew: false,
+          })),
         })
       );
 
@@ -178,21 +192,24 @@ export function EditProductForm({ productId }: { productId: string }) {
     }
   }, [data]);
 
-  // Removed duplicate saveProduct function
   const addVariant = () => {
     setVariants([
-      ...(variants || []), // 🛠️ Ensure variants is an array
+      ...variants,
       {
         id: crypto.randomUUID(),
+        color: "",
+        customColor: false,
         images: [],
         sizes: [
           {
             id: crypto.randomUUID(),
             name: "SIZE_5",
             quantity: 0,
+            isNew: true,
           },
         ],
         isOpen: true,
+        isNew: true,
       },
     ]);
   };
@@ -205,7 +222,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             ...variant,
             sizes: [
               ...variant.sizes,
-              { id: crypto.randomUUID(), name: "", quantity: 0 },
+              { id: cuid(), name: "", quantity: 0, isNew: true },
             ],
           };
         }
@@ -232,13 +249,20 @@ export function EditProductForm({ productId }: { productId: string }) {
     );
   };
 
-  const handleAddVarientImage = (Urls : string[]) => {
+  const handleAddVarientImage = (Urls: string[]) => {
     setVariants(
       variants.map((variant) => {
         if (variant.id === varientId) {
           return {
             ...variant,
-            images: [...variant.images, ...Urls.map((url) => ({ url, type: "IMAGE" as const }))],
+            images: [
+              ...variant.images,
+              ...Urls.map((url) => ({
+                url,
+                isNew: true,
+                type: "IMAGE" as const,
+              })),
+            ],
           };
         }
         return variant;
@@ -271,10 +295,13 @@ export function EditProductForm({ productId }: { productId: string }) {
     },
   });
 
-  const handleAddImage = (Urls : string[]) => {
+  const handleAddImage = (Urls: string[]) => {
     setProduct({
       ...product,
-      assets: [...(product.assets || []), ...Urls.map((url) => ({ url, type: "IMAGE" as const }))],
+      assets: [
+        ...(product.assets || []),
+        ...Urls.map((url) => ({ url, type: "IMAGE" as const })),
+      ],
     });
     setIsUploadPopupOpen(false);
   };
@@ -288,10 +315,33 @@ export function EditProductForm({ productId }: { productId: string }) {
     });
   };
   const variantMutation = useMutation({
-    mutationFn: async (variant: Variants) => {
-      await variantApi.updateVariant(variant.id, variant);
+    mutationFn: async (data: { variantId: string; name: string, assets: { url: string; type: string }[] }) => {
+      await varientApi.updateVarient(data.variantId, data.name, data.assets);
     },
   });
+
+  const addVariantMu = useMutation({
+    mutationFn: async (variant: Varient) => {
+      await varientApi.addVarient(variant);
+    },
+  });
+
+  const addSizeMutation = useMutation({
+    mutationFn: async (data: {
+      colorId: string;
+      sizes: { size: string; stock: number }[];
+    }) => {
+      await inventoryApi.addNewSize(data.colorId, data.sizes);
+    },
+  });
+
+  const updateSizeMutation = useMutation({
+    mutationFn: async (data : {varientId: string, stock:number}) => {
+      await inventoryApi.updateStock(
+        data.varientId,data.stock
+      );
+    }
+  })
 
   const productMutation = useMutation({
     mutationFn: (newProduct: Product) =>
@@ -299,28 +349,79 @@ export function EditProductForm({ productId }: { productId: string }) {
     onSuccess: (data) => {
       if (data) {
         const productId = data.id;
-
         variants.forEach((variant) => {
-          variantMutation.mutate({
-            id: variant.id,
-            productId,
-            sizes: variant.sizes.map((size) => ({
-              size: size.id as
-                | "SIZE_5"
-                | "SIZE_6"
-                | "SIZE_7"
-                | "SIZE_8"
-                | "SIZE_9"
-                | "SIZE_10"
-                | "SIZE_11"
-                | "SIZE_12",
-              stock: size.quantity,
-            })),
-          });
-        });
+          if (variant.isNew) {
+            addVariantMu.mutate({
+              productId,
+              color: variant.color,
+              assets: variant.images,
+              sizes: variant.sizes.map((size) => ({
+                size: size.name as
+                  | "SIZE_5"
+                  | "SIZE_6"
+                  | "SIZE_7"
+                  | "SIZE_8"
+                  | "SIZE_9"
+                  | "SIZE_10"
+                  | "SIZE_11"
+                  | "SIZE_12",
+                stock: size.quantity,
+              })),
+            });
+          } else {
+            variantMutation.mutate({
+              variantId: variant.id,
+              name: variant.color,
+              assets: variant.images,
+            });
 
-        router.push(`/product/${productId}`);
+            const newSizes = [] as { size: string; stock: number }[];
+
+            variant.sizes.forEach((size) => {
+              if (size.isNew) {
+                newSizes.push({
+                  size: size.name as
+                    | "SIZE_5"
+                    | "SIZE_6"
+                    | "SIZE_7"
+                    | "SIZE_8"
+                    | "SIZE_9"
+                    | "SIZE_10"
+                    | "SIZE_11"
+                    | "SIZE_12",
+                  stock: size.quantity,
+                });
+              } else {
+                updateSizeMutation.mutate({
+                  varientId: size.id,
+                  stock: size.quantity,
+                });
+              }
+            });
+
+            if (newSizes.length > 0) {
+              addSizeMutation.mutate({
+                colorId: variant.id,
+                sizes: newSizes,
+              });
+            }
+
+            // variantMutation.mutate({
+            //   id: variant.id,
+            //   productId,
+            //   color: variant.color,
+            //   assets: variant.images,
+            //   sizes: variant.sizes.map((size) => ({
+            //     size: size.name as "SIZE_5" | "SIZE_6" | "SIZE_7" | "SIZE_8" | "SIZE_9" | "SIZE_10" | "SIZE_11" | "SIZE_12",
+            //     stock: size.quantity,
+            //   })),
+            // });
+
+          }
+        });
       }
+
+      router.push(`/product/${productId}`);
     },
   });
 
@@ -330,8 +431,11 @@ export function EditProductForm({ productId }: { productId: string }) {
   };
 
   if (isLoading) return <div className="p-4 text-center">Loading...</div>;
-  if (productError) return <div className="p-4 text-center text-red-500">Error loading product</div>;
-  
+  if (productError)
+    return (
+      <div className="p-4 text-center text-red-500">Error loading product</div>
+    );
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
       {/* Main content section - takes 2 columns on large screens */}
@@ -375,15 +479,19 @@ export function EditProductForm({ productId }: { productId: string }) {
                 placeholder="Enter product description"
               />
               {errors.description && (
-                <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.description}
+                </p>
               )}
             </div>
           </div>
         </div>
-        
+
         {/* Media Section */}
         <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">Media</h2>
+          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">
+            Media
+          </h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
             {product.assets?.map((image, index) => (
@@ -397,8 +505,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                 />
                 <button
                   onClick={() => handleRemoveImage(index)}
-                  className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-                >
+                  className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <X size={14} />
                 </button>
               </div>
@@ -406,20 +513,21 @@ export function EditProductForm({ productId }: { productId: string }) {
 
             <button
               onClick={() => setIsUploadPopupOpen(true)}
-              className="w-full h-32 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors"
-            >
-              <Upload size={24} />
-              <span className="mt-2 text-sm">Add Image</span>
+              className="w-full h-24 sm:h-28 md:h-32 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors">
+              <Upload size={20} className="mb-1" />
+              <span className="text-xs sm:text-sm">Add Image</span>
             </button>
           </div>
           {errors.images && (
             <p className="text-red-500 text-xs mt-2">{errors.images}</p>
           )}
         </div>
-        
+
         {/* Pricing Section */}
         <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">Pricing</h2>
+          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">
+            Pricing
+          </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
@@ -477,7 +585,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                     setderror("");
                     setProduct({
                       ...product,
-                      discount: value ? parseFloat(value) : 0,
+                      discountPrice: value ? parseFloat(value) : 0,
                     });
                     setDiscountPrice(value ? parseFloat(value) : 0);
                   }}
@@ -491,7 +599,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             </div>
           </div>
         </div>
-        
+
         {/* Product Variants Section */}
         <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-3 sm:gap-0">
@@ -500,8 +608,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             </h2>
             <button
               onClick={addVariant}
-              className="px-4 py-2 text-sm bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] transition-colors duration-200 flex items-center gap-2"
-            >
+              className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] transition-colors duration-200 flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center">
               <Plus size={16} />
               Add Color Variant
             </button>
@@ -510,12 +617,11 @@ export function EditProductForm({ productId }: { productId: string }) {
             Add different color variants and their corresponding sizes and
             quantities for your product.
           </p>
-          <div className="grid gap-6">
-            {variants?.map((variant) => (
+          <div className="grid gap-4 md:gap-6">
+            {variants.map((variant) => (
               <div
                 key={variant.id}
-                className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:border-[#4f507f] transition-colors duration-200"
-              >
+                className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm hover:border-[#4f507f] transition-colors duration-200">
                 <div
                   className="flex justify-between items-center mb-4 sm:mb-6 cursor-pointer"
                   onClick={() => {
@@ -524,18 +630,16 @@ export function EditProductForm({ productId }: { productId: string }) {
                         v.id === variant.id ? { ...v, isOpen: !v.isOpen } : v
                       )
                     );
-                  }}
-                >
-                  <div className="flex items-center gap-4">
+                  }}>
+                  <div className="flex items-center gap-2 sm:gap-4">
                     <div
                       className={`transform transition-transform ${
                         variant.isOpen ? "rotate-90" : ""
-                      }`}
-                    >
-                      <ChevronRight size={20} />
+                      }`}>
+                      <ChevronRight size={18} />
                     </div>
-                    {/* <div className="w-64">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="w-full max-w-[14rem]">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Color Variant
                       </label>
                       {variant.customColor ? (
@@ -567,8 +671,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                                 )
                               );
                             }}
-                            className="px-3 py-1.5 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 mt-1 sm:mt-0"
-                          >
+                            className="px-3 py-1.5 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 mt-1 sm:mt-0">
                             Back
                           </button>
                         </div>
@@ -605,17 +708,16 @@ export function EditProductForm({ productId }: { productId: string }) {
                           <option value="custom">Custom Color...</option>
                         </select>
                       )}
-                    </div> */}
+                    </div>
                   </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       removeVariant(variant.id);
                     }}
-                    className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-2 rounded-full hover:bg-red-50"
-                    title="Remove Color Variant"
-                  >
-                    <Trash2 size={18} />
+                    className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-red-50"
+                    title="Remove Color Variant">
+                    <Trash2 size={16} />
                   </button>
                 </div>
                 {variant.isOpen && (
@@ -631,16 +733,17 @@ export function EditProductForm({ productId }: { productId: string }) {
                               src={image.url || "/logo.svg"}
                               width={200}
                               height={200}
-                              alt={`Variant image ${index + 1}`}
-                              className="w-full h-28 object-contain rounded-md border border-gray-200"
+                              alt={`${variant.color} variant image ${
+                                index + 1
+                              }`}
+                              className="w-full h-20 sm:h-24 md:h-28 object-contain rounded-md border border-gray-200"
                             />
                             <button
                               onClick={() =>
                                 handleRemoveVariantImage(variant.id, index)
                               }
-                              className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X size={14} />
+                              className="absolute top-1 right-1 bg-white rounded-full p-1 sm:p-1.5 shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                              <X size={12} />
                             </button>
                           </div>
                         ))}
@@ -650,10 +753,9 @@ export function EditProductForm({ productId }: { productId: string }) {
                             setVarientId(variant.id);
                             setVarientImgPopUp(true);
                           }}
-                          className="w-full h-28 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors"
-                        >
-                          <Upload size={20} />
-                          <span className="mt-2 text-sm">Add Image</span>
+                          className="w-full h-20 sm:h-24 md:h-28 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors">
+                          <Upload size={16} className="mb-1" />
+                          <span className="text-xs">Add Image</span>
                         </button>
                       </div>
                     </div>
@@ -665,10 +767,9 @@ export function EditProductForm({ productId }: { productId: string }) {
                         {variant.sizes.map((size) => (
                           <div
                             key={size.id}
-                            className="flex gap-6 items-center bg-gray-50 p-4 rounded-lg"
-                          >
-                            <div className="w-48">
-                              <label className="block text-xs text-gray-500 mb-1.5">
+                            className="flex flex-col sm:flex-row gap-3 sm:gap-6 sm:items-center bg-gray-50 p-3 sm:p-4 rounded-lg">
+                            <div className="w-full sm:w-48">
+                              <label className="block text-xs text-gray-500 mb-1">
                                 Size
                               </label>
                               <select
@@ -690,11 +791,10 @@ export function EditProductForm({ productId }: { productId: string }) {
                                       return v;
                                     })
                                   );
-                                }}
-                              >
+                                }}>
                                 {Sizes.map((size) => (
-                                  <option key={size.value} value={size.value}>
-                                    {size.label}
+                                  <option key={size} value={size}>
+                                    {size.replace(/[^0-9]/g, "")}
                                   </option>
                                 ))}
                               </select>
@@ -734,9 +834,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                             </div>
                             <button
                               onClick={() => removeSize(variant.id, size.id)}
-                              className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-2 rounded-full hover:bg-red-50 mt-6"
-                              title="Remove Size Option"
-                            >
+                              className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-red-50 mx-auto sm:mt-6"
+                              title="Remove Size Option">
                               <X size={16} />
                             </button>
                           </div>
@@ -744,9 +843,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                       </div>
                       <button
                         onClick={() => addSize(variant.id)}
-                        className="mt-4 text-sm text-[#4f507f] hover:text-[#3e3f63] flex items-center gap-2 px-4 py-2 rounded-md hover:bg-[#edeefc] transition-colors duration-200"
-                      >
-                        <Plus size={16} />
+                        className="mt-3 sm:mt-4 text-xs sm:text-sm text-[#4f507f] hover:text-[#3e3f63] flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-[#edeefc] transition-colors duration-200">
+                        <Plus size={14} />
                         Add Size Option
                       </button>
                     </div>
@@ -757,7 +855,7 @@ export function EditProductForm({ productId }: { productId: string }) {
           </div>
         </div>
       </div>
-      
+
       {/* Sidebar section */}
       <div className="space-y-4 md:space-y-6">
         {/* Organization section */}
@@ -780,23 +878,21 @@ export function EditProductForm({ productId }: { productId: string }) {
                     <div
                       key={category.id}
                       onClick={() =>
-                        setProduct({ ...product, categoryId: category.id })
+                        setProduct({ ...product, category_id: category.id })
                       }
                       className={`flex items-center gap-2 p-2 rounded-md cursor-pointer ${
-                        product.categoryId === category.id
+                        product.category_id === category.id
                           ? "bg-[#edeefc] text-[#4f507f]"
                           : "hover:bg-gray-100"
-                      }`}
-                    >
+                      }`}>
                       <div
-                        className={`w-5 h-5 rounded-md flex items-center justify-center ${
-                          product.categoryId === category.id
+                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded-md flex items-center justify-center ${
+                          product.category_id === category.id
                             ? "bg-[#4f507f] text-white"
                             : "border border-gray-300"
-                        }`}
-                      >
-                        {product.categoryId === category.id && (
-                          <Check size={14} />
+                        }`}>
+                        {product.category_id === category.id && (
+                          <Check size={12} />
                         )}
                       </div>
                       <span className="text-sm">{category.name}</span>
@@ -840,49 +936,9 @@ export function EditProductForm({ productId }: { productId: string }) {
           </div>
         </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Low Stock Threshold
-              </label>
-              <input
-                type="number"
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f]"
-                placeholder="0"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="track-inventory"
-                className="w-4 h-4 text-[#4f507f] bg-white rounded focus:ring-[#4f507f]"
-              />
-              <label
-                htmlFor="track-inventory"
-                className="text-sm text-gray-700"
-              >
-                Track inventory
-              </label>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="continue-selling"
-                className="w-4 h-4 bg-white text-[#4f507f] rounded focus:ring-[#4f507f]"
-              />
-              <label
-                htmlFor="continue-selling"
-                className="text-sm text-gray-700"
-              >
-                Continue selling when out of stock
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-8 shadow-lg border border-gray-100">
-          <h2 className="text-xl font-semibold mb-6 text-[#4f507f] flex items-center">
+        {/* Status section */}
+        <div className="bg-white rounded-lg p-4 md:p-8 shadow-lg border border-gray-100">
+          <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6 text-[#4f507f] flex items-center">
             <span className="inline-block w-2 h-2 bg-[#4f507f] rounded-full mr-2"></span>
             Status
           </h2>
@@ -895,8 +951,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                   product.status === "DRAFT"
                     ? "bg-yellow-100 text-yellow-800"
                     : "bg-gray-100 text-gray-800"
-                }`}
-              >
+                }`}>
                 Draft
               </button>
               <button
@@ -905,32 +960,29 @@ export function EditProductForm({ productId }: { productId: string }) {
                   product.status === "PUBLISHED"
                     ? "bg-green-100 text-green-800"
                     : "bg-gray-100 text-gray-800"
-                }`}
-              >
+                }`}>
                 Published
               </button>
             </div>
           </div>
         </div>
-        
+
         {/* Action buttons */}
         <div className="flex gap-2 sm:gap-3">
           <button
             type="submit"
-            className="flex-1 bg-[#4f507f] text-white py-2 px-4 rounded-md hover:bg-[#3e3f63] transition-colors"
-            onClick={saveProduct}
-          >
+            className="flex-1 bg-[#4f507f] text-white py-2 px-3 sm:px-4 rounded-md hover:bg-[#3e3f63] transition-colors text-sm sm:text-base"
+            onClick={saveProduct}>
             Save Product
           </button>
           <button
             type="button"
-            className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 transition-colors"
-          >
+            className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-3 sm:px-4 rounded-md hover:bg-gray-50 transition-colors text-sm sm:text-base">
             Cancel
           </button>
         </div>
       </div>
-      
+
       {/* Popups */}
       {isUploadPopupOpen && (
         <MultiUploadPopup
