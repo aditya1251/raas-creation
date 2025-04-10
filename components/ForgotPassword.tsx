@@ -9,6 +9,7 @@ import {
   FormField,
   FormItem,
   FormControl,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 // Define a simple schema for the mobile number field
 const ForgotPasswordSchema = z.object({
@@ -30,9 +33,12 @@ const ForgotPasswordSchema = z.object({
 
 const ForgotPassword = () => {
   const router = useRouter();
-  const { mutate } = useForgotPassword();
+  const { mutate, isPending } = useForgotPassword();
   const form = useForm<z.infer<typeof ForgotPasswordSchema>>({
     resolver: zodResolver(ForgotPasswordSchema),
+    defaultValues: {
+      mobileNumber: "",
+    },
   });
 
   async function handleSubmit(values: z.infer<typeof ForgotPasswordSchema>) {
@@ -92,7 +98,7 @@ const ForgotPassword = () => {
               </div>
               <Link
                 href="/"
-                className="ml-auto bg-[#a08452] hover:bg-[#8c703d] text-white px-4 py-2 rounded-md flex items-center gap-2"
+                className="ml-auto bg-[#a08452] hover:bg-[#8c703d] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
               >
                 <span>BACK</span>
                 <ArrowLeft className="h-4 w-4" />
@@ -100,8 +106,8 @@ const ForgotPassword = () => {
             </div>
 
             <div className="mb-8">
-              <h1 className="text-3xl font-medium mb-2">Forgot Password?</h1>
-              <p className="text-gray-500 flex items-center gap-1">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Forgot Password?</h1>
+              <p className="text-gray-600">
                 Enter Your Mobile Number
               </p>
             </div>
@@ -109,32 +115,43 @@ const ForgotPassword = () => {
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-4"
+                className="space-y-6"
               >
                 <FormField
                   control={form.control}
                   name="mobileNumber"
-                  render={({ field }) => (
+                  render={({ field: { onChange, ...field } }) => (
                     <FormItem>
+                      <FormLabel className="text-sm font-semibold text-gray-700">
+                        Mobile Number
+                      </FormLabel>
                       <FormControl>
-                        <div className="rounded-xl border-2 border-[#a08452] focus:outline-[#a08452]">
-                          <Input
-                            placeholder="Mobile Number"
-                            className="w-full p-4 sm:p-5 text-white bg-transparent border-0 rounded-xl outline-none"
-                            {...field}
-                          />
-                        </div>
+                        <PhoneInput
+                          country={"in"}
+                          value={field.value}
+                          onChange={(phone) => onChange(phone)}
+                          disabled={isPending}
+                          inputClass="!w-full !px-10 !py-3 !border !border-gray-300 !rounded-lg !focus:outline-none !focus:ring-2 !focus:ring-[#a08452] !focus:border-transparent"
+                          buttonClass="!bg-[#a08452] !rounded-lg !border-0"
+                          dropdownClass="!bg-white !text-black"
+                          searchClass="!bg-white !text-gray-900"
+                          inputProps={{
+                            required: true,
+                            placeholder: "Enter your mobile number",
+                          }}
+                        />
                       </FormControl>
-                      <FormMessage className="text-red-400 text-sm ml-2" />
+                      <FormMessage className="text-red-500 text-sm" />
                     </FormItem>
                   )}
                 />
 
                 <Button
                   type="submit"
-                  className="w-full p-3 text-white text-lg rounded-xl bg-[#a08452] shadow-[0_4px_20px_rgba(255,255,255,0.6)]"
+                  disabled={isPending}
+                  className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white py-3 rounded-lg font-medium transition-colors duration-200"
                 >
-                  Send OTP
+                  {isPending ? "Sending OTP..." : "Send OTP"}
                 </Button>
               </form>
             </Form>
