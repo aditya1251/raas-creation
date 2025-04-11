@@ -83,7 +83,7 @@ export function Sidebar() {
         }`}>
         <div className="p-4 border-b border-gray-200 flex items-center gap-2 font-semibold">
           <span className="h-6 w-6 rounded-full bg-[#4f507f] flex-shrink-0"></span>
-          {!isCollapsed && <span>Arvan</span>}
+          {!isCollapsed && <span>RAAS</span>}
           {!isMobile && (
             <button
               className="ml-auto text-gray-500 hover:text-gray-700"
