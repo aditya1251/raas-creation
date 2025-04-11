@@ -61,7 +61,6 @@ export function EditProductForm({ productId }: { productId: string }) {
     variants: "",
     images: "",
     category: "",
-    material: "",
   });
 
   const [product, setProduct] = useState<Product>({
@@ -70,7 +69,6 @@ export function EditProductForm({ productId }: { productId: string }) {
     price: 0,
     discountPrice: 0,
     category_id: "",
-    material: "",
     assets: [],
     status: "DRAFT",
   });
@@ -83,7 +81,6 @@ export function EditProductForm({ productId }: { productId: string }) {
       variants: "",
       images: "",
       category: "",
-      material: "",
     };
     if (!product.name.trim()) {
       newErrors.name = "Product name is required";
@@ -105,9 +102,6 @@ export function EditProductForm({ productId }: { productId: string }) {
       newErrors.category = "Please select a category";
     }
 
-    if (!product.material.trim()) {
-      newErrors.material = "Please select a material";
-    }
 
     if (variants.length > 0) {
       const hasInvalidVariant = variants.some(
@@ -144,7 +138,6 @@ export function EditProductForm({ productId }: { productId: string }) {
         description: data.description,
         price: data.price,
         category_id: data.category_id,
-        material: data.material,
         status: data.status,
         discountPrice: data.discountPrice ?? 1,
         assets: data.assets?.map(
@@ -905,23 +898,7 @@ export function EditProductForm({ productId }: { productId: string }) {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Material
-              </label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-sm"
-                placeholder="Enter material"
-                value={product.material}
-                onChange={(e) =>
-                  setProduct({ ...product, material: e.target.value })
-                }
-              />
-              {errors.material && (
-                <p className="text-red-500 text-xs mt-1">{errors.material}</p>
-              )}
-            </div>
+            
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

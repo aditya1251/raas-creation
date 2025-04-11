@@ -358,11 +358,6 @@ export default function ProductDetailPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Material</h3>
-                  <p>Mid Cotton</p>
-                </div>
-
-                <div>
                   <h3 className="text-sm font-medium mb-2">
                     Care Instructions
                   </h3>

@@ -55,7 +55,8 @@ export function AddProductForm() {
     variants: "",
     images: "",
     category: "",
-    material: "",
+    status: "",
+    sku: "",
   });
 
   const [product, setProduct] = useState<Product>({
@@ -64,9 +65,9 @@ export function AddProductForm() {
     price: 0,
     discountPrice: 1,
     category_id: "",
-    material: "",
     assets: [],
     status: "DRAFT",
+    sku: "",
   });
 
   const validateProduct = () => {
@@ -77,7 +78,8 @@ export function AddProductForm() {
       variants: "",
       images: "",
       category: "",
-      material: "",
+      status: "",
+      sku: "",
     };
     if (!product.name.trim()) {
       newErrors.name = "Product name is required";
@@ -94,13 +96,20 @@ export function AddProductForm() {
     if (product.assets?.length === 0) {
       newErrors.images = "At least one product image is required";
     }
+    
+    if (!product.status.trim()) {
+      newErrors.status = "Please select a status";
+    }
+    if (!product.sku?.trim()) {
+      newErrors.sku = "SKU is required";
+    }
+
+    if(!product.sku){
+      newErrors.sku = "SKU is required";
+    }
 
     if (!product.category_id.trim()) {
       newErrors.category = "Please select a category";
-    }
-
-    if (!product.material.trim()) {
-      newErrors.material = "Please select a material";
     }
 
     if (variants.length > 0) {
@@ -324,15 +333,19 @@ export function AddProductForm() {
                 placeholder="Enter product description"
               />
               {errors.description && (
-                <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.description}
+                </p>
               )}
             </div>
           </div>
         </div>
-        
+
         {/* Media Section */}
         <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">Media</h2>
+          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">
+            Media
+          </h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
             {product.assets?.map((image, index) => (
@@ -363,10 +376,12 @@ export function AddProductForm() {
             <p className="text-red-500 text-xs mt-2">{errors.images}</p>
           )}
         </div>
-        
+
         {/* Pricing Section */}
         <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">Pricing</h2>
+          <h2 className="text-lg font-medium mb-3 md:mb-4 text-[#4f507f]">
+            Pricing
+          </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
@@ -434,7 +449,7 @@ export function AddProductForm() {
             </div>
           </div>
         </div>
-        
+
         {/* Product Variants Section */}
         <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-3 sm:gap-0">
@@ -506,8 +521,7 @@ export function AddProductForm() {
                                 )
                               );
                             }}
-                            className="px-3 py-1.5 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 mt-1 sm:mt-0"
-                          >
+                            className="px-3 py-1.5 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 mt-1 sm:mt-0">
                             Back
                           </button>
                         </div>
@@ -691,7 +705,7 @@ export function AddProductForm() {
           </div>
         </div>
       </div>
-      
+
       {/* Sidebar section */}
       <div className="space-y-4 md:space-y-6">
         {/* Organization section */}
@@ -743,19 +757,19 @@ export function AddProductForm() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Material
+                SKU
               </label>
               <input
                 type="text"
                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-sm"
-                placeholder="Enter material"
-                value={product.material}
+                placeholder="Enter SKU"
+                value={product.sku}
                 onChange={(e) =>
-                  setProduct({ ...product, material: e.target.value })
+                  setProduct({ ...product, sku: e.target.value })
                 }
               />
-              {errors.material && (
-                <p className="text-red-500 text-xs mt-1">{errors.material}</p>
+              {errors.sku && (
+                <p className="text-red-500 text-xs mt-1">{errors.sku}</p>
               )}
             </div>
 
@@ -802,7 +816,7 @@ export function AddProductForm() {
             </div>
           </div>
         </div>
-        
+
         {/* Action buttons */}
         <div className="flex gap-2 sm:gap-3">
           <button
@@ -819,7 +833,7 @@ export function AddProductForm() {
           </button>
         </div>
       </div>
-      
+
       {/* Popups */}
       {isUploadPopupOpen && (
         <MultiUploadPopup
