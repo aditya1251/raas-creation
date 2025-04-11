@@ -22,14 +22,12 @@ export function AddProductForm() {
   const router = useRouter();
 
   const Sizes = [
-    "SIZE_5",
-    "SIZE_6",
-    "SIZE_7",
-    "SIZE_8",
-    "SIZE_9",
-    "SIZE_10",
-    "SIZE_11",
-    "SIZE_12",
+    "SIZE_36",
+    "SIZE_38",
+    "SIZE_40",
+    "SIZE_42",
+    "SIZE_44",
+    "SIZE_46",
   ];
 
   interface Variant {
@@ -96,7 +94,7 @@ export function AddProductForm() {
     if (product.assets?.length === 0) {
       newErrors.images = "At least one product image is required";
     }
-    
+
     if (!product.status.trim()) {
       newErrors.status = "Please select a status";
     }
@@ -104,7 +102,7 @@ export function AddProductForm() {
       newErrors.sku = "SKU is required";
     }
 
-    if(!product.sku){
+    if (!product.sku) {
       newErrors.sku = "SKU is required";
     }
 
@@ -139,7 +137,32 @@ export function AddProductForm() {
         sizes: [
           {
             id: cuid(),
-            name: "SIZE_5",
+            name: "SIZE_36",
+            quantity: 0,
+          },
+          {
+            id: cuid(),
+            name: "SIZE_38",
+            quantity: 0,
+          },
+          {
+            id: cuid(),
+            name: "SIZE_40",
+            quantity: 0,
+          },
+          {
+            id: cuid(),
+            name: "SIZE_42",
+            quantity: 0,
+          },
+          {
+            id: cuid(),
+            name: "SIZE_44",
+            quantity: 0,
+          },
+          {
+            id: cuid(),
+            name: "SIZE_46",
             quantity: 0,
           },
         ],
@@ -154,7 +177,7 @@ export function AddProductForm() {
         if (variant.id === variantId) {
           return {
             ...variant,
-            sizes: [...variant.sizes, { id: cuid(), name: "", quantity: 0 }],
+            sizes: [...variant.sizes, { id: cuid(), name: "SIZE_36", quantity: 0 }],
           };
         }
         return variant;
@@ -180,14 +203,17 @@ export function AddProductForm() {
     );
   };
 
-  const handleAddVarientImage = (Urls : string[]) => {
+  const handleAddVarientImage = (Urls: string[]) => {
     // In a real app, this would open a file picker
     setVariants(
       variants.map((variant) => {
         if (variant.id === varientId) {
           return {
             ...variant,
-            images: [...variant.images, ...Urls.map((url) => ({ url, type: "IMAGE" as const }))],
+            images: [
+              ...variant.images,
+              ...Urls.map((url) => ({ url, type: "IMAGE" as const })),
+            ],
           };
         }
         return variant;
@@ -217,10 +243,13 @@ export function AddProductForm() {
     queryFn: () => categoryApi.getAll(),
   });
 
-  const handleAddImage = (Urls : string[]) => {
+  const handleAddImage = (Urls: string[]) => {
     setProduct({
       ...product,
-      assets: [...(product.assets || []), ...Urls.map((url) => ({ url, type: "IMAGE" as const }))],
+      assets: [
+        ...(product.assets || []),
+        ...Urls.map((url) => ({ url, type: "IMAGE" as const })),
+      ],
     });
     setIsUploadPopupOpen(false);
   };
@@ -243,14 +272,12 @@ export function AddProductForm() {
       }[];
       sizes: {
         size:
-          | "SIZE_5"
-          | "SIZE_6"
-          | "SIZE_7"
-          | "SIZE_8"
-          | "SIZE_9"
-          | "SIZE_10"
-          | "SIZE_11"
-          | "SIZE_12";
+          | "SIZE_36"
+          | "SIZE_38"
+          | "SIZE_40"
+          | "SIZE_42"
+          | "SIZE_44"
+          | "SIZE_46";
         stock: number;
       }[];
     }) => varientApi.addVarient(variant),
@@ -268,14 +295,12 @@ export function AddProductForm() {
             assets: variant.images,
             sizes: variant.sizes.map((size) => ({
               size: size.name as
-                | "SIZE_5"
-                | "SIZE_6"
-                | "SIZE_7"
-                | "SIZE_8"
-                | "SIZE_9"
-                | "SIZE_10"
-                | "SIZE_11"
-                | "SIZE_12",
+               "SIZE_36"
+              | "SIZE_38"
+              | "SIZE_40"
+              | "SIZE_42"
+              | "SIZE_44"
+              | "SIZE_46",
               stock: size.quantity,
             })),
           });

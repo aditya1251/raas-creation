@@ -25,14 +25,12 @@ export function EditProductForm({ productId }: { productId: string }) {
   const router = useRouter();
 
   const Sizes = [
-    "SIZE_5",
-    "SIZE_6",
-    "SIZE_7",
-    "SIZE_8",
-    "SIZE_9",
-    "SIZE_10",
-    "SIZE_11",
-    "SIZE_12",
+    "SIZE_36",
+    "SIZE_38",
+    "SIZE_40",
+    "SIZE_42",
+    "SIZE_44",
+    "SIZE_46",
   ];
 
   interface Variant {
@@ -195,10 +193,41 @@ export function EditProductForm({ productId }: { productId: string }) {
         images: [],
         sizes: [
           {
-            id: crypto.randomUUID(),
-            name: "SIZE_5",
+            id: cuid(),
+            name: "SIZE_36",
             quantity: 0,
-            isNew: true,
+            isNew: true
+          },
+          {
+            id: cuid(),
+            name: "SIZE_38",
+            quantity: 0,
+            isNew: true
+
+          },
+          {
+            id: cuid(),
+            name: "SIZE_40",
+            quantity: 0,
+            isNew: true
+          },
+          {
+            id: cuid(),
+            name: "SIZE_42",
+            quantity: 0,
+            isNew: true
+          },
+          {
+            id: cuid(),
+            name: "SIZE_44",
+            quantity: 0,
+            isNew: true
+          },
+          {
+            id: cuid(),
+            name: "SIZE_46",
+            quantity: 0,
+            isNew: true
           },
         ],
         isOpen: true,
@@ -215,7 +244,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             ...variant,
             sizes: [
               ...variant.sizes,
-              { id: cuid(), name: "", quantity: 0, isNew: true },
+              { id: cuid(), name: "SIZE_36", quantity: 0, isNew: true },
             ],
           };
         }
@@ -350,14 +379,12 @@ export function EditProductForm({ productId }: { productId: string }) {
               assets: variant.images,
               sizes: variant.sizes.map((size) => ({
                 size: size.name as
-                  | "SIZE_5"
-                  | "SIZE_6"
-                  | "SIZE_7"
-                  | "SIZE_8"
-                  | "SIZE_9"
-                  | "SIZE_10"
-                  | "SIZE_11"
-                  | "SIZE_12",
+                "SIZE_36"
+                | "SIZE_38"
+                | "SIZE_40"
+                | "SIZE_42"
+                | "SIZE_44"
+                | "SIZE_46",
                 stock: size.quantity,
               })),
             });
@@ -374,14 +401,12 @@ export function EditProductForm({ productId }: { productId: string }) {
               if (size.isNew) {
                 newSizes.push({
                   size: size.name as
-                    | "SIZE_5"
-                    | "SIZE_6"
-                    | "SIZE_7"
-                    | "SIZE_8"
-                    | "SIZE_9"
-                    | "SIZE_10"
-                    | "SIZE_11"
-                    | "SIZE_12",
+                  "SIZE_36"
+                  | "SIZE_38"
+                  | "SIZE_40"
+                  | "SIZE_42"
+                  | "SIZE_44"
+                  | "SIZE_46",
                   stock: size.quantity,
                 });
               } else {
