@@ -4,8 +4,6 @@ import Link from "next/link";
 import {
   ChevronDown,
   Heart,
-  LayoutGrid,
-  List,
   Package,
   RefreshCw,
   HeadphonesIcon,
@@ -26,15 +24,78 @@ import { useQuery } from "@tanstack/react-query";
 import { productApi } from "@/lib/api/productdetails";
 import { Products } from "@/components/admin/products-table";
 
+// Define sort options
+const sortOptions = [
+  { value: "latest", label: "Sort by latest" },
+  // { value: "popularity", label: "Sort by popularity" },
+  { value: "price-low-high", label: "Sort by price: low to high" },
+  { value: "price-high-low", label: "Sort by price: high to low" },
+];
+
 export default function ShopPage() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  //  const queryClient = useQueryClient()
+  const [sortBy, setSortBy] = useState<string>("latest");
+  const [priceRange, setPriceRange] = useState<number>(6000);
+  const [maxPriceValue, setMaxPriceValue] = useState<number>(6000);
   
-    const { data:products, isLoading } = useQuery({
-      queryKey: ["products"],
-      queryFn: productApi.getAll,
-    })
-    console.log("products", products);
+  // Get products from API
+  const { data: products, isLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: productApi.getAll,
+  });
+  
+  // State for sorted and filtered products
+  const [filteredProducts, setFilteredProducts] = useState<Products[]>([]);
+  
+  // Calculate max price when products load
+  useEffect(() => {
+    if (products && products.length > 0) {
+      const highestPrice = Math.max(...products.map(p => p.price));
+      // Round up to nearest 1000 for better UI
+      const roundedMax = Math.ceil(highestPrice / 1000) * 1000;
+      setMaxPriceValue(roundedMax > 0 ? roundedMax : 6000);
+      setPriceRange(roundedMax > 0 ? roundedMax : 6000);
+    }
+  }, [products]);
+  
+  // Sort and filter products when required states change
+  useEffect(() => {
+    if (!products) return;
+    
+    // First filter by price
+    let filtered = products.filter(product => 
+      product.discountPrice <= priceRange
+    );
+    
+    // Then sort the filtered results
+    switch (sortBy) {
+      case "latest":
+        // Assuming products have a createdAt or date field
+        filtered = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+      case "price-low-high":
+        filtered = filtered.sort((a, b) => a.discountPrice - b.discountPrice);
+        break;
+      case "price-high-low":
+        filtered = filtered.sort((a, b) => b.discountPrice - a.discountPrice);
+        break;
+      default:
+        break;
+    }
+    
+    setFilteredProducts(filtered);
+  }, [products, sortBy, priceRange]);
+  
+  // Handle sort change
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortBy(e.target.value);
+  };
+  
+  // Handle price range change
+  const handlePriceRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPriceRange(Number(e.target.value));
+  };
+
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
@@ -133,25 +194,28 @@ export default function ShopPage() {
                 </div>
               </div>
             </div>
-
-            {/* Filter By Price */}
+            {/* Filter By Price - Now Dynamic */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-medium">Filter By Price</h3>
                 <ChevronDown className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-sm mb-2">Price: ₹0 - ₹6000</p>
+                <p className="text-sm mb-2">Price: ₹0 - ₹{priceRange}</p>
                 <input
                   type="range"
                   min="0"
-                  max="6000"
-                  defaultValue="6000"
+                  max={maxPriceValue}
+                  value={priceRange}
+                  onChange={handlePriceRangeChange}
                   className="w-full h-1 bg-[#A08452] rounded-lg appearance-none cursor-pointer"
                 />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>₹0</span>
+                  <span>₹{maxPriceValue}</span>
+                </div>
               </div>
             </div>
-
             {/* Filter By Color */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
@@ -177,7 +241,6 @@ export default function ShopPage() {
                 </div>
               </div>
             </div>
-
             {/* Size */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
@@ -223,7 +286,6 @@ export default function ShopPage() {
                 </div>
               </div>
             </div>
-
             {/* Mobile Apply Filters Button */}
             <div className="md:hidden my-4">
               <Button
@@ -238,32 +300,44 @@ export default function ShopPage() {
           {/* Product Grid */}
           <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
-              <div className="flex space-x-2">
-                <button className="p-2 border rounded bg-gray-100">
-                  <LayoutGrid className="h-5 w-5" />
-                </button>
-                <button className="p-2 border rounded text-gray-400">
-                  <List className="h-5 w-5" />
-                </button>
+              {/* Product count */}
+              <div className="text-sm text-gray-500">
+                Showing {filteredProducts.length} of {products?.length || 0} products
               </div>
+              
+              {/* Sort by dropdown */}
               <div>
                 <div className="relative inline-block">
-                  <select className="appearance-none border rounded-md px-4 py-2 pr-8 focus:outline-none text-sm">
-                    <option>Sort by latest</option>
-                    <option>Sort by popularity</option>
-                    <option>Sort by price: low to high</option>
-                    <option>Sort by price: high to low</option>
+                  <select 
+                    className="appearance-none border rounded-md px-4 py-2 pr-8 focus:outline-none text-sm"
+                    value={sortBy}
+                    onChange={handleSortChange}
+                  >
+                    {sortOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
-                  {/* <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 " /> */}
+                  {/* <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" /> */}
                 </div>
               </div>
             </div>
 
-            {/* Products Grid */}
+            {/* Products Grid - Only Column View */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {products?.map((product, index) => (
-                <ProductCard key={index} product={product} />
-              ))}
+              {isLoading ? (
+                <div className="col-span-3 text-center py-10">Loading products...</div>
+              ) : filteredProducts?.length ? (
+                filteredProducts.map((product, index) => (
+                  <ProductCard 
+                    key={index} 
+                    product={product}
+                  />
+                ))
+              ) : (
+                <div className="col-span-3 text-center py-10">No products found within the selected price range</div>
+              )}
             </div>
 
             {/* Load More Button */}
@@ -320,9 +394,19 @@ export default function ShopPage() {
   );
 }
 
-// ProductCard component remains the same as in the original code
+// ProductCard component remains the same
 function ProductCard({ product }: { product: Products }) {
-  // (Original ProductCard implementation)
+  const { toast } = useToast();
+  const { addToCart } = useCart();
+  
+  const handleAddToCart = () => {
+    addToCart(product);
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart.`,
+    });
+  };
+  
   return (
     <div className="group relative">
       <div className="aspect-[3/4] relative overflow-hidden rounded-xl bg-gray-100">
@@ -347,6 +431,7 @@ function ProductCard({ product }: { product: Products }) {
           transition-transform duration-300 ease-in-out"
         >
           <button
+            onClick={handleAddToCart}
             className="w-full flex justify-center gap-4 items-center rounded-lg bg-[#795D2A] text-white text-lg font-normal py-2 
             opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           >
@@ -356,7 +441,7 @@ function ProductCard({ product }: { product: Products }) {
         </div>
       </div>
       <div className="mt-3">
-        <Link href={`/shop/product/${product.slug}`} className="block">
+        <Link href={`/product/${product.slug}`} className="block">
           <h3 className="text-sm font-medium">{product.name}</h3>
         </Link>
         <div className="flex items-center mt-1">
