@@ -166,3 +166,14 @@ select {
     scrollbar-width: none;  /* Firefox */
   }
 }
+
+* select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+* select:hover {
+  /* courser: pointer; */
+  cursor: pointer;
+}
