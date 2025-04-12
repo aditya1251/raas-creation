@@ -16,6 +16,7 @@ export const product = z.object({
       .optional(),
     status: z.enum(['DRAFT', 'PUBLISHED']),
     sku: z.string().min(1, "SKU is required").optional(),
+    tags: z.array(z.string()).optional(),
   });
 
 export const varient = z.object({
