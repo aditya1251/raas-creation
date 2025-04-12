@@ -146,7 +146,7 @@ export default function MediaManager({
             <Button
               className={`flex-1 py-2.5 px-6 rounded-lg transition-all font-medium ${
                 showUpload
-                  ? "bg-[#4f507f] text-white shadow-sm"
+                  ? "bg-[#4f507f] hover:bg-[#4f507f] text-white shadow-sm"
                   : "bg-transparent hover:bg-transparent text-gray-600"
               }`}
               onClick={() => {
@@ -160,7 +160,7 @@ export default function MediaManager({
             <Button
               className={`flex-1 py-2.5 px-6 rounded-lg transition-all font-medium ${
                 showGallery
-                  ? "bg-[#4f507f] text-white shadow-sm"
+                  ? "bg-[#4f507f] hover:bg-[#4f507f] text-white shadow-sm"
                   : "bg-transparent hover:bg-transparent text-gray-600"
               }`}
               onClick={() => {
@@ -180,7 +180,7 @@ export default function MediaManager({
           </Button>
         </div>
 
-        <div className="p-5 overflow-y-auto flex-1">
+        <div className="p-5 overflow-hidden flex-1 ">
           {showUpload && (
             <>
               {files.length === 0 ? (

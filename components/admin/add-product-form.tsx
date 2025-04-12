@@ -307,7 +307,7 @@ export function AddProductForm() {
         });
       }
 
-      router.push(`/product/${data.id}`);
+      router.push(`/product/${data.slug}`);
     },
   });
 
