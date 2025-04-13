@@ -1,23 +1,36 @@
 import { AssetType, VariantsValues } from "@prisma/client";
 import { z } from "zod";
 export const product = z.object({
-    name: z.string().min(1, "Product name is required"),
-    description: z.string().min(1, "Description is required"),
-    price: z.number().positive("Price must be a positive number"),
-    discountPrice: z.number().positive("Discount Prize must be a positive number").optional(),
-    category_id: z.string().cuid("Invalid category ID"),
-    assets: z
-      .array(
-        z.object({
-          url: z.string().url("Invalid asset URL"),
-          type: z.enum(["IMAGE", "VIDEO"]),
-        })
-      )
-      .optional(),
-    status: z.enum(['DRAFT', 'PUBLISHED']),
-    sku: z.string().min(1, "SKU is required").optional(),
-  });
+  name: z.string().min(1, "Product name is required"),
+  description: z.string().min(1, "Description is required"),
+  price: z.number().positive("Price must be a positive number"),
+  discountPrice: z.number().positive("Discount Prize must be a positive number").optional(),
+  category_id: z.string().cuid("Invalid category ID"),
+  assets: z
+    .array(
+      z.object({
+        url: z.string().url("Invalid asset URL"),
+        type: z.enum(["IMAGE", "VIDEO"]),
+      })
+    )
+    .optional(),
+  status: z.enum(['DRAFT', 'PUBLISHED']),
+  sku: z.string().min(1, "SKU is required").optional(),
+  tags: z.array(z.string()).optional(),
+});
 
+export const discount = z.object({
+  id: z.string().cuid("Invalid discount ID").optional(),
+  code: z.string().min(1, "Discount code is required"),
+  type: z.enum(['PERCENTAGE', 'FIXED_AMOUNT']),
+  value: z.number().positive("Discount value must be a positive number"),
+  minPurchase: z.number().positive("Minimum purchase must be a positive number").optional(),
+  usageLimit: z.number().int().positive("Usage limit must be a positive integer").optional(),
+  usageCount: z.number().int().min(0, "Usage count must be a non-negative integer"),
+  startDate: z.date(),
+  endDate: z.date().optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'EXPIRED']).default('ACTIVE'),
+});
 export const varient = z.object({
   id: z.string().cuid("Invalid variant ID").optional(),
   productId: z.string().cuid("Invalid product ID"),
@@ -50,6 +63,8 @@ export type Review = z.infer<typeof review>;
 export type Varient = z.infer<typeof varient>;
 
 export type Product = z.infer<typeof product>;
+
+export type Discount = z.infer<typeof discount>;
 
 export const category = z.object({
   id: z.string().cuid("Invalid category ID"),
@@ -105,4 +120,4 @@ export const SignUpSchema = z
     path: ["confirmPassword"],
   })
 
-  
+

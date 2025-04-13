@@ -26,6 +26,14 @@ model Product {
   sales              SalesSummary[]
   OrderItem          OrderItem[]
   Wishlist           Wishlist[]
+  ProductTags        ProductTags[]
+}
+
+model ProductTags {
+  id        String  @id @default(cuid())
+  tag       String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
 }
 
 model ProductColor {
@@ -308,4 +316,37 @@ model Wishlist {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, productId])
+}
+
+model Upoads {
+  id        String   @id @default(cuid())
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Discount {
+  id            String       @id @default(cuid())
+  code          String    @unique
+  type          DiscountType
+  value         Float
+  minPurchase   Float?    // Optional
+  usageLimit    Int?      // Optional (null means unlimited)
+  usageCount    Int       @default(0)
+  startDate     DateTime
+  endDate       DateTime? // Optional (null means no expiration)
+  status        Status    @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  EXPIRED
 }
