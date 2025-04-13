@@ -23,6 +23,7 @@ import {
   Menu,
   X,
   Box,
+  Percent,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -197,6 +198,13 @@ export function Sidebar() {
                 icon={<List size={18} />}
                 label="All Orders"
                 active={isActive("/admin/orders")}
+                collapsed={isCollapsed}
+              />
+              <NavItem
+                href="/admin/orders/discount"
+                icon={<Percent size={18} />}
+                label="Discount"
+                active={isActive("/admin/orders/discount")}
                 collapsed={isCollapsed}
               />
             </div>

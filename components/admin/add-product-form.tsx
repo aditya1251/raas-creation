@@ -66,6 +66,7 @@ export function AddProductForm() {
     assets: [],
     status: "DRAFT",
     sku: "",
+    tags: [],
   });
 
   const validateProduct = () => {
@@ -126,6 +127,28 @@ export function AddProductForm() {
     return Object.values(newErrors).every((error) => !error);
   };
 
+  const [inputValue, setInputValue] = useState("");
+
+  const handleKeyDown = (e: { key: string; preventDefault: () => void; }) => {
+    if (["Enter", ","].includes(e.key)) {
+      e.preventDefault();
+      const newTag = inputValue.trim();
+      if (newTag && !product.tags?.includes(newTag)) {
+        setProduct({ ...product, tags: [...(product.tags || []), newTag] });
+      }
+      setInputValue("");
+    } else if (e.key === "Backspace" && inputValue === "") {
+      setProduct({ ...product, tags: product.tags?.slice(0, -1) });
+    }
+  };
+  const removeTag = (indexToRemove : number) => {
+    setProduct({
+      ...product,
+      tags: product.tags?.filter((_, i) => i !== indexToRemove),
+    });
+  };
+
+
   const addVariant = () => {
     setVariants([
       ...variants,
@@ -177,7 +200,10 @@ export function AddProductForm() {
         if (variant.id === variantId) {
           return {
             ...variant,
-            sizes: [...variant.sizes, { id: cuid(), name: "SIZE_36", quantity: 0 }],
+            sizes: [
+              ...variant.sizes,
+              { id: cuid(), name: "SIZE_36", quantity: 0 },
+            ],
           };
         }
         return variant;
@@ -295,19 +321,19 @@ export function AddProductForm() {
             assets: variant.images,
             sizes: variant.sizes.map((size) => ({
               size: size.name as
-               "SIZE_36"
-              | "SIZE_38"
-              | "SIZE_40"
-              | "SIZE_42"
-              | "SIZE_44"
-              | "SIZE_46",
+                | "SIZE_36"
+                | "SIZE_38"
+                | "SIZE_40"
+                | "SIZE_42"
+                | "SIZE_44"
+                | "SIZE_46",
               stock: size.quantity,
             })),
           });
         });
       }
 
-      router.push(`/product/${data.id}`);
+      router.push(`/product/${data.slug}`);
     },
   });
 
@@ -779,7 +805,6 @@ export function AddProductForm() {
                 <p className="text-red-500 text-xs mt-1">{errors.category}</p>
               )}
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 SKU
@@ -797,16 +822,36 @@ export function AddProductForm() {
                 <p className="text-red-500 text-xs mt-1">{errors.sku}</p>
               )}
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tags (Not working yet)
+                Tags (Optional)
               </label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-sm"
-                placeholder="Enter tags separated by commas"
-              />
+              <div
+                className="flex flex-wrap items-center gap-1 px-2 py-1 border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-[#4f507f] bg-white min-h-[40px]"
+                onClick={() => document.getElementById("tag-input")?.focus()}>
+                {product.tags?.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-[#edeefc] text-[#4f507f]">
+                    {tag}
+                    <button
+                      type="button"
+                      className="text-[#4f507f] hover:text-[#2f3060] text-xs"
+                      onClick={() => removeTag(index)}>
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <input
+                  id="tag-input"
+                  type="text"
+                  className="flex-grow border-none outline-none text-sm py-1 px-1 min-w-[100px] focus:border-none focus:ring-0"
+                  placeholder="Type and press enter"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+              </div>
             </div>
           </div>
         </div>
