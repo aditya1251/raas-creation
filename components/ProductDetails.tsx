@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type React from "react";
-
+import { Loader, LoadingProductDetails } from "@/components/ui/loader";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -37,7 +37,7 @@ export default function ProductDetails({slug} : {slug: string}) {
   const [reviewEmail, setReviewEmail] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [product, setProduct] = useState<Products | null>(null);
-  const [availableSizes, setAvailableSizes] = useState<{size: string, available: boolean}[]>([]);
+  const [availableSizes, setAvailableSizes] = useState<{size: string, stock: number; available: boolean}[]>([]);
 
   const decreaseQuantity = () => {
     if (quantity > 1) {
@@ -94,7 +94,7 @@ export default function ProductDetails({slug} : {slug: string}) {
         setAvailableSizes(color.sizes);
         // Reset selected size or select first available size
         if (color.sizes.length > 0) {
-          const firstAvailableSize = color.sizes.find(s => s.stock>0)?.size || color.sizes[0].size;
+          const firstAvailableSize = color.sizes.find(s => s.stock > 0)?.size || color.sizes[0].size;
           setSelectedSize(firstAvailableSize);
         } else {
           setSelectedSize("");
@@ -183,7 +183,7 @@ export default function ProductDetails({slug} : {slug: string}) {
           setAvailableSizes(data.colors[0].sizes);
           
           // Select first available size
-          const firstAvailableSize = data.colors[0].sizes.find(s => s.stock>0).size || data.colors[0].sizes[0].size;
+          const firstAvailableSize = data.colors[0].sizes.find(s => s.stock > 0)?.size || data.colors[0].sizes[0].size;
           setSelectedSize(firstAvailableSize);
         }
       }
@@ -195,7 +195,15 @@ export default function ProductDetails({slug} : {slug: string}) {
   }
 
   if(isLoading){
-    return <div>Loading...</div>;
+    return (
+      <main className="min-h-screen bg-white">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <LoadingProductDetails />
+        </div>
+        <SiteFooter />
+      </main>
+    );
   }
 
   if(!data){
@@ -211,12 +219,12 @@ export default function ProductDetails({slug} : {slug: string}) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
           {/* Product Images */}
           <div>
-            <div className="mb-4 aspect-[3/3] relative">
+            <div className="mb-4 aspect-[1] relative">
               <Image
                 src={product?.assets[0].asset_url || "/placeholder.svg"}
-                alt={product?.name?product.name:"image"}
+                alt={product?.name || "image"}
                 fill
-                className="object-cover rounded-md"
+                className="object-cover rounded-md w-full h-full"
               />
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -227,7 +235,7 @@ export default function ProductDetails({slug} : {slug: string}) {
                 >
                   <Image
                     src={image.asset_url || "/placeholder.svg"}
-                    alt={`${product?.name?product?.name:"image"} view ${index + 1}`}
+                    alt={`${product?.name || "image"} view ${index + 1}`}
                     fill
                     className="object-cover"
                   />
@@ -249,7 +257,7 @@ export default function ProductDetails({slug} : {slug: string}) {
                 {[1, 2, 3, 4, 5].map((star) => (
                   <svg
                     key={star}
-                    className={`w-5 h-5 ${
+                    className={`w-8 aspect-square ${
                       star <= Math.floor(product?.rating)
                         ? "text-yellow-400"
                         : "text-gray-300"
@@ -304,26 +312,31 @@ export default function ProductDetails({slug} : {slug: string}) {
               </div>
             </div>
 
-            {/* Size Selection - Modified to use available sizes based on selected color */}
+            {/* Size Selection - Optimized */}
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-2">Size</h3>
               <div className="flex flex-wrap gap-2">
-                {availableSizes.map((sizeObj) => (
-                  <button
-                    key={sizeObj.size}
-                    className={`w-10 h-10 flex items-center justify-center border rounded-md ${
-                      selectedSize === sizeObj.size
-                        ? "bg-[#a08452] text-white border-[#a08452]"
-                        : sizeObj.stock>0 
-                          ? "border-gray-300 text-gray-700 hover:border-[#a08452]" 
-                          : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                    }`}
-                    onClick={() => setSelectedSize(sizeObj.size)}
-                    disabled={!sizeObj.available}
-                  >
-                    {sizeObj.size.slice(5)}
-                  </button>
-                ))}
+                {availableSizes.map((sizeObj) => {
+                  const isSelected = selectedSize === sizeObj.size;
+                  const isAvailable = sizeObj.stock > 0;
+                  
+                  return (
+                    <button
+                      key={sizeObj.size}
+                      className={`w-10 h-10 flex items-center justify-center border rounded-md transition-colors ${
+                        isSelected
+                          ? "bg-[#a08452] text-white border-[#a08452]"
+                          : isAvailable 
+                            ? "border-gray-300 text-gray-700 hover:border-[#a08452]" 
+                            : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                      }`}
+                      onClick={() => isAvailable && setSelectedSize(sizeObj.size)}
+                      disabled={!isAvailable}
+                    >
+                      {sizeObj.size.slice(5)}
+                    </button>
+                  );
+                })}
               </div>
               {availableSizes.length === 0 && (
                 <p className="text-sm text-gray-500 mt-1">No sizes available for this color</p>
@@ -366,9 +379,9 @@ export default function ProductDetails({slug} : {slug: string}) {
           </div>
         </div>
 
-        {/* Product Tabs */}
+        {/* Product Tabs - Fixed to sync active tab with selection */}
         <div className="mb-16">
-          <Tabs defaultValue="reviews" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="border-b w-full justify-start rounded-none bg-transparent mb-6">
               <TabsTrigger
                 value="descriptions"
@@ -377,7 +390,6 @@ export default function ProductDetails({slug} : {slug: string}) {
                     ? "border-b-2 border-[#a08452] text-[#a08452]"
                     : "text-gray-600"
                 }`}
-                onClick={() => setActiveTab("descriptions")}
               >
                 Descriptions
               </TabsTrigger>
@@ -388,7 +400,6 @@ export default function ProductDetails({slug} : {slug: string}) {
                     ? "border-b-2 border-[#a08452] text-[#a08452]"
                     : "text-gray-600"
                 }`}
-                onClick={() => setActiveTab("additional")}
               >
                 Additional Information
               </TabsTrigger>
@@ -399,7 +410,6 @@ export default function ProductDetails({slug} : {slug: string}) {
                     ? "border-b-2 border-[#a08452] text-[#a08452]"
                     : "text-gray-600"
                 }`}
-                onClick={() => setActiveTab("reviews")}
               >
                 Reviews
               </TabsTrigger>
@@ -435,7 +445,7 @@ export default function ProductDetails({slug} : {slug: string}) {
                       <div key={color.id} className="flex items-center space-x-2">
                         <div 
                           className="w-4 h-4 rounded-sm border border-gray-300" 
-                          style={{ backgroundColor: `red` }}
+                          style={{ backgroundColor: `${color.color}` }} // Fixed to use the correct color
                         ></div>
                       </div>
                     ))}
@@ -452,6 +462,7 @@ export default function ProductDetails({slug} : {slug: string}) {
             </TabsContent>
 
             <TabsContent value="reviews" className="mt-0">
+              {/* Reviews content - keeping original */}
               <div>
                 <h2 className="text-xl font-medium mb-6">Customer Reviews</h2>
 
@@ -609,7 +620,7 @@ export default function ProductDetails({slug} : {slug: string}) {
                   <div className="aspect-[3/4] relative overflow-hidden bg-gray-100 rounded-md mb-3">
                     <Image
                       src={product?.image || "/placeholder.svg"}
-                      alt={product?.name ? product.name :"image"}
+                      alt={product?.name || "image"}
                       fill
                       className="object-cover transition-transform group-hover:scale-105"
                     />
