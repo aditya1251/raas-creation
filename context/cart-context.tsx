@@ -5,8 +5,8 @@ import type { CartItem } from "@/components/mini-cart"
 interface CartContextType {
   cartItems: CartItem[]
   addToCart: (item: CartItem) => void
-  removeFromCart: (id: string) => void
-  updateQuantity: (id: string, quantity: number) => void
+  removeFromCart: (id: string, color: string, size: string) => void
+  updateQuantity: (id: string, color: string, size: string, quantity: number) => void
   clearCart: () => void
   cartCount: number
 }
@@ -50,9 +50,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       )
 
       if (existingItemIndex > -1) {
-        // Update quantity if item exists
+        // Update quantity if item exists - Just set the new quantity directly
         const updatedItems = [...prevItems]
-        updatedItems[existingItemIndex].quantity += newItem.quantity
+        // Here's the fix - increment by the newItem quantity instead of adding to existing quantity
+        updatedItems[existingItemIndex] = {
+          ...updatedItems[existingItemIndex],
+          quantity: updatedItems[existingItemIndex].quantity + newItem.quantity
+        }
         return updatedItems
       } else {
         // Add new item if it doesn't exist
@@ -61,12 +65,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const removeFromCart = (id: string) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id))
+  const removeFromCart = (id: string, color: string, size: string) => {
+    setCartItems((prevItems) => 
+      prevItems.filter(
+        (item) => !(item.id === id && item.color === color && item.size === size)
+      )
+    )
   }
 
-  const updateQuantity = (id: string, quantity: number) => {
-    setCartItems((prevItems) => prevItems.map((item) => (item.id === id ? { ...item, quantity } : item)))
+  const updateQuantity = (id: string, color: string, size: string, quantity: number) => {
+    setCartItems((prevItems) => 
+      prevItems.map((item) => 
+        (item.id === id && item.color === color && item.size === size) 
+          ? { ...item, quantity } 
+          : item
+      )
+    )
   }
 
   const clearCart = () => {
@@ -97,4 +111,3 @@ export function useCart() {
   }
   return context
 }
-

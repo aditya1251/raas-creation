@@ -37,41 +37,44 @@ export default function ShopPage() {
   const [sortBy, setSortBy] = useState<string>("latest");
   const [priceRange, setPriceRange] = useState<number>(6000);
   const [maxPriceValue, setMaxPriceValue] = useState<number>(6000);
-  
+
   // Get products from API
   const { data: products, isLoading } = useQuery({
     queryKey: ["products"],
     queryFn: productApi.getAll,
   });
-  
+
   // State for sorted and filtered products
   const [filteredProducts, setFilteredProducts] = useState<Products[]>([]);
-  
+
   // Calculate max price when products load
   useEffect(() => {
     if (products && products.length > 0) {
-      const highestPrice = Math.max(...products.map(p => p.price));
+      const highestPrice = Math.max(...products.map((p) => p.price));
       // Round up to nearest 1000 for better UI
       const roundedMax = Math.ceil(highestPrice / 1000) * 1000;
       setMaxPriceValue(roundedMax > 0 ? roundedMax : 6000);
       setPriceRange(roundedMax > 0 ? roundedMax : 6000);
     }
   }, [products]);
-  
+
   // Sort and filter products when required states change
   useEffect(() => {
     if (!products) return;
-    
+
     // First filter by price
-    let filtered = products.filter(product => 
-      product.discountPrice <= priceRange
+    let filtered = products.filter(
+      (product) => product.discountPrice <= priceRange
     );
-    
+
     // Then sort the filtered results
     switch (sortBy) {
       case "latest":
         // Assuming products have a createdAt or date field
-        filtered = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        filtered = filtered.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
         break;
       case "price-low-high":
         filtered = filtered.sort((a, b) => a.discountPrice - b.discountPrice);
@@ -82,15 +85,15 @@ export default function ShopPage() {
       default:
         break;
     }
-    
+
     setFilteredProducts(filtered);
   }, [products, sortBy, priceRange]);
-  
+
   // Handle sort change
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortBy(e.target.value);
   };
-  
+
   // Handle price range change
   const handlePriceRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPriceRange(Number(e.target.value));
@@ -302,13 +305,14 @@ export default function ShopPage() {
             <div className="flex justify-between items-center mb-6">
               {/* Product count */}
               <div className="text-sm text-gray-500">
-                Showing {filteredProducts.length} of {products?.length || 0} products
+                Showing {filteredProducts.length} of {products?.length || 0}{" "}
+                products
               </div>
-              
+
               {/* Sort by dropdown */}
               <div>
                 <div className="relative inline-block">
-                  <select 
+                  <select
                     className="appearance-none border rounded-md px-4 py-2 pr-8 focus:outline-none text-sm"
                     value={sortBy}
                     onChange={handleSortChange}
@@ -327,16 +331,17 @@ export default function ShopPage() {
             {/* Products Grid - Only Column View */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {isLoading ? (
-                <div className="col-span-3 text-center py-10">Loading products...</div>
+                <div className="col-span-3 text-center py-10">
+                  Loading products...
+                </div>
               ) : filteredProducts?.length ? (
                 filteredProducts.map((product, index) => (
-                  <ProductCard 
-                    key={index} 
-                    product={product}
-                  />
+                  <ProductCard key={index} product={product} />
                 ))
               ) : (
-                <div className="col-span-3 text-center py-10">No products found within the selected price range</div>
+                <div className="col-span-3 text-center py-10">
+                  No products found within the selected price range
+                </div>
               )}
             </div>
 
@@ -398,15 +403,35 @@ export default function ShopPage() {
 function ProductCard({ product }: { product: Products }) {
   const { toast } = useToast();
   const { addToCart } = useCart();
-  
   const handleAddToCart = () => {
-    addToCart(product);
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.discountPrice || product.price,
+      originalPrice: product.price,
+      quantity: 1,
+      color:
+        product.colors.length > 0
+          ? product.colors[0].color
+          : "",
+      size:
+        product.colors[0].sizes.length > 0
+          ? product.colors[0].sizes[0].size
+          : "SIZE_DEFAULT",
+      image:
+        product.assets && product.assets.length > 0
+          ? product.assets[0].asset_url
+          : "/placeholder.svg",
+    };
+
+    addToCart(cartItem);
+
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
     });
   };
-  
+
   return (
     <div className="group relative">
       <div className="aspect-[3/4] relative overflow-hidden rounded-xl bg-gray-100">
@@ -445,10 +470,14 @@ function ProductCard({ product }: { product: Products }) {
           <h3 className="text-sm font-medium">{product.name}</h3>
         </Link>
         <div className="flex items-center mt-1">
-          <span className="text-sm font-medium">₹{product.discountPrice}</span>
-          <span className="text-xs text-gray-500 line-through ml-2">
-            ₹{product.price}
+          <span className="text-sm font-medium">
+            ₹{product.discountPrice || product.price}
           </span>
+          {product.discountPrice && product.discountPrice < product.price && (
+            <span className="text-xs text-gray-500 line-through ml-2">
+              ₹{product.price}
+            </span>
+          )}
         </div>
       </div>
     </div>

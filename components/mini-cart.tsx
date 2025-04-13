@@ -15,14 +15,15 @@ export type CartItem = {
   color: string
   size: string
   image: string
+  cartItemKey?: string // Optional, generated on add
 }
 
 interface MiniCartProps {
   isOpen: boolean
   onClose: () => void
   cartItems: CartItem[]
-  removeFromCart: (id: string) => void
-  updateQuantity: (id: string, quantity: number) => void
+  removeFromCart: (id: string, color: string, size: string) => void
+  updateQuantity: (id: string, color: string, size: string, quantity: number) => void
 }
 
 export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, updateQuantity }: MiniCartProps) {
@@ -38,7 +39,6 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
     }
-
     window.addEventListener("keydown", handleEscape)
     return () => window.removeEventListener("keydown", handleEscape)
   }, [onClose])
@@ -47,6 +47,11 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
 
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
+  }
+  
+  // Format size display by removing the "SIZE_" prefix if it exists
+  const formatSize = (size: string) => {
+    return size?.startsWith("SIZE_") ? size.replace("SIZE_", "") : size;
   }
 
   return (
@@ -111,7 +116,7 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                 <>
                   <div className="flex-grow overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
                     {cartItems.map((item) => (
-                      <div key={item.id} className="pb-4 md:pb-6 border-b border-gray-200">
+                      <div key={`${item.id}_${item.color}_${item.size}`} className="pb-4 md:pb-6 border-b border-gray-200">
                         <div className="flex gap-4">
                           <div className="w-[80px] h-[100px] md:w-[100px] md:h-[120px] relative flex-shrink-0 rounded-md overflow-hidden">
                             <Image
@@ -124,16 +129,16 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                           <div className="flex-1 min-w-0">
                             <h3 className="text-sm md:text-base font-medium truncate">{item.name}</h3>
                             <div className="flex items-center mt-1">
-                              <span className="text-sm md:text-base font-medium">₹{item.price.toFixed(2)}</span>
+                              <span className="text-sm md:text-base font-medium">₹{item.price.toFixed(0)}</span>
                               {item.originalPrice && (
                                 <span className="ml-2 text-gray-500 line-through text-xs">
-                                  ₹{item.originalPrice.toFixed(2)}
+                                  ₹{item.originalPrice.toFixed(0)}
                                 </span>
                               )}
                             </div>
 
                             <div className="mt-2 space-y-1">
-                              <p className="text-gray-600 text-xs">Size: {item.size}</p>
+                              <p className="text-gray-600 text-xs">Size: {formatSize(item.size)}</p>
                               <p className="text-gray-600 text-xs">Qty: {item.quantity.toString().padStart(2, "0")}</p>
                               <p className="text-gray-600 text-xs">Color: {item.color}</p>
                             </div>
@@ -142,7 +147,7 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                               <div className="flex items-center border border-gray-300 rounded">
                                 <button
                                   className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
-                                  onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                                  onClick={() => updateQuantity(item.id, item.color, item.size, Math.max(1, item.quantity - 1))}
                                   aria-label="Decrease quantity"
                                 >
                                   −
@@ -156,7 +161,7 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                                 />
                                 <button
                                   className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  onClick={() => updateQuantity(item.id, item.color, item.size, item.quantity + 1)}
                                   aria-label="Increase quantity"
                                 >
                                   +
@@ -164,7 +169,7 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                               </div>
 
                               <button
-                                onClick={() => removeFromCart(item.id)}
+                                onClick={() => removeFromCart(item.id, item.color, item.size)}
                                 className="text-red-500 hover:text-red-600 transition-colors"
                                 aria-label="Remove item"
                               >

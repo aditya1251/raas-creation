@@ -25,7 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import { productApi } from "@/lib/api/productdetails";
 import { Products } from "./admin/products-table";
 
-export default function ProductDetails({slug} : {slug: string}) {
+export default function ProductDetails({ slug }: { slug: string }) {
   const { toast } = useToast();
   const { addToCart } = useCart();
   const [selectedColor, setSelectedColor] = useState("");
@@ -37,7 +37,9 @@ export default function ProductDetails({slug} : {slug: string}) {
   const [reviewEmail, setReviewEmail] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [product, setProduct] = useState<Products | null>(null);
-  const [availableSizes, setAvailableSizes] = useState<{size: string, stock: number; available: boolean}[]>([]);
+  const [availableSizes, setAvailableSizes] = useState<
+    { size: string; stock: number; available: boolean }[]
+  >([]);
 
   const decreaseQuantity = () => {
     if (quantity > 1) {
@@ -53,7 +55,6 @@ export default function ProductDetails({slug} : {slug: string}) {
     e.preventDefault();
     // Handle review submission
     console.log({ reviewRating, reviewName, reviewEmail, reviewText });
-    // Reset form
     setReviewRating(0);
     setReviewName("");
     setReviewEmail("");
@@ -61,10 +62,9 @@ export default function ProductDetails({slug} : {slug: string}) {
   };
 
   const handleAddToCart = () => {
-    if(!product){
+    if (!product) {
       return;
     }
-    // Add item to cart
     addToCart({
       id : product.id,
       name: product.name,
@@ -75,8 +75,6 @@ export default function ProductDetails({slug} : {slug: string}) {
       size: selectedSize,
       image: product?.assets[0].asset_url,
     });
-
-    // Show success toast
     toast({
       title: "Added to cart",
       description: `${product?.name} has been added to your cart.`,
@@ -86,15 +84,16 @@ export default function ProductDetails({slug} : {slug: string}) {
   // Set sizes based on selected color
   const handleColorSelect = (colorCode: string) => {
     setSelectedColor(colorCode);
-    
+
     // Find the selected color in the product colors
     if (product && product.colors) {
-      const color = product.colors.find(c => c.color === colorCode);
+      const color = product.colors.find((c) => c.color === colorCode);
       if (color && color.sizes) {
         setAvailableSizes(color.sizes);
         // Reset selected size or select first available size
         if (color.sizes.length > 0) {
-          const firstAvailableSize = color.sizes.find(s => s.stock > 0)?.size || color.sizes[0].size;
+          const firstAvailableSize =
+            color.sizes.find((s) => s.stock > 0)?.size || color.sizes[0].size;
           setSelectedSize(firstAvailableSize);
         } else {
           setSelectedSize("");
@@ -155,7 +154,7 @@ export default function ProductDetails({slug} : {slug: string}) {
       image: "/image 100.png?height=300&width=250",
     },
   ];
-  
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["product", slug],
     queryFn: async () => {
@@ -167,34 +166,32 @@ export default function ProductDetails({slug} : {slug: string}) {
       }
     },
   });
-  
+
   useEffect(() => {
     if (data) {
       setProduct(data);
-      console.log(data);
-      
       // Set default color and sizes when product loads
       if (data.colors && data.colors.length > 0) {
         const defaultColor = data.colors[0].color;
         setSelectedColor(defaultColor);
-        
         // Set available sizes based on the default color
         if (data.colors[0].sizes) {
           setAvailableSizes(data.colors[0].sizes);
-          
           // Select first available size
-          const firstAvailableSize = data.colors[0].sizes.find(s => s.stock > 0)?.size || data.colors[0].sizes[0].size;
+          const firstAvailableSize =
+            data.colors[0].sizes.find((s) => s.stock > 0)?.size ||
+            data.colors[0].sizes[0].size;
           setSelectedSize(firstAvailableSize);
         }
       }
     }
   }, [data]);
-  
-  if(error) {
+
+  if (error) {
     return <div>Error loading product</div>;
   }
 
-  if(isLoading){
+  if (isLoading) {
     return (
       <main className="min-h-screen bg-white">
         <Navbar />
@@ -206,14 +203,13 @@ export default function ProductDetails({slug} : {slug: string}) {
     );
   }
 
-  if(!data){
+  if (!data) {
     return <div>Product not found</div>;
   }
 
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Product Detail Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
@@ -299,9 +295,9 @@ export default function ProductDetails({slug} : {slug: string}) {
                   <button
                     key={color.id}
                     className={`w-8 h-8 rounded-sm border ${
-                      selectedColor === color.color 
-                        ? 'ring-2 ring-offset-2 ring-[#a08452]' 
-                        : 'ring-1 ring-gray-300'
+                      selectedColor === color.color
+                        ? "ring-2 ring-offset-2 ring-[#a08452]"
+                        : "ring-1 ring-gray-300"
                     }`}
                     style={{ backgroundColor: `${color.color}` }}
                     onClick={() => handleColorSelect(color.color)}
@@ -319,18 +315,20 @@ export default function ProductDetails({slug} : {slug: string}) {
                 {availableSizes.map((sizeObj) => {
                   const isSelected = selectedSize === sizeObj.size;
                   const isAvailable = sizeObj.stock > 0;
-                  
+
                   return (
                     <button
                       key={sizeObj.size}
                       className={`w-10 h-10 flex items-center justify-center border rounded-md transition-colors ${
                         isSelected
                           ? "bg-[#a08452] text-white border-[#a08452]"
-                          : isAvailable 
-                            ? "border-gray-300 text-gray-700 hover:border-[#a08452]" 
-                            : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                          : isAvailable
+                          ? "border-gray-300 text-gray-700 hover:border-[#a08452]"
+                          : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
                       }`}
-                      onClick={() => isAvailable && setSelectedSize(sizeObj.size)}
+                      onClick={() =>
+                        isAvailable && setSelectedSize(sizeObj.size)
+                      }
                       disabled={!isAvailable}
                     >
                       {sizeObj.size.slice(5)}
@@ -339,7 +337,9 @@ export default function ProductDetails({slug} : {slug: string}) {
                 })}
               </div>
               {availableSizes.length === 0 && (
-                <p className="text-sm text-gray-500 mt-1">No sizes available for this color</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  No sizes available for this color
+                </p>
               )}
             </div>
 
@@ -381,7 +381,11 @@ export default function ProductDetails({slug} : {slug: string}) {
 
         {/* Product Tabs - Fixed to sync active tab with selection */}
         <div className="mb-16">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
             <TabsList className="border-b w-full justify-start rounded-none bg-transparent mb-6">
               <TabsTrigger
                 value="descriptions"
@@ -442,9 +446,12 @@ export default function ProductDetails({slug} : {slug: string}) {
                   <h3 className="text-sm font-medium mb-2">Available Colors</h3>
                   <div className="flex flex-wrap gap-2">
                     {product?.colors.map((color) => (
-                      <div key={color.id} className="flex items-center space-x-2">
-                        <div 
-                          className="w-4 h-4 rounded-sm border border-gray-300" 
+                      <div
+                        key={color.id}
+                        className="flex items-center space-x-2"
+                      >
+                        <div
+                          className="w-4 h-4 rounded-sm border border-gray-300"
                           style={{ backgroundColor: `${color.color}` }} // Fixed to use the correct color
                         ></div>
                       </div>
