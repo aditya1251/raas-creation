@@ -1,146 +1,154 @@
-"use client";
+"use client"
 
-import { ProductPerformanceApi } from "@/lib/api/productperformance";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { ProductPerformance } from "./product-performance-table";
-
-const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-// Define types
-interface Sale {
-  date: string;
-  totalOrders: number;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  sales: Sale[];
-}
-
-interface MonthlySalesData {
-  name: string;
-  sales: number;
-}
+import { salesApi } from "@/lib/api/sales"
+import { useQuery } from "@tanstack/react-query"
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  Area,
+  AreaChart,
+} from "recharts"
+import { useState } from "react"
+import { Calendar, TrendingUp } from "lucide-react"
 
 export function SalesChart() {
-  // Fetch products using React Query
-  const { data: products = [], isLoading } = useQuery<Product[]>({
-    queryKey: ["productPerformance"],
-    queryFn: async () => {
-      try {
-        const rawData: ProductPerformance[] = await ProductPerformanceApi.getAll();
-        const data: Product[] = rawData.map((item) => ({
-          id: item.id,
-          name: item.name,
-          sales: Array.isArray(item.sales)
-            ? item.sales.filter((sale): sale is Sale => sale && typeof sale === "object" && "date" in sale && "totalOrders" in sale)
-            : [], // If sales is invalid, return an empty array
-        }));
-        console.log("Fetched products:", data);
-        return data;
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        return [];
-      }
-    },
-  });
+  const [activeTab, setActiveTab] = useState("Monthly")
+  const tabs = ["Daily", "Weekly", "Monthly", "Yearly"]
 
-  // Aggregate sales data by month
-  const monthlySales: MonthlySalesData[] = products
-    .flatMap((product) => product.sales || []) // Ensure sales is always an array
-    .reduce((acc: MonthlySalesData[], sale: Sale) => {
-      if (!sale.date) return acc; // Skip invalid data
-      const monthIndex = new Date(sale.date).getMonth();
-      const monthName = monthNames[monthIndex];
+  const { data: chartData, isLoading, error } = useQuery({
+    queryKey: ['sales-chart', activeTab],
+    queryFn: () => salesApi.getGraph(activeTab),
+    retry: 2,
+  })
 
-      const existingMonth = acc.find((item) => item.name === monthName);
-      if (existingMonth) {
-        existingMonth.sales += sale.totalOrders;
-      } else {
-        acc.push({ name: monthName, sales: sale.totalOrders });
-      }
+  // Custom tooltip formatter to add currency symbol
+  const formatTooltipValue = (value: number) => {
+    return `Rs. ${value.toLocaleString()}`
+  }
 
-      return acc;
-    }, []);
-
-  const [activeTab, setActiveTab] = useState<"Daily" | "Weekly" | "Monthly" | "Yearly">("Monthly");
-
-  const tabs: ("Daily" | "Weekly" | "Monthly" | "Yearly")[] = ["Daily", "Weekly", "Monthly", "Yearly"];
-
-  // ✅ Empty Data Handling: Ensure chart is always rendered
-  const chartData = monthlySales.length > 0 ? monthlySales : monthNames.map((month) => ({ name: month, sales: 0 }));
+  // Empty state data for visualization
+  const emptyData = [
+    { name: "No Data", sales: 0 },
+    { name: "Available", sales: 0 },
+  ]
 
   return (
-    <div className="bg-white rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 space-y-3 sm:space-y-0">
-        <h2 className="text-base sm:text-lg font-medium text-[#4f507f]">Sales Trend</h2>
-        
-        {/* Scrollable Tab Container for Mobile */}
-        <div className="w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 -mx-3 px-3 sm:mx-0 sm:px-0">
-          <div className="flex space-x-2 min-w-max">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md whitespace-nowrap ${
-                  activeTab === tab ? "bg-[#4f507f] text-white" : "text-gray-500 hover:bg-gray-100"
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+    <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <span className="w-2 h-6 bg-indigo-600 rounded-full"></span>
+          <TrendingUp className="h-5 w-5 text-indigo-600" />
+          Sales Trend
+        </h2>
+        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                activeTab === tab
+                  ? "bg-indigo-600 text-white shadow-md"
+                  : "text-gray-600 hover:bg-gray-200"
+              }`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
       </div>
-      
-      {isLoading ? (
-        <div className="h-[200px] sm:h-[250px] md:h-[300px] flex items-center justify-center">
-          <div className="text-gray-400 text-sm">Loading chart data...</div>
-        </div>
-      ) : (
-        <div className="h-[200px] sm:h-[250px] md:h-[300px]">
+
+      <div className="h-[350px]">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="w-10 h-10 border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-500">Loading sales data...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-full text-red-500">
+            <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p>Failed to load sales data</p>
+            <button 
+              onClick={() => setActiveTab(activeTab)} 
+              className="mt-3 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-md text-sm hover:bg-indigo-200 transition-colors"
+            >
+              Try again
+            </button>
+          </div>
+        ) : !chartData || chartData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <Calendar className="w-12 h-12 mb-2 text-gray-400" />
+            <p>No sales data available for this period</p>
+            <p className="text-sm text-gray-400 mt-1">Try selecting a different time range</p>
+          </div>
+        ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+            <AreaChart data={chartData || emptyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#4f507f" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#4f507f" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
               <XAxis 
                 dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                fontSize={12}
-                tick={{ fill: '#6b7280' }}
-                padding={{ left: 10, right: 10 }}
+                tick={{ fill: '#6b7280', fontSize: 12 }}
+                dy={10}
               />
               <YAxis 
                 axisLine={false} 
-                tickLine={false}
-                fontSize={12}
-                width={30}
-                tick={{ fill: '#6b7280' }}
+                tickLine={false} 
+                tick={{ fill: '#6b7280', fontSize: 12 }}
+                tickFormatter={(value) => `Rs.${value}`}
+                width={80}
               />
               <Tooltip 
-                contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  borderRadius: '6px',
-                  border: '1px solid #f0f0f0',
-                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-                  fontSize: '12px',
+                formatter={formatTooltipValue}
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  padding: '8px 12px'
                 }}
+                labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
               />
-              <Line 
+              <Legend 
+                verticalAlign="top" 
+                height={36} 
+                iconType="circle"
+                formatter={() => <span className="text-gray-700">Revenue</span>}
+              />
+              <Area 
                 type="monotone" 
                 dataKey="sales" 
                 stroke="#4f507f" 
-                strokeWidth={2} 
-                dot={false}
-                activeDot={{ r: 5, fill: '#4f507f', stroke: 'white', strokeWidth: 2 }}
+                strokeWidth={3}
+                fillOpacity={1}
+                fill="url(#colorSales)"
+                activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
+        )}
+      </div>
+      
+      <div className="mt-4 text-xs text-gray-500 flex items-center justify-end">
+        <div className="flex items-center">
+          <span className="inline-block w-3 h-3 bg-indigo-600 rounded-full mr-1 opacity-80"></span>
+          <span>Data updated as of {new Date().toLocaleDateString()}</span>
         </div>
-      )}
+      </div>
     </div>
-  );
+  )
 }

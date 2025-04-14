@@ -10,8 +10,9 @@ datasource db {
 model Product {
   id                 String               @id @default(cuid())
   name               String
-  description        String
   sku                String
+  slug               String
+  description        String
   price              Float
   discountPrice      Float?
   category_id        String
@@ -22,11 +23,9 @@ model Product {
   colors             ProductColor[]
   assets             ProductAsset[]
   ProductRating      ProductRating[]
-  ProductPerformance ProductPerformance[]
-  sales              SalesSummary[]
   OrderItem          OrderItem[]
   Wishlist           Wishlist[]
-  ProductTags        ProductTags[]
+  tags               ProductTags[]
 }
 
 model ProductTags {
@@ -279,33 +278,6 @@ model ContactForm {
   updatedAt DateTime @updatedAt
 }
 
-model SalesSummary {
-  id           String   @id @default(uuid())
-  date         DateTime @unique
-  totalRevenue Float
-  salesGrowth  Float
-  totalOrders  Int
-  newCustomers Int
-
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-}
-
-model ProductPerformance {
-  id        String   @id @default(uuid())
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  date      DateTime @default(now())
-  revenue   Decimal  @default(0.0)
-  orders    Int      @default(0)
-  rating    Float?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([productId, date]) // Ensures one record per product per day
-  @@index([date]) // Adds an index on the 'date' field
-}
-
 model Wishlist {
   id        String   @id @default(cuid())
   user      User     @relation(fields: [userId], references: [id])
@@ -318,12 +290,14 @@ model Wishlist {
   @@unique([userId, productId])
 }
 
+
 model Upoads {
   id        String   @id @default(cuid())
   url       String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
 
 model Discount {
   id            String       @id @default(cuid())
