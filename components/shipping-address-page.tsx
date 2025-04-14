@@ -1,15 +1,27 @@
-"use client"
-import { useState } from "react"
-import { Check } from "lucide-react"
-import AddressForm from "./address-form"
-import OrderSummary from "./order-summary"
-import Navbar from "@/components/navbar"
-import SiteFooter from "@/components/site-footer"
-import Link from "next/link"
+"use client";
+import { useState } from "react";
+import { Check } from "lucide-react";
+import AddressForm from "./address-form";
+import OrderSummary from "./order-summary";
+import Navbar from "@/components/navbar";
+import SiteFooter from "@/components/site-footer";
+import Link from "next/link";
+import { useCart } from "@/context/cart-context";
 
 export default function ShippingAddressPage() {
-  const [selectedAddress, setSelectedAddress] = useState<string>("1")
-
+  const [isDiscountApplied, setIsDiscountApplied] = useState(false);
+  const { cartItems } = useCart();
+  const calculateSubtotal = () => {
+    return cartItems.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
+  };
+  const subtotal = calculateSubtotal();
+  const deliveryCharges = 40;
+  const discount = isDiscountApplied ? 0 : 0; // You can implement discount logic here
+  const grandTotal = subtotal + deliveryCharges - discount;
+  const [selectedAddress, setSelectedAddress] = useState<string>("1");
   const addresses = [
     {
       id: "1",
@@ -21,16 +33,18 @@ export default function ShippingAddressPage() {
       name: "Abhishek Chaudhary",
       address: "204/2c & d , basement, jeewan nagar, New Delhi 110014",
     },
-  ]
+  ];
+  const handleApplyDiscount = () => {
+    setIsDiscountApplied(true);
+    // Implement discount logic here
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-
       <main className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-2xl font-medium mb-8">Shipping Address</h1>
-
           {/* Progress Steps */}
           <div className="flex items-center justify-between mb-10 max-w-xl">
             <div className="flex flex-col items-center">
@@ -105,17 +119,24 @@ export default function ShippingAddressPage() {
             <div className="flex-1">
               {/* Select a delivery address */}
               <div className="mb-10">
-                <h2 className="text-lg font-medium mb-2">Select a delivery address</h2>
+                <h2 className="text-lg font-medium mb-2">
+                  Select a delivery address
+                </h2>
                 <p className="text-sm text-gray-600 mb-6">
-                  Is the address you'd like to use displayed below? If so, click the corresponding "Deliver to this
-                  address" button. Or you can enter a new delivery address.
+                  Is the address you'd like to use displayed below? If so, click
+                  the corresponding "Deliver to this address" button. Or you can
+                  enter a new delivery address.
                 </p>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   {addresses.map((address) => (
                     <div
                       key={address.id}
-                      className={`p-4 rounded-md ${selectedAddress === address.id ? "bg-[#ffefd4]" : "bg-[#fff8ea]"}`}
+                      className={`p-4 rounded-md ${
+                        selectedAddress === address.id
+                          ? "bg-[#ffefd4]"
+                          : "bg-[#fff8ea]"
+                      }`}
                     >
                       <div className="flex justify-between mb-2">
                         <h3 className="font-medium">{address.name}</h3>
@@ -127,10 +148,14 @@ export default function ShippingAddressPage() {
                           }`}
                           onClick={() => setSelectedAddress(address.id)}
                         >
-                          {selectedAddress === address.id && <Check className="h-3 w-3" />}
+                          {selectedAddress === address.id && (
+                            <Check className="h-3 w-3" />
+                          )}
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-4">{address.address}</p>
+                      <p className="text-sm text-gray-600 mb-4">
+                        {address.address}
+                      </p>
                       <div className="flex gap-2">
                         <button className="px-4 py-1 text-sm border border-[#795d2a] text-[#795d2a] rounded flex items-center justify-center">
                           <svg
@@ -186,7 +211,14 @@ export default function ShippingAddressPage() {
 
             {/* Order Summary */}
             <div className="w-full lg:w-80 shrink-0">
-              <OrderSummary />
+              <OrderSummary
+                subtotal={subtotal}
+                deliveryCharges={40}
+                discountCode="Colors60"
+                onApplyDiscount={handleApplyDiscount}
+                checkoutLink="/shipping-address"
+                buttonText=""
+              />
             </div>
           </div>
         </div>
@@ -194,6 +226,5 @@ export default function ShippingAddressPage() {
 
       <SiteFooter />
     </div>
-  )
+  );
 }
-
