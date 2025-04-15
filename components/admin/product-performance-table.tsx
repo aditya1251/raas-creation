@@ -57,7 +57,7 @@ export function ProductPerformanceTable() {
 
   // Format currency helper function
   const formatCurrency = (value: number) => {
-    return `$${value.toFixed(2)}`;
+    return `$${value}`;
   };
 
   return (

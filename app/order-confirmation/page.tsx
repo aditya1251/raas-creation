@@ -150,7 +150,7 @@ export default function OrderConfirmationPage() {
           </div>
 
           <div className="text-center">
-            <Link href="/">
+            <Link href="/shop">
               <Button className="bg-[#a08452] hover:bg-[#8c703d] text-white px-8">Continue Shopping</Button>
             </Link>
           </div>

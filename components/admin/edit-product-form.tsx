@@ -35,6 +35,7 @@ export function EditProductForm({ productId }: { productId: string }) {
 
   interface Variant {
     isNew: boolean;
+    isDeleted: boolean;
     isOpen: boolean;
     id: string;
     color: string;
@@ -49,6 +50,7 @@ export function EditProductForm({ productId }: { productId: string }) {
       name: string;
       quantity: number;
       isNew: boolean;
+      isDeleted: boolean;
     }[];
   }
   const [variants, setVariants] = useState<Variant[]>([]);
@@ -187,6 +189,7 @@ export function EditProductForm({ productId }: { productId: string }) {
           id: color.id,
           color: color.color,
           isNew: false,
+          isDeleted: false,
           isOpen: false,
           customColor: true,
           images: color.assets?.map((asset) => ({
@@ -201,6 +204,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             name: size.size,
             quantity: size.stock,
             isNew: false,
+            isDeleted: false,
           })),
         })
       );
@@ -222,42 +226,49 @@ export function EditProductForm({ productId }: { productId: string }) {
             id: cuid(),
             name: "SIZE_36",
             quantity: 0,
-            isNew: true
+            isNew: true,
+            isDeleted: false,
           },
           {
             id: cuid(),
             name: "SIZE_38",
             quantity: 0,
-            isNew: true
+            isNew: true,
+            isDeleted: false,
 
           },
           {
             id: cuid(),
             name: "SIZE_40",
             quantity: 0,
-            isNew: true
+            isNew: true,
+            isDeleted: false,
           },
           {
             id: cuid(),
             name: "SIZE_42",
             quantity: 0,
-            isNew: true
+            isNew: true,
+            isDeleted: false,
           },
           {
             id: cuid(),
             name: "SIZE_44",
             quantity: 0,
-            isNew: true
+            isNew: true,
+            isDeleted: false,
           },
           {
             id: cuid(),
             name: "SIZE_46",
             quantity: 0,
-            isNew: true
+            isNew: true,
+            isDeleted: false,
           },
         ],
         isOpen: true,
         isNew: true,
+        isDeleted: false,
       },
     ]);
   };
@@ -270,7 +281,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             ...variant,
             sizes: [
               ...variant.sizes,
-              { id: cuid(), name: "SIZE_36", quantity: 0, isNew: true },
+              { id: cuid(), name: "SIZE_36", quantity: 0, isNew: true, isDeleted: false },
             ],
           };
         }
@@ -280,7 +291,17 @@ export function EditProductForm({ productId }: { productId: string }) {
   };
 
   const removeVariant = (variantId: string) => {
-    setVariants(variants.filter((v) => v.id !== variantId));
+    setVariants(
+      variants.map((variant) => {
+        if (variant.id === variantId) {
+          return {
+            ...variant,
+            isDeleted: true,
+          };
+        }
+        return variant;
+      })
+    );
   };
 
   const removeSize = (variantId: string, sizeId: string) => {
@@ -289,7 +310,15 @@ export function EditProductForm({ productId }: { productId: string }) {
         if (variant.id === variantId) {
           return {
             ...variant,
-            sizes: variant.sizes.filter((size) => size.id !== sizeId),
+            sizes: variant.sizes.map((size) => {
+              if (size.id === sizeId) {
+                return {
+                  ...size,
+                  isDeleted: true,
+                };
+              }
+              return size;
+            }),
           };
         }
         return variant;
@@ -391,6 +420,18 @@ export function EditProductForm({ productId }: { productId: string }) {
     }
   })
 
+  const deleteVariantMutation = useMutation({
+    mutationFn: async (data: { variantId: string }) => {
+      await varientApi.deleteVarient(data.variantId);
+    },
+  });
+
+  const deleteSizeMutation = useMutation({
+    mutationFn: async (data: { sizeId: string }) => {
+      await inventoryApi.deleteSize(data.sizeId);
+    },
+  });
+
   const productMutation = useMutation({
     mutationFn: (newProduct: Product) =>
       productApi.updateProduct(productId, newProduct),
@@ -398,21 +439,27 @@ export function EditProductForm({ productId }: { productId: string }) {
       if (data) {
         const productId = data.id;
         variants.forEach((variant) => {
-          if (variant.isNew) {
+          if (variant.isNew && !variant.isDeleted) {
             addVariantMu.mutate({
               productId,
               color: variant.color,
               assets: variant.images,
-              sizes: variant.sizes.map((size) => ({
-                size: size.name as
-                "SIZE_36"
-                | "SIZE_38"
-                | "SIZE_40"
-                | "SIZE_42"
-                | "SIZE_44"
-                | "SIZE_46",
-                stock: size.quantity,
-              })),
+              sizes: variant.sizes
+                .filter((size) => !size.isDeleted)
+                .map((size) => ({
+                  size: size.name  as
+                  "SIZE_36"
+                  | "SIZE_38"
+                  | "SIZE_40"
+                  | "SIZE_42"
+                  | "SIZE_44"
+                  | "SIZE_46",
+                  stock: size.quantity,
+                })),
+            });
+          } else if (variant.isDeleted && !variant.isNew) {
+            deleteVariantMutation.mutate({
+              variantId: variant.id,
             });
           } else {
             variantMutation.mutate({
@@ -424,9 +471,9 @@ export function EditProductForm({ productId }: { productId: string }) {
             const newSizes = [] as { size: string; stock: number }[];
 
             variant.sizes.forEach((size) => {
-              if (size.isNew) {
+              if (size.isNew && !size.isDeleted) {
                 newSizes.push({
-                  size: size.name as
+                  size: size.name  as
                   "SIZE_36"
                   | "SIZE_38"
                   | "SIZE_40"
@@ -434,6 +481,10 @@ export function EditProductForm({ productId }: { productId: string }) {
                   | "SIZE_44"
                   | "SIZE_46",
                   stock: size.quantity,
+                });
+              } else if (size.isDeleted && !size.isNew) {
+                deleteSizeMutation.mutate({
+                  sizeId: size.id,
                 });
               } else {
                 updateSizeMutation.mutate({
@@ -460,7 +511,6 @@ export function EditProductForm({ productId }: { productId: string }) {
             //     stock: size.quantity,
             //   })),
             // });
-
           }
         });
       }
