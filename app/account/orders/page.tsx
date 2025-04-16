@@ -129,9 +129,11 @@ export default function OrdersPage() {
                     <div className="text-right">
                       <p className="font-medium">₹1950</p>
                       <div className="mt-4 space-y-2">
-                        <Button variant="outline" className="w-full border-gray-300 hover:bg-gray-50">
-                          View Order
-                        </Button>
+                      <Link href={`/account/orders/details`}>
+                          <Button variant="outline" className="w-full border-gray-300 hover:bg-gray-50">
+                            View Order
+                          </Button>
+                        </Link>
                         <Button className="w-full bg-red-500 hover:bg-red-600 text-white">Cancel Order</Button>
                       </div>
                     </div>
