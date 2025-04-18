@@ -1,11 +1,73 @@
+"use client"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Search, Filter, User, Package, Heart, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Navbar from "@/components/navbar"
 import SiteFooter from "@/components/site-footer"
+import { useQuery } from "@tanstack/react-query"
+import { orderApi } from "@/lib/api/orders"
 
 export default function OrdersPage() {
+  const [currentPage, setCurrentPage] = useState("1")
+  const [itemsPerPage, setItemsPerPage] = useState("10")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+    }, 500)
+
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [searchTerm])
+
+  // Fetch orders with React Query
+  const { data, isLoading } = useQuery({
+    queryKey: ["Orders", currentPage, itemsPerPage, debouncedSearchTerm],
+    queryFn: () => orderApi.getOrders(currentPage, itemsPerPage, debouncedSearchTerm)
+  })
+
+  console.log(data)
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value)
+    setCurrentPage("1") // Reset to first page on new search
+  }
+
+  // Pagination controls
+  const handlePreviousPage = () => {
+    if (data?.pagination.currentPage > 1) {
+      setCurrentPage(String(data.pagination.currentPage - 1))
+    }
+  }
+
+  const handleNextPage = () => {
+    if (data?.pagination.currentPage < data?.pagination.totalPages) {
+      setCurrentPage(String(data.pagination.currentPage + 1))
+    }
+  }
+
+  // Function to determine status style based on order status
+  const getStatusStyle = (status) => {
+    switch (status?.toLowerCase()) {
+      case "delivered":
+        return "bg-green-100 text-green-800"
+      case "in process":
+      case "inprocess":
+        return "bg-yellow-100 text-yellow-800"
+      case "cancelled":
+      case "canceled":
+        return "bg-red-100 text-red-800"
+      default:
+        return "bg-gray-100 text-gray-700"
+    }
+  }
+
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
@@ -18,11 +80,15 @@ export default function OrdersPage() {
               <input
                 type="text"
                 placeholder="Search"
+                value={searchTerm}
+                onChange={handleSearchChange}
                 className="pl-10 pr-4 py-2 border rounded-md focus:outline-none w-64"
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
-            <Button className="bg-[#a08452] hover:bg-[#8c703d] text-white px-4 py-2 flex items-center space-x-2">
+            <Button 
+              className="bg-[#a08452] hover:bg-[#8c703d] text-white px-4 py-2 flex items-center space-x-2"
+            >
               <span>Filter</span>
               <Filter className="h-4 w-4" />
             </Button>
@@ -43,7 +109,7 @@ export default function OrdersPage() {
                 />
               </div>
               <p className="text-sm text-gray-600 mb-1">Hello 👋</p>
-              <h2 className="font-medium">Abhishek Chaudhary</h2>
+              <h2 className="font-medium">{data?.user?.name || "Abhishek Chaudhary"}</h2>
             </div>
 
             <nav className="border rounded-md overflow-hidden">
@@ -74,106 +140,99 @@ export default function OrdersPage() {
 
           {/* Main Content */}
           <div className="flex-1">
-            {/* Order 1 */}
-            <div className="border-b pb-6 mb-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-20 h-24 relative">
-                  <Image src="/placeholder.svg?height=96&width=80" alt="Product Image" fill className="object-cover" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium">Voilet Crape Digital Print Co-ord Set</h3>
-                      <p className="text-sm text-gray-600 mt-1">Size: 38</p>
-                      <p className="text-sm text-gray-600">Qty: 1</p>
-                      <div className="mt-2">
-                        <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                          Delivered
-                        </span>
+            {isLoading ? (
+              // Loading state
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#a08452]"></div>
+              </div>
+            ) : data?.orders?.length === 0 ? (
+              // No orders state
+              <div className="text-center py-16">
+                <p className="text-gray-500">No orders found</p>
+              </div>
+            ) : (
+              // Orders list
+              <>
+                {data?.orders?.map((order, index) => (
+                  <div 
+                    key={order.id || index} 
+                    className={index !== data.orders.length - 1 ? "border-b pb-6 mb-6" : "pb-6 mb-6"}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-20 h-24 relative">
+                        <Image 
+                          src={order.productImage || "/placeholder.svg?height=96&width=80"} 
+                          alt={order.productName || "Product Image"} 
+                          fill 
+                          className="object-cover" 
+                        />
                       </div>
-                      <p className="text-sm text-gray-600 mt-2">Your product has been delivered</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">₹2599</p>
-                      <div className="mt-4 space-y-2">
-                        <Button variant="outline" className="w-full border-gray-300 hover:bg-gray-50">
-                          View Order
-                        </Button>
-                        <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white">Write A Review</Button>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium">{order.productName}</h3>
+                            <p className="text-sm text-gray-600 mt-1">Size: {order.size}</p>
+                            <p className="text-sm text-gray-600">Qty: {order.quantity}</p>
+                            <div className="mt-2">
+                              <span className={`inline-block px-3 py-1 ${getStatusStyle(order.status)} text-xs rounded-full`}>
+                                {order.status}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-2">
+                              {order.statusMessage || `Your product has been ${order.status}`}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">₹{order.price}</p>
+                            <div className="mt-4 space-y-2">
+                              <Button variant="outline" className="w-full border-gray-300 hover:bg-gray-50">
+                                View Order
+                              </Button>
+                              
+                              {/* Conditional button based on order status */}
+                              {order.status?.toLowerCase() === "delivered" ? (
+                                <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white">
+                                  Write A Review
+                                </Button>
+                              ) : order.status?.toLowerCase() === "in process" || order.status?.toLowerCase() === "inprocess" ? (
+                                <Button className="w-full bg-red-500 hover:bg-red-600 text-white">
+                                  Cancel Order
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
+                ))}
 
-            {/* Order 2 */}
-            <div className="border-b pb-6 mb-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-20 h-24 relative">
-                  <Image src="/placeholder.svg?height=96&width=80" alt="Product Image" fill className="object-cover" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium">Majenta embroidered suit set</h3>
-                      <p className="text-sm text-gray-600 mt-1">Size: 46</p>
-                      <p className="text-sm text-gray-600">Qty: 1</p>
-                      <div className="mt-2">
-                        <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-                          In Process
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-2">Your product has been Inprocess</p>
+                {/* Pagination controls */}
+                {data?.pagination && data.pagination.totalPages > 1 && (
+                  <div className="flex justify-between items-center mt-8">
+                    <Button 
+                      onClick={handlePreviousPage}
+                      disabled={data.pagination.currentPage <= 1}
+                      variant="outline"
+                      className="border-gray-300"
+                    >
+                      Previous
+                    </Button>
+                    <div className="text-sm text-gray-600">
+                      Page {data.pagination.currentPage} of {data.pagination.totalPages}
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium">₹1950</p>
-                      <div className="mt-4 space-y-2">
-                      <Link href={`/account/orders/details`}>
-                          <Button variant="outline" className="w-full border-gray-300 hover:bg-gray-50">
-                            View Order
-                          </Button>
-                        </Link>
-                        <Button className="w-full bg-red-500 hover:bg-red-600 text-white">Cancel Order</Button>
-                      </div>
-                    </div>
+                    <Button 
+                      onClick={handleNextPage}
+                      disabled={data.pagination.currentPage >= data.pagination.totalPages}
+                      variant="outline"
+                      className="border-gray-300"
+                    >
+                      Next
+                    </Button>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Order 3 */}
-            <div className="border-b pb-6 mb-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-20 h-24 relative">
-                  <Image src="/placeholder.svg?height=96&width=80" alt="Product Image" fill className="object-cover" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium">Tailored Cotton Casual Shirt</h3>
-                      <p className="text-sm text-gray-600 mt-1">Size: M</p>
-                      <p className="text-sm text-gray-600">Qty: 1</p>
-                      <div className="mt-2">
-                        <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-                          In Process
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-2">Your product has been Inprocess</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">$40.00</p>
-                      <div className="mt-4 space-y-2">
-                        <Button variant="outline" className="w-full border-gray-300 hover:bg-gray-50">
-                          View Order
-                        </Button>
-                        <Button className="w-full bg-red-500 hover:bg-red-600 text-white">Cancel Order</Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -182,4 +241,3 @@ export default function OrdersPage() {
     </main>
   )
 }
-

@@ -14,13 +14,11 @@ export interface Contact {
   updatedAt: string
   Status: string
 }
-
 // Fetch contacts
 const fetchContacts = async (): Promise<Contact[]> => {
   const { data } = await axios.get<Contact[]>(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/send`)
   return data
 }
-
 // Delete contact
 const deleteContact = async (id: number): Promise<void> => {
   await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/send/${id}`)

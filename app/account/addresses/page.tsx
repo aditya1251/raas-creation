@@ -7,65 +7,52 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import Navbar from "@/components/navbar"
 import SiteFooter from "@/components/site-footer"
+import { useQuery } from "@tanstack/react-query"
+import { AddressApi } from "@/lib/api/address"
 
 export default function ManageAddressesPage() {
   const [showAddressModal, setShowAddressModal] = useState(false)
   const [isDefaultAddress, setIsDefaultAddress] = useState(false)
-  const [addresses, setAddresses] = useState([
-    {
-      id: 1,
-      name: "Robert Fox",
-      address: "Store: 204/2-c & d , basement , jeewan nagar , ashram, New Delhi-110014",
-      phone: "+91 9039156555",
-    },
-    {
-      id: 2,
-      name: "Robert Fox",
-      address: "Store: 204/2-c & d , basement , jeewan nagar , ashram, New Delhi-110014",
-      phone: "+91 9039156555",
-    },
-    {
-      id: 3,
-      name: "Robert Fox",
-      address: "Store: 204/2-c & d , basement , jeewan nagar , ashram, New Delhi-110014",
-      phone: "+91 9039156555",
-    },
-  ])
+  const {data:addresses,isLoading}=useQuery({
+    queryKey:["addresses"],
+    queryFn:AddressApi.getAddress
+  })
 
   const openAddressModal = () => setShowAddressModal(true)
   const closeAddressModal = () => setShowAddressModal(false)
+// Add new address
+  // const handleAddAddress = (e) => {
+  //   e.preventDefault()
 
-  const handleAddAddress = (e) => {
-    e.preventDefault()
+  //   // Get form data
+  //   const formData = new FormData(e.target)
+  //   const name = formData.get("name")
+  //   const mobile = formData.get("mobile")
+  //   const building = formData.get("building")
+  //   const area = formData.get("area")
+  //   const city = formData.get("city")
+  //   const pincode = formData.get("pincode")
+  //   const state = formData.get("state")
 
-    // Get form data
-    const formData = new FormData(e.target)
-    const name = formData.get("name")
-    const mobile = formData.get("mobile")
-    const building = formData.get("building")
-    const area = formData.get("area")
-    const city = formData.get("city")
-    const pincode = formData.get("pincode")
-    const state = formData.get("state")
+  //   // Create new address object
+  //   const newAddress = {
+  //     id: addresses?.length + 1,
+  //     name: name.toString(),
+  //     address: `${building}, ${area}, ${city}, ${state}-${pincode}`,
+  //     phone: mobile.toString(),
+  //   }
 
-    // Create new address object
-    const newAddress = {
-      id: addresses.length + 1,
-      name: name.toString(),
-      address: `${building}, ${area}, ${city}, ${state}-${pincode}`,
-      phone: mobile.toString(),
-    }
+  //   // Add to addresses array
+  //   setAddresses([...addresses, newAddress])
 
-    // Add to addresses array
-    setAddresses([...addresses, newAddress])
+  //   // Close modal
+  //   closeAddressModal()
+  // }
 
-    // Close modal
-    closeAddressModal()
-  }
-
-  const handleDeleteAddress = (id) => {
-    setAddresses(addresses.filter((address) => address.id !== id))
-  }
+// delete address
+  // const handleDeleteAddress = (id) => {
+  //   setAddresses(addresses?.filter((address) => address.id !== id))
+  // }
 
   return (
     <main className="min-h-screen bg-white">
@@ -129,7 +116,7 @@ export default function ManageAddressesPage() {
               Add New Address
             </Button>
 
-            {addresses.map((address) => (
+            {addresses?.map((address) => (
               <div key={address.id} className="border-b pb-6 mb-6">
                 <div className="flex justify-between items-start">
                   <div>
@@ -155,7 +142,7 @@ export default function ManageAddressesPage() {
               </div>
             ))}
 
-            {addresses.length === 0 && (
+            {addresses?.length === 0 && (
               <div className="text-center py-8">
                 <p className="text-gray-500">No addresses found. Please add a new address.</p>
               </div>
