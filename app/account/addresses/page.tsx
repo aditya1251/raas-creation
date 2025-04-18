@@ -1,58 +1,66 @@
-"use client"
-import { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { User, Package, Heart, MapPin, Plus, PenSquare, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import Navbar from "@/components/navbar"
-import SiteFooter from "@/components/site-footer"
-import { useQuery } from "@tanstack/react-query"
-import { AddressApi } from "@/lib/api/address"
+"use client";
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  User,
+  Package,
+  Heart,
+  MapPin,
+  Plus,
+  PenSquare,
+  Trash2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import Navbar from "@/components/navbar";
+import SiteFooter from "@/components/site-footer";
+import { useQuery } from "@tanstack/react-query";
+import { AddressApi } from "@/lib/api/address";
 
 export default function ManageAddressesPage() {
-  const [showAddressModal, setShowAddressModal] = useState(false)
-  const [isDefaultAddress, setIsDefaultAddress] = useState(false)
-  const {data:addresses,isLoading}=useQuery({
-    queryKey:["addresses"],
-    queryFn:AddressApi.getAddress
-  })
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [isDefaultAddress, setIsDefaultAddress] = useState(false);
+  const { data: addresses, isLoading } = useQuery({
+    queryKey: ["addresses"],
+    queryFn: AddressApi.getAddress,
+  });
 
-  const openAddressModal = () => setShowAddressModal(true)
-  const closeAddressModal = () => setShowAddressModal(false)
-// Add new address
-  // const handleAddAddress = (e) => {
-  //   e.preventDefault()
+  const openAddressModal = () => setShowAddressModal(true);
+  const closeAddressModal = () => setShowAddressModal(false);
+  // Add new address
+  const handleAddAddress = (e) => {
+    e.preventDefault();
 
-  //   // Get form data
-  //   const formData = new FormData(e.target)
-  //   const name = formData.get("name")
-  //   const mobile = formData.get("mobile")
-  //   const building = formData.get("building")
-  //   const area = formData.get("area")
-  //   const city = formData.get("city")
-  //   const pincode = formData.get("pincode")
-  //   const state = formData.get("state")
+    // Get form data
+    const formData = new FormData(e.target);
+    const name = formData.get("name");
+    const mobile = formData.get("mobile");
+    const building = formData.get("building");
+    const area = formData.get("area");
+    const city = formData.get("city");
+    const pincode = formData.get("pincode");
+    const state = formData.get("state");
 
-  //   // Create new address object
-  //   const newAddress = {
-  //     id: addresses?.length + 1,
-  //     name: name.toString(),
-  //     address: `${building}, ${area}, ${city}, ${state}-${pincode}`,
-  //     phone: mobile.toString(),
-  //   }
+    // Create new address object
+    // const newAddress = {
+    //   id: addresses?.length + 1,
+    //   name: name.toString(),
+    //   address: `${building}, ${area}, ${city}, ${state}-${pincode}`,
+    //   phone: mobile.toString(),
+    // };
 
-  //   // Add to addresses array
-  //   setAddresses([...addresses, newAddress])
+    // Add to addresses array
+    // setAddresses([...addresses, newAddress]);
 
-  //   // Close modal
-  //   closeAddressModal()
-  // }
+    // Close modal
+    closeAddressModal();
+  };
 
-// delete address
-  // const handleDeleteAddress = (id) => {
-  //   setAddresses(addresses?.filter((address) => address.id !== id))
-  // }
+  // delete address
+  const handleDeleteAddress = (id) => {
+    // setAddresses(addresses?.filter((address) => address.id !== id))
+  };
 
   return (
     <main className="min-h-screen bg-white">
@@ -62,7 +70,6 @@ export default function ManageAddressesPage() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-medium">MY PROFILE</h1>
         </div>
-
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar */}
           <div className="w-full md:w-64 shrink-0">
@@ -79,7 +86,6 @@ export default function ManageAddressesPage() {
               <p className="text-sm text-gray-600 mb-1">Hello 👋</p>
               <h2 className="font-medium">Abhishek Chaudhary</h2>
             </div>
-
             <nav className="border rounded-md overflow-hidden">
               <Link
                 href="/account/personal-information"
@@ -88,7 +94,10 @@ export default function ManageAddressesPage() {
                 <User className="h-5 w-5 text-gray-500" />
                 <span>Personal Information</span>
               </Link>
-              <Link href="/account/orders" className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 border-b">
+              <Link
+                href="/account/orders"
+                className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 border-b"
+              >
                 <Package className="h-5 w-5 text-gray-500" />
                 <span>My Orders</span>
               </Link>
@@ -99,13 +108,15 @@ export default function ManageAddressesPage() {
                 <Heart className="h-5 w-5 text-gray-500" />
                 <span>My Wishlists</span>
               </Link>
-              <Link href="/account/addresses" className="flex items-center space-x-3 px-4 py-3 bg-[#a08452] text-white">
+              <Link
+                href="/account/addresses"
+                className="flex items-center space-x-3 px-4 py-3 bg-[#a08452] text-white"
+              >
                 <MapPin className="h-5 w-5" />
                 <span>Manage Addresses</span>
               </Link>
             </nav>
           </div>
-
           {/* Main Content */}
           <div className="flex-1">
             <Button
@@ -121,8 +132,8 @@ export default function ManageAddressesPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium text-lg mb-2">{address.name}</h3>
-                    <p className="text-gray-700 mb-1">{address.address}</p>
-                    <p className="text-gray-700">{address.phone}</p>
+                    <p className="text-gray-700 mb-1">{address.street}</p>
+                    <p className="text-gray-700">{address.name}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button className="bg-[#a08452] hover:bg-[#8c703d] text-white h-9 px-3 flex items-center gap-1">
@@ -144,7 +155,9 @@ export default function ManageAddressesPage() {
 
             {addresses?.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-gray-500">No addresses found. Please add a new address.</p>
+                <p className="text-gray-500">
+                  No addresses found. Please add a new address.
+                </p>
               </div>
             )}
           </div>
@@ -171,7 +184,9 @@ export default function ManageAddressesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Mobile Number</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Mobile Number
+                  </label>
                   <input
                     type="tel"
                     name="mobile"
@@ -182,7 +197,9 @@ export default function ManageAddressesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Flat, House No, Building, Company, Apartment</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Flat, House No, Building, Company, Apartment
+                  </label>
                   <input
                     type="text"
                     name="building"
@@ -192,7 +209,9 @@ export default function ManageAddressesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Area, Colony, Street, Sector, Village</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Area, Colony, Street, Sector, Village
+                  </label>
                   <input
                     type="text"
                     name="area"
@@ -218,7 +237,9 @@ export default function ManageAddressesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Pin Code</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Pin Code
+                  </label>
                   <input
                     type="text"
                     name="pincode"
@@ -229,7 +250,9 @@ export default function ManageAddressesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">State</label>
+                  <label className="block text-sm font-medium mb-1">
+                    State
+                  </label>
                   <select
                     name="state"
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452] appearance-none"
@@ -245,14 +268,24 @@ export default function ManageAddressesPage() {
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="default-address" checked={isDefaultAddress} onCheckedChange={setIsDefaultAddress} />
-                  <label htmlFor="default-address" className="text-sm cursor-pointer">
+                  <Checkbox
+                    id="default-address"
+                    checked={isDefaultAddress}
+                    onCheckedChange={setIsDefaultAddress}
+                  />
+                  <label
+                    htmlFor="default-address"
+                    className="text-sm cursor-pointer"
+                  >
                     Use as My Default Address
                   </label>
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  <Button type="submit" className="flex-1 bg-[#a08452] hover:bg-[#8c703d] text-white py-3">
+                  <Button
+                    type="submit"
+                    className="flex-1 bg-[#a08452] hover:bg-[#8c703d] text-white py-3"
+                  >
                     Add New Address
                   </Button>
                   <Button
@@ -272,6 +305,5 @@ export default function ManageAddressesPage() {
 
       <SiteFooter />
     </main>
-  )
+  );
 }
-
