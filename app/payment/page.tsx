@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import type React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MapPin, CreditCard, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,9 @@ import { useCart } from "@/context/cart-context";
 import OrderSummary from "@/components/order-summary";
 import { useMutation } from "@tanstack/react-query";
 import { Order, orderApi, OrderItems } from "@/lib/api/orders";
+import toast from "react-hot-toast";
+import Script from "next/script";
+import { useSession } from "next-auth/react";
 
 export default function PaymentPage() {
   const router = useRouter();
@@ -24,9 +26,10 @@ export default function PaymentPage() {
   const { cartItems, clearCart } = useCart();
   const createOrderMutation = useMutation({
     mutationFn: (orderData: Order) => orderApi.createOrder(orderData),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      await processPayment();
       clearCart();
-      console.log(data)
+      console.log(data);
       localStorage.setItem("lastOrderId", data.id || "");
       router.push("/order-confirmation");
     },
@@ -35,11 +38,16 @@ export default function PaymentPage() {
       alert("There was a problem processing your order. Please try again.");
     },
   });
+
+  const {data: session} = useSession();
+
   useEffect(() => {
-    // Get addressId from localStorage or query params
     const storedAddressId = localStorage.getItem("selectedAddressId");
     if (storedAddressId) {
       setAddressId(storedAddressId);
+    } else {
+      toast.error("Please select an address before proceeding to payment.");
+      router.push("/shipping-address");
     }
   }, []);
   const calculateSubtotal = () => {
@@ -55,33 +63,147 @@ export default function PaymentPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Convert cart items to the OrderItems format required by the API
-    const orderItems: OrderItems[] = cartItems.map((item) => ({
-      productId: item.id,
-      quantity: item.quantity,
-      priceAtOrder: item.price,
-      productVariantId: `${item.id}_${item.color}_${item.size}`,
-      color: item.color,
-      productImage: item.image || "",
-      productName: item.name,
-      size: item.size,
-    }));
-    const orderData: Order = {
-      userId: "yashsingh9651",
-      items: orderItems,
-      total: grandTotal,
-      addressId: addressId||"adress123839df56",
-      paid: paymentMethod !== "cod",
-      status: "pending", // Assuming initial status is pending
-      fulfillment: "pending", // Assuming initial status is pending
-    };
-    createOrderMutation.mutate(orderData);
+    await processPayment();
+
+    // const orderItems: OrderItems[] = cartItems.map((item) => ({
+    //   productId: item.id,
+    //   quantity: item.quantity,
+    //   priceAtOrder: item.price,
+    //   productVariantId: `${item.id}_${item.color}_${item.size}`,
+    //   color: item.color,
+    //   productImage: item.image || "",
+    //   productName: item.name,
+    //   size: item.size,
+    // }));
+    // const orderData: Order = {
+    //   userId: "yashsingh9651",
+    //   items: orderItems,
+    //   total: grandTotal,
+    //   addressId: addressId || "adress123839df56",
+    //   paid: paymentMethod !== "cod",
+    //   status: "pending", // Assuming initial status is pending
+    //   fulfillment: "pending", // Assuming initial status is pending
+    // };
+    // createOrderMutation.mutate(orderData);
   };
   const handleApplyDiscount = (code: string) => {
-    // Implement discount logic here
     if (code === "Colors60") {
-      return 0; // Replace with your actual discount calculation
+      return 0;
     }
     return 0;
+  };
+
+  const createOrderId = async () => {
+    try {
+     const response = await fetch('/api/order', {
+      method: 'POST',
+      headers: {
+       'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+       amount: grandTotal*100,
+      })
+     });
+  
+     if (!response.ok) {
+      throw new Error('Network response was not ok');
+     }
+  
+     const data = await response.json();
+     return data.orderId;
+    } catch (error) {
+     console.error('There was a problem with your fetch operation:', error);
+    }
+   };
+
+   const processPayment = async () => {
+    try {
+      const orderId: string = await createOrderId();
+      const options = {
+        key: process.env.RAZORPAY_KEY_ID,
+        amount: subtotal * 100,
+        currency: "INR",
+        name: "Raas - The Creation",
+        description: "Raas - The Creation Order",
+        order_id: orderId,
+
+        handler: async function (response: {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }) {
+          // setIsPaymentProcessing(false);
+          const data = {
+            orderCreationId: orderId,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpaySignature: response.razorpay_signature,
+          };
+
+          const result = await fetch("/api/verify", {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: { "Content-Type": "application/json" },
+          });
+          const res = await result.json();
+          if (res.isOk) {
+            // orderMutaion.mutate(
+            //   {
+            //     userId: session?.user?.id as string,
+            //     addressId: selectedAddress,
+            //     total: subtotal,
+            //     items: cart.map((item) => ({
+            //       productId: item.productId,
+            //       color: item.color,
+            //       productName: item.name,
+            //       size: item.size,
+            //       productVariantId: item.productVariantId as string,
+            //       quantity: item.quantity,
+            //       priceAtOrder: item.price,
+            //       productImage: item.image,
+            //     })),
+            //     status: "PENDING",
+            //   },
+            //   {
+            //     onSuccess: async (data) => {
+            //       const orderId = data?.id;
+
+            //       // 🔥 Shiprocket Order
+            //       await createShiprocketOrder(orderId as string);
+            //       router.push("/profile");
+            //     },
+            //     onError: (error) => {
+            //       console.error("Error creating order:", error);
+            //     },
+            //   }
+            // );
+          } else {
+            // setIsPaymentProcessing(false);
+            // setIsPaymentFailed(true);
+            // setPaymentErrorMessage(res.message);
+          }
+        },
+        prefill: {
+          name: session?.user?.name,
+          contact: session?.user?.mobile_no,
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.on(
+        "payment.failed",
+        function (response: { error: { description: string } }) {
+          // setIsPaymentProcessing(false);
+          // setIsPaymentFailed(true);
+          // setPaymentErrorMessage(response.error.description);
+        }
+      );
+      paymentObject.open();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -140,8 +262,7 @@ export default function PaymentPage() {
                         <label
                           htmlFor="card-payment"
                           className="font-medium cursor-pointer"
-                          onClick={() => setPaymentMethod("card")}
-                        >
+                          onClick={() => setPaymentMethod("card")}>
                           Debit/Credit Card
                         </label>
                         <input
@@ -161,8 +282,7 @@ export default function PaymentPage() {
                             <div>
                               <label
                                 htmlFor="card-number"
-                                className="block text-sm font-medium mb-1"
-                              >
+                                className="block text-sm font-medium mb-1">
                                 Card Number
                               </label>
                               <input
@@ -177,8 +297,7 @@ export default function PaymentPage() {
                             <div>
                               <label
                                 htmlFor="card-name"
-                                className="block text-sm font-medium mb-1"
-                              >
+                                className="block text-sm font-medium mb-1">
                                 Name On The Card
                               </label>
                               <input
@@ -194,8 +313,7 @@ export default function PaymentPage() {
                               <div>
                                 <label
                                   htmlFor="expiry-date"
-                                  className="block text-sm font-medium mb-1"
-                                >
+                                  className="block text-sm font-medium mb-1">
                                   Expiry Date
                                 </label>
                                 <input
@@ -213,8 +331,7 @@ export default function PaymentPage() {
                               <div>
                                 <label
                                   htmlFor="cvv"
-                                  className="block text-sm font-medium mb-1"
-                                >
+                                  className="block text-sm font-medium mb-1">
                                   CVV
                                 </label>
                                 <input
@@ -230,8 +347,7 @@ export default function PaymentPage() {
                             <div>
                               <Button
                                 type="button"
-                                className="w-full md:w-auto px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white"
-                              >
+                                className="w-full md:w-auto px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white">
                                 Add Card
                               </Button>
                             </div>
@@ -250,8 +366,7 @@ export default function PaymentPage() {
                         <label
                           htmlFor="upi-payment"
                           className="font-medium cursor-pointer"
-                          onClick={() => setPaymentMethod("upi")}
-                        >
+                          onClick={() => setPaymentMethod("upi")}>
                           UPI (Google Pay, Paytm, Phonepe)
                         </label>
                         <input
@@ -276,8 +391,7 @@ export default function PaymentPage() {
                         <label
                           htmlFor="cod-payment"
                           className="font-medium cursor-pointer"
-                          onClick={() => setPaymentMethod("cod")}
-                        >
+                          onClick={() => setPaymentMethod("cod")}>
                           Cash On Delivery
                         </label>
                         <input
@@ -298,8 +412,8 @@ export default function PaymentPage() {
                   <Button
                     type="submit"
                     className="w-full md:w-auto px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white"
-                    disabled={createOrderMutation.isPending}
-                  >
+                    onClick={handleSubmit}
+                    disabled={createOrderMutation.isPending}>
                     {createOrderMutation.isPending
                       ? "Processing..."
                       : "Place Order"}
@@ -322,6 +436,13 @@ export default function PaymentPage() {
           </form>
         </div>
       </main>
+
+      <div className="absolute w-full h-full lg:w-1/2 lg:h-1/2">
+        <Script
+          id="razorpay-checkout-js"
+          src="https://checkout.razorpay.com/v1/checkout.js"
+        />
+      </div>
 
       <SiteFooter />
     </div>

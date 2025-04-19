@@ -41,7 +41,7 @@ export default function ShippingAddressPage() {
       const add = address.map((address: AddressType) => {
         return {
           id: address.id ?? "",
-          name: address.addressName,
+          name: address.addressName + " | " + address.firstName + " " + address.lastName,
           address:
           address.firstName + " " + address.lastName + ", " +
             address.street +
@@ -77,6 +77,8 @@ export default function ShippingAddressPage() {
       setError("Please select a delivery address");
       return;
     }
+    // Save selected address to local storage
+    localStorage.setItem("selectedAddressId", selectedAddress);
     // Continue to payment page
   };
 
