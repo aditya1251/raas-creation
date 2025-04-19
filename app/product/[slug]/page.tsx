@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 export default function ProductDetail() {
   const params = useParams();
   const slug = params?.slug;
-  console.log(slug);
 
   if(!slug){
     return <div>Product not found</div>;

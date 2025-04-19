@@ -5,6 +5,6 @@ export const contactFormApi = {
     getAll: async () => {
         const { data } = await apiClient.get<Contact[]>("/api/send")
         return data
-    }
+    },
     
 }

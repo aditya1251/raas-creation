@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type React from "react";
-import { Loader, LoadingProductDetails } from "@/components/ui/loader";
+import { LoadingProductDetails } from "@/components/ui/loader";
 import Image from "next/image";
 import Link from "next/link";
 import {
