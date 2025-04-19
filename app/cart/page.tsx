@@ -177,8 +177,9 @@ export default function CartPage() {
                               onClick={() =>
                                 updateQuantity(
                                   item.id,
-                                  Math.max(1, item.quantity - 1)
-                                )
+                                  item.color,
+                                  item.size,
+                                  Math.max(1, item.quantity - 1)                                )
                               }
                             >
                               <Minus className="h-3 w-3" />
@@ -189,7 +190,7 @@ export default function CartPage() {
                             <button
                               className="w-7 h-7 flex items-center justify-center"
                               onClick={() =>
-                                updateQuantity(item.id, item.quantity + 1)
+                                updateQuantity(item.id, item.color, item.size, item.quantity + 1)
                               }
                             >
                               <Plus className="h-3 w-3" />
@@ -202,7 +203,7 @@ export default function CartPage() {
                           </div>
                           <button
                             className="text-red-500"
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removeFromCart(item.id, item.color, item.size)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -252,7 +253,7 @@ export default function CartPage() {
                             className="w-7 h-7 flex items-center justify-center"
                             onClick={() =>
                               updateQuantity(
-                                item.id,
+                                item.id, item.color, item.size,
                                 Math.max(1, item.quantity - 1)
                               )
                             }
@@ -265,7 +266,7 @@ export default function CartPage() {
                           <button
                             className="w-7 h-7 flex items-center justify-center"
                             onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
+                              updateQuantity(item.id, item.color, item.size, item.quantity + 1)
                             }
                           >
                             <Plus className="h-3 w-3" />
@@ -278,7 +279,7 @@ export default function CartPage() {
                       <div className="text-right">
                         <button
                           className="text-red-500"
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.id, item.color, item.size)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

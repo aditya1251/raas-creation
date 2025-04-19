@@ -24,6 +24,7 @@ import {
   X,
   Box,
   Percent,
+  DollarSign,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -109,14 +110,20 @@ export function Sidebar() {
               />
               <div
                 onClick={() =>
-                  signOut({ redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/`, callbackUrl: "/signin" })
+                  signOut({
+                    redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/`,
+                    callbackUrl: "/signin",
+                  })
                 }
                 className={`flex cursor-pointer items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-all text-gray-700 hover:bg-gray-100 ${
                   isCollapsed ? "justify-center" : ""
                 }`}>
                 <div
                   onClick={() =>
-                    signOut({ redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/`,callbackUrl: "/signin" })
+                    signOut({
+                      redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/`,
+                      callbackUrl: "/signin",
+                    })
                   }
                   className="flex-shrink-0">
                   <LogOut size={18} />
@@ -206,6 +213,12 @@ export function Sidebar() {
                 label="Discount"
                 active={isActive("/admin/orders/discount")}
                 collapsed={isCollapsed}
+              />
+              <NavItem
+                href="/admin/orders/taxes"
+                icon={<DollarSign size={18} />}
+                label="Taxes & Charges"
+                active={isActive("/admin/orders/taxes")}
               />
             </div>
           </div>
