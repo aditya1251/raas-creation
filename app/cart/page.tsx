@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
@@ -7,11 +7,32 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
 import { useCart } from "@/context/cart-context";
+import { orderApi } from "@/lib/api/orders";
+import { useQuery } from "@tanstack/react-query";
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart } = useCart();
   const [discountCode, setDiscountCode] = useState("");
   const [isDiscountApplied, setIsDiscountApplied] = useState(false);
+  const [deliveryCharges, setDeliveryCharges] = useState(0);
+  const [gstTaxRate, setGstTaxRate] = useState<number | null>(null);
+
+  const { data } = useQuery({
+    queryKey: ["tax"],
+    queryFn: async () => {
+      const response = await orderApi.getTax();
+      return response;
+    },
+  });
+
+  useEffect(() => {
+    if (data) {
+      const deliveryCharges =
+        cartItems.length > 0 ? data.ShiippingCharge || 0 : 0;
+      setDeliveryCharges(deliveryCharges);
+      setGstTaxRate(data.GSTtax);
+    }
+  }, [data]);
 
   const calculateSubtotal = () => {
     return cartItems.reduce(
@@ -20,60 +41,12 @@ export default function CartPage() {
     );
   };
 
-  const checkoutItems =
-    cartItems.length > 0
-      ? cartItems
-      : [
-          {
-            id: "1",
-            name: "Mirror Work Tangy Cotton Print Suit Set",
-            price: 3490,
-            originalPrice: 4899,
-            quantity: 1,
-            color: "Orange",
-            size: "38",
-            image:
-              "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-22zL20iPWx4nVh3qQdh5EwkvzWf4H0.jpeg",
-          },
-          {
-            id: "2",
-            name: "Mirror Work Tangy Cotton Print Suit Set",
-            price: 3490,
-            originalPrice: 4899,
-            quantity: 1,
-            color: "Orange",
-            size: "38",
-            image:
-              "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-22zL20iPWx4nVh3qQdh5EwkvzWf4H0.jpeg",
-          },
-          {
-            id: "3",
-            name: "Mirror Work Tangy Cotton Print Suit Set",
-            price: 3490,
-            originalPrice: 4899,
-            quantity: 1,
-            color: "Orange",
-            size: "38",
-            image:
-              "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-22zL20iPWx4nVh3qQdh5EwkvzWf4H0.jpeg",
-          },
-          {
-            id: "4",
-            name: "Mirror Work Tangy Cotton Print Suit Set",
-            price: 3490,
-            originalPrice: 4899,
-            quantity: 1,
-            color: "Orange",
-            size: "38",
-            image:
-              "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Raas_Creation_Web_Design.png-22zL20iPWx4nVh3qQdh5EwkvzWf4H0.jpeg",
-          },
-        ];
+  const checkoutItems = cartItems.length > 0 ? cartItems : [];
 
   const subtotal = calculateSubtotal();
-  const deliveryCharges = cartItems.length > 0 ? 40 : 0;
-  const discount = isDiscountApplied ? 0 : 0; // You can implement discount logic here
-  const grandTotal = subtotal + deliveryCharges - discount;
+  const discount = isDiscountApplied ? 0 : 0;
+  const gstAmount = gstTaxRate ? (subtotal * gstTaxRate) / 100 : 0;
+  const grandTotal = subtotal + deliveryCharges - discount + gstAmount;
 
   const handleApplyDiscount = () => {
     if (discountCode.trim()) {
@@ -104,8 +77,7 @@ export default function CartPage() {
                 className="w-12 h-12 text-gray-400"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+                stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -179,9 +151,9 @@ export default function CartPage() {
                                   item.id,
                                   item.color,
                                   item.size,
-                                  Math.max(1, item.quantity - 1)                                )
-                              }
-                            >
+                                  Math.max(1, item.quantity - 1)
+                                )
+                              }>
                               <Minus className="h-3 w-3" />
                             </button>
                             <span className="w-7 text-center text-xs">
@@ -190,9 +162,13 @@ export default function CartPage() {
                             <button
                               className="w-7 h-7 flex items-center justify-center"
                               onClick={() =>
-                                updateQuantity(item.id, item.color, item.size, item.quantity + 1)
-                              }
-                            >
+                                updateQuantity(
+                                  item.id,
+                                  item.color,
+                                  item.size,
+                                  item.quantity + 1
+                                )
+                              }>
                               <Plus className="h-3 w-3" />
                             </button>
                           </div>
@@ -203,8 +179,9 @@ export default function CartPage() {
                           </div>
                           <button
                             className="text-red-500"
-                            onClick={() => removeFromCart(item.id, item.color, item.size)}
-                          >
+                            onClick={() =>
+                              removeFromCart(item.id, item.color, item.size)
+                            }>
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -225,8 +202,7 @@ export default function CartPage() {
                         <div className="min-w-0 overflow-hidden">
                           <div
                             className="font-medium truncate max-w-full"
-                            title={item.name}
-                          >
+                            title={item.name}>
                             {item.name.length > 15
                               ? item.name.slice(0, 15) + "..."
                               : item.name}
@@ -253,11 +229,12 @@ export default function CartPage() {
                             className="w-7 h-7 flex items-center justify-center"
                             onClick={() =>
                               updateQuantity(
-                                item.id, item.color, item.size,
+                                item.id,
+                                item.color,
+                                item.size,
                                 Math.max(1, item.quantity - 1)
                               )
-                            }
-                          >
+                            }>
                             <Minus className="h-3 w-3" />
                           </button>
                           <span className="w-7 text-center text-sm">
@@ -266,9 +243,13 @@ export default function CartPage() {
                           <button
                             className="w-7 h-7 flex items-center justify-center"
                             onClick={() =>
-                              updateQuantity(item.id, item.color, item.size, item.quantity + 1)
-                            }
-                          >
+                              updateQuantity(
+                                item.id,
+                                item.color,
+                                item.size,
+                                item.quantity + 1
+                              )
+                            }>
                             <Plus className="h-3 w-3" />
                           </button>
                         </div>
@@ -279,8 +260,9 @@ export default function CartPage() {
                       <div className="text-right">
                         <button
                           className="text-red-500"
-                          onClick={() => removeFromCart(item.id, item.color, item.size)}
-                        >
+                          onClick={() =>
+                            removeFromCart(item.id, item.color, item.size)
+                          }>
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -313,20 +295,28 @@ export default function CartPage() {
                       />
                       <Button
                         className="rounded-l-none bg-[#a08452] hover:bg-[#8c703d] py-2 px-4 h-auto"
-                        onClick={handleApplyDiscount}
-                      >
+                        onClick={handleApplyDiscount}>
                         Apply
                       </Button>
                     </div>
                   </div>
+                  {gstTaxRate !== null && (
+                    <div className="flex justify-between">
+                      <span>GST ({gstTaxRate}%)</span>
+                      <span className="font-medium">
+                        ₹{gstAmount.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
 
-                  <div className="flex justify-between">
-                    <span>Delivery Charges</span>
-                    <span className="font-medium">
-                      ₹{deliveryCharges.toFixed(2)}
-                    </span>
-                  </div>
-
+                  {deliveryCharges > 0 && (
+                    <div className="flex justify-between">
+                      <span>Delivery Charges</span>
+                      <span className="font-medium">
+                        ₹{deliveryCharges.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                   {isDiscountApplied && discount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount</span>
@@ -343,7 +333,7 @@ export default function CartPage() {
                     </div>
                   </div>
 
-                  <Link href="/checkout">
+                  <Link href="/shipping-address">
                     <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] py-2 h-auto mt-4">
                       Proceed to Checkout
                     </Button>

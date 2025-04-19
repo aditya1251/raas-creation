@@ -10,11 +10,23 @@ import { useCart } from "@/context/cart-context";
 import { useQuery } from "@tanstack/react-query";
 import {  AddressApi } from "@/lib/api/address";
 import { AddressType } from "@/types/types";
+import { orderApi } from "@/lib/api/orders";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function ShippingAddressPage() {
   const [isDiscountApplied, setIsDiscountApplied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { cartItems } = useCart();
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      toast.error("Your cart is empty.");
+      router.push("/shop");
+    }
+  },[])
 
   const calculateSubtotal = () => {
     return cartItems.reduce(
@@ -23,12 +35,30 @@ export default function ShippingAddressPage() {
     );
   };
   const subtotal = calculateSubtotal();
-  const deliveryCharges = 40;
+  const [deliveryCharges, setDeliveryCharges] = useState(0);
+  const [gstTaxRate, setGstTaxRate] = useState<number | null>(null);
   const discount = isDiscountApplied ? 0 : 0;
   const grandTotal = subtotal + deliveryCharges - discount;
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [error, setError] = useState<string>("");
 
+  const { data } = useQuery({
+    queryKey: ["tax"],
+    queryFn: async () => {
+      const response = await orderApi.getTax();
+      return response;
+    },
+  });
+
+  useEffect(() => {
+    if (data) {
+      const deliveryCharges = cartItems.length > 0 ? data.ShiippingCharge || 0 : 0;
+      setDeliveryCharges(deliveryCharges);
+      setGstTaxRate(data.GSTtax);
+    }
+  }, [data]);
+
+  
   const { data: address, isLoading: addressLoading, error: addressError } = useQuery({
     queryKey: ["address"],
     queryFn: AddressApi.getAddress,
@@ -60,7 +90,7 @@ export default function ShippingAddressPage() {
     }
   }, [address]);
 
-  const handleApplyDiscount = () => {
+  const handleApplyDiscount = (code: string) => {
     setIsLoading(true);
     try {
       setIsDiscountApplied(true);
@@ -69,6 +99,7 @@ export default function ShippingAddressPage() {
       setError("Failed to apply discount. Please try again.");
     } finally {
       setIsLoading(false);
+      return 0;
     }
   };
 
@@ -307,7 +338,8 @@ export default function ShippingAddressPage() {
             <div className="w-full lg:w-80 shrink-0">
               <OrderSummary
                 subtotal={subtotal}
-                deliveryCharges={40}
+                deliveryCharges={deliveryCharges}
+                gstTaxRate={gstTaxRate}
                 discountCode="Colors60"
                 onApplyDiscount={handleApplyDiscount}
                 checkoutLink="/shipping-address"

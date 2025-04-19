@@ -5,18 +5,30 @@ import Link from "next/link";
 
 export default function OrderSummary({
   subtotal,
-  deliveryCharges = 40,
+  deliveryCharges = 0,
   discountCode = "Colors60",
   onApplyDiscount,
   checkoutLink = "/shipping-address",
   buttonText = "Proceed to Checkout",
+  gstTaxRate = null,
   showDiscountInput = true,
+} : {
+  subtotal: number,
+  deliveryCharges: number,
+  discountCode: string,
+  onApplyDiscount: (code: string) => number,
+  checkoutLink: string,
+  buttonText: string,
+  gstTaxRate: number | null,
+  showDiscountInput?: boolean,
 }) {
   const [discount, setDiscount] = useState(0);
   const [isDiscountApplied, setIsDiscountApplied] = useState(false);
   const [discountCodeValue, setDiscountCodeValue] = useState(discountCode);
+
+  const gstAmount = gstTaxRate ? (subtotal * gstTaxRate) / 100 : 0;
   
-  const grandTotal = subtotal + deliveryCharges - discount;
+  const grandTotal = subtotal + deliveryCharges - discount + gstAmount;
 
   const handleApplyDiscount = () => {
     if (typeof onApplyDiscount === "function") {
@@ -56,11 +68,20 @@ export default function OrderSummary({
             </div>
           </div>
         )}
+
+        {gstTaxRate !== null && (
+          <div className="flex justify-between">
+            <span>GST ({gstTaxRate}%)</span>
+            <span className="font-medium">₹{gstAmount.toFixed(2)}</span>
+          </div>
+        )}
         
-        <div className="flex justify-between">
-          <span>Delivery Charges</span>
-          <span className="font-medium">₹{deliveryCharges.toFixed(2)}</span>
-        </div>
+        {deliveryCharges > 0 && (
+          <div className="flex justify-between">
+            <span>Delivery Charges</span>
+            <span className="font-medium">₹{deliveryCharges.toFixed(2)}</span>
+          </div>
+        )}
         
         {isDiscountApplied && discount > 0 && (
           <div className="flex justify-between text-green-600">

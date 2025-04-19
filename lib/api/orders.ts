@@ -67,7 +67,7 @@ export const orderApi = {
   },
   getTax: async (): Promise<{ CodLimit: number | null, GSTtax: number | null, ShiippingCharge: number | null }> => {
     const response = await apiClient.get("/api/orders/tax");
-    return response.data;
+    return response.data.data;
   },
   updateTax: async (tax: { CodLimit: number | null, GSTtax: number | null, ShiippingCharge: number | null }): Promise<void> => {
     await apiClient.post("/api/orders/tax", { tax: tax });
