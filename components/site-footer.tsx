@@ -111,6 +111,14 @@ export default function SiteFooter() {
               </li>
               <li>
                 <a
+                  href="/privacy"
+                  className="text-gray-700 hover:text-[#795d2a] transition-colors"
+                >
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a
                   href="/contact"
                   className="text-gray-700 hover:text-[#795d2a] transition-colors"
                 >
