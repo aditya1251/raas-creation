@@ -17,18 +17,19 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { analyticApi } from "@/lib/api/analyticApi";
 import { LoadingProducts } from "@/components/ui/loader";
+import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/context/cart-context";
+import Link from "next/link";
 
 export default function Home() {
   const { data: bestSellers, isLoading: bestSellerLoad } = useQuery({
     queryKey: ["bestSellers"],
     queryFn: analyticApi.getBestSellers,
   });
-  console.log("best Seller", bestSellers);
   const { data: newArrivals, isLoading: newArrivalsLoad } = useQuery({
     queryKey: ["newArrivals"],
     queryFn: analyticApi.getNewArrivals,
   });
-  console.log(newArrivals);
   return (
     <main className="min-h-screen bg-white flex flex-col">
       <Navbar />
@@ -112,16 +113,40 @@ export default function Home() {
 
 // Product Card Component
 function ProductCard({ product }) {
+  const { toast } = useToast();
+  const { addToCart } = useCart();
+  const handleAddToCart = () => {
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.discountPrice || product.price,
+      originalPrice: product.price,
+      quantity: 1,
+      color: product.colors.length > 0 ? product.colors[0].color : "",
+      size:
+        product.colors[0]?.sizes?.length > 0
+          ? product.colors[0].sizes[0].size
+          : "SIZE_DEFAULT",
+      image: product.img,
+    };
+    addToCart(cartItem);
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart.`,
+    });
+  };
   return (
     <div className="group relative">
       <div className="aspect-[3/4] relative overflow-hidden rounded-xl bg-gray-100">
         {/* Image */}
-        <Image
-          src={product.img || "/placeholder.svg"}
-          alt={product.name}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+        <Link href={`/product/${product.slug}`}>
+          <Image
+            src={product.img || "/placeholder.svg"}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </Link>
         {/* Wishlist Heart Button */}
         <button
           className="absolute top-3 right-3 aspect-square w-8 lg:w-10 bg-[#a08452] hover:bg-[#8c703d] rounded-full flex items-center justify-center
@@ -136,19 +161,24 @@ function ProductCard({ product }) {
           transform translate-y-0 lg:translate-y-full lg:group-hover:translate-y-0
           transition-transform duration-300 ease-in-out"
         >
-          <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white flex items-center justify-center gap-2 text-lg lg:text-xl font-normal opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
+          <Button
+            onClick={handleAddToCart}
+            className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white flex items-center justify-center gap-2 text-lg lg:text-xl font-normal opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300"
+          >
             <ShoppingBag />
             Add to Cart
           </Button>
         </div>
       </div>
       {/* Product Details */}
-      <div className="mt-3">
-        <h3 className="text-xs font-medium">{product.name}</h3>
-        <p className="text-[#7d6e8b] text-xs font-medium mt-1">
-          ₹{product.price}
-        </p>
-      </div>
+      <Link href={`/product/${product.slug}`}>
+        <div className="mt-3">
+          <h3 className="text-xs font-medium">{product.name}</h3>
+          <p className="text-[#7d6e8b] text-xs font-medium mt-1">
+            ₹{product.price}
+          </p>
+        </div>
+      </Link>
     </div>
   );
 }

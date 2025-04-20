@@ -18,7 +18,6 @@ export const discountApi = {
         const response = await apiClient.get(`/api/discounts/${id}`);
         return response.data.discount;
     },
-
     getByCode: async (code: string): Promise<Discount> => {
         const response = await apiClient.get(`/api/discounts/name/${code}`);
         return response.data.discount;

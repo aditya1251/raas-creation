@@ -2,9 +2,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { discountApi } from "@/lib/api/discount";
 
 export default function OrderSummary({
   subtotal,
+
   deliveryCharges = 0,
   discountCode = "Colors60",
   onApplyDiscount,
@@ -48,7 +51,7 @@ export default function OrderSummary({
           <span>Subtotal</span>
           <span className="font-medium">₹{subtotal?.toFixed(2)}</span>
         </div>
-        
+
         {showDiscountInput && (
           <div>
             <p className="mb-2 text-sm">Enter Discount Code</p>
@@ -82,26 +85,28 @@ export default function OrderSummary({
             <span className="font-medium">₹{deliveryCharges.toFixed(2)}</span>
           </div>
         )}
-        
+
         {isDiscountApplied && discount > 0 && (
           <div className="flex justify-between text-green-600">
             <span>Discount</span>
             <span className="font-medium">-₹{discount.toFixed(2)}</span>
           </div>
         )}
-        
+
         <div className="pt-4 border-t">
           <div className="flex justify-between text-lg font-medium">
             <span>Grand Total</span>
             <span>₹{grandTotal.toFixed(2)}</span>
           </div>
         </div>
-        
-        {buttonText.length>0&&<Link href={checkoutLink}>
-          <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] py-2 h-auto mt-4">
-            {buttonText}
-          </Button>
-        </Link>}
+
+        {buttonText.length > 0 && (
+          <Link href={checkoutLink}>
+            <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] py-2 h-auto mt-4">
+              {buttonText}
+            </Button>
+          </Link>
+        )}
       </div>
     </div>
   );
