@@ -220,21 +220,6 @@ function ProductCard({
             <Heart className="aspect-square w-4 lg:w-6 text-white" />
           )}
         </button>
-
-        {/* Add to Cart Button */}
-        <div
-          className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
-            transform translate-y-0 lg:translate-y-full lg:group-hover:translate-y-0
-            transition-transform duration-300 ease-in-out"
-        >
-          <Button
-            onClick={handleAddToCart}
-            className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white flex items-center justify-center gap-2 text-lg lg:text-xl font-normal opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300"
-          >
-            <ShoppingBag />
-            Add to Cart
-          </Button>
-        </div>
       </div>
 
       {/* Product Details */}

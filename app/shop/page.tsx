@@ -148,6 +148,7 @@ export default function ShopPage() {
     // First filter by price
     let filtered = products.filter(
       (product) => product.discountPrice ?? product.price <= priceRange
+
     );
     // Filter by selected colors if any are selected
     if (selectedColors.length > 0) {
