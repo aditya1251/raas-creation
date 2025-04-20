@@ -13,6 +13,7 @@ import { Order, orderApi, OrderItems } from "@/lib/api/orders";
 import toast from "react-hot-toast";
 import Script from "next/script";
 import { useSession } from "next-auth/react";
+import { discountApi } from "@/lib/api/discount";
 
 export default function PaymentPage() {
   const router = useRouter();
@@ -70,6 +71,33 @@ export default function PaymentPage() {
   const gstAmount = gstTaxRate ? (subtotal * gstTaxRate) / 100 : 0;
   const grandTotal = subtotal + deliveryCharges - discount + gstAmount;
 
+  useEffect(() => {
+        const storedCode = localStorage.getItem("discountCode");
+      
+        if (storedCode && cartItems.length > 0) {
+          // Use local copy of subtotal to avoid stale discount calculations
+          const currentSubtotal = subtotal;
+      
+          discountApi.getByCode(storedCode)
+            .then((discountData) => {
+              if (discountData) {
+                const discountAmount =
+                  discountData.type === "PERCENTAGE"
+                    ? (currentSubtotal * discountData.value) / 100
+                    : discountData.value;
+      
+                setDiscount(discountAmount);
+              } else {
+                setDiscount(0);
+                localStorage.removeItem("discountCode");
+              }
+            })
+            .catch((err) => {
+              console.error("Failed to apply stored discount:", err);
+            });
+        }
+      }, [cartItems]);
+      
   const { data } = useQuery({
     queryKey: ["tax"],
     queryFn: async () => {
@@ -115,13 +143,7 @@ export default function PaymentPage() {
     // };
     // createOrderMutation.mutate(orderData);
   };
-  const handleApplyDiscount = (code: string) => {
-    if (code === "Colors60") {
-      return 0;
-    }
-    return 0;
-  };
-
+ 
   const createOrderId = async () => {
     try {
       const response = await fetch("/api/order", {
@@ -150,7 +172,7 @@ export default function PaymentPage() {
       const orderId: string = await createOrderId();
       const options = {
         key: process.env.RAZORPAY_KEY_ID,
-        amount: subtotal * 100,
+        amount: grandTotal * 100,
         currency: "INR",
         name: "Raas - The Creation",
         description: "Raas - The Creation Order",
@@ -470,10 +492,9 @@ export default function PaymentPage() {
                   subtotal={subtotal}
                   gstTaxRate={gstTaxRate}
                   deliveryCharges={deliveryCharges}
-                  discountCode="Colors60"
-                  onApplyDiscount={handleApplyDiscount}
                   checkoutLink="/shipping-address"
                   buttonText=""
+                  showDiscountInput={false}
                 />
               </div>
             </div>
