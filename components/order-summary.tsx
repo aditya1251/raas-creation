@@ -1,16 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useCart } from "@/context/cart-context";
 import { discountApi } from "@/lib/api/discount";
+import toast from "react-hot-toast";
 
 export default function OrderSummary({
   subtotal,
-
   deliveryCharges = 0,
-  discountCode = "Colors60",
-  onApplyDiscount,
   checkoutLink = "/shipping-address",
   buttonText = "Proceed to Checkout",
   gstTaxRate = null,
@@ -18,8 +16,6 @@ export default function OrderSummary({
 } : {
   subtotal: number,
   deliveryCharges: number,
-  discountCode: string,
-  onApplyDiscount: (code: string) => number,
   checkoutLink: string,
   buttonText: string,
   gstTaxRate: number | null,
@@ -27,21 +23,82 @@ export default function OrderSummary({
 }) {
   const [discount, setDiscount] = useState(0);
   const [isDiscountApplied, setIsDiscountApplied] = useState(false);
-  const [discountCodeValue, setDiscountCodeValue] = useState(discountCode);
+  const [discountCodeValue, setDiscountCodeValue] = useState("");
+
+
+  const { cartItems } = useCart();
 
   const gstAmount = gstTaxRate ? (subtotal * gstTaxRate) / 100 : 0;
   
   const grandTotal = subtotal + deliveryCharges - discount + gstAmount;
 
-  const handleApplyDiscount = () => {
-    if (typeof onApplyDiscount === "function") {
-      const appliedDiscount = onApplyDiscount(discountCodeValue);
-      if (appliedDiscount !== undefined) {
-        setDiscount(appliedDiscount);
-      }
+  const handleApplyDiscount = async () => {
+    const trimmedCode = discountCodeValue.trim();
+
+    if (!trimmedCode) {
+      toast.error("Please enter a discount code.");
+      return;
     }
-    setIsDiscountApplied(true);
+
+    try {
+      const discountData = await discountApi.getByCode(trimmedCode);
+
+      if (discountData) {
+        let discountAmount = 0;
+
+        if (discountData.type === "PERCENTAGE") {
+          discountAmount = (subtotal * discountData.value) / 100;
+        } else {
+          discountAmount = discountData.value;
+        }
+
+        setDiscount(discountAmount);
+        setIsDiscountApplied(true);
+        localStorage.setItem("discountCode", trimmedCode);
+        toast.success("Discount applied!");
+      } else {
+        toast.error("Invalid discount code.");
+        setIsDiscountApplied(false);
+        setDiscount(0);
+      }
+    } catch (error) {
+      toast.error("Error applying discount. Please try again.");
+      console.error("Discount error:", error);
+    }
+
+    setDiscountCodeValue(""); // Clear input either way
   };
+
+  useEffect(() => {
+      const storedCode = localStorage.getItem("discountCode");
+    
+      if (storedCode && cartItems.length > 0) {
+        // Use local copy of subtotal to avoid stale discount calculations
+        const currentSubtotal = subtotal;
+    
+        discountApi.getByCode(storedCode)
+          .then((discountData) => {
+            if (discountData) {
+              const discountAmount =
+                discountData.type === "PERCENTAGE"
+                  ? (currentSubtotal * discountData.value) / 100
+                  : discountData.value;
+    
+              setDiscount(discountAmount);
+              setIsDiscountApplied(true);
+            } else {
+              setIsDiscountApplied(false);
+              setDiscount(0);
+              localStorage.removeItem("discountCode");
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to apply stored discount:", err);
+          });
+          setDiscountCodeValue("");
+      }
+    }, [cartItems]);
+    
 
   return (
     <div className="border rounded-md p-6">
@@ -51,7 +108,7 @@ export default function OrderSummary({
           <span>Subtotal</span>
           <span className="font-medium">₹{subtotal?.toFixed(2)}</span>
         </div>
-
+        
         {showDiscountInput && (
           <div>
             <p className="mb-2 text-sm">Enter Discount Code</p>
@@ -85,28 +142,26 @@ export default function OrderSummary({
             <span className="font-medium">₹{deliveryCharges.toFixed(2)}</span>
           </div>
         )}
-
+        
         {isDiscountApplied && discount > 0 && (
           <div className="flex justify-between text-green-600">
             <span>Discount</span>
             <span className="font-medium">-₹{discount.toFixed(2)}</span>
           </div>
         )}
-
+        
         <div className="pt-4 border-t">
           <div className="flex justify-between text-lg font-medium">
             <span>Grand Total</span>
             <span>₹{grandTotal.toFixed(2)}</span>
           </div>
         </div>
-
-        {buttonText.length > 0 && (
-          <Link href={checkoutLink}>
-            <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] py-2 h-auto mt-4">
-              {buttonText}
-            </Button>
-          </Link>
-        )}
+        
+        {buttonText.length>0&&<Link href={checkoutLink}>
+          <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] py-2 h-auto mt-4">
+            {buttonText}
+          </Button>
+        </Link>}
       </div>
     </div>
   );

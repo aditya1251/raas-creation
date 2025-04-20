@@ -37,11 +37,9 @@ export default function ShippingAddressPage() {
   const subtotal = calculateSubtotal();
   const [deliveryCharges, setDeliveryCharges] = useState(0);
   const [gstTaxRate, setGstTaxRate] = useState<number | null>(null);
-  const discount = isDiscountApplied ? 0 : 0;
-  const grandTotal = subtotal + deliveryCharges - discount;
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [error, setError] = useState<string>("");
-
+  
   const { data } = useQuery({
     queryKey: ["tax"],
     queryFn: async () => {
@@ -340,8 +338,6 @@ export default function ShippingAddressPage() {
                 subtotal={subtotal}
                 deliveryCharges={deliveryCharges}
                 gstTaxRate={gstTaxRate}
-                discountCode="Colors60"
-                onApplyDiscount={handleApplyDiscount}
                 checkoutLink="/shipping-address"
                 buttonText=""
               />
