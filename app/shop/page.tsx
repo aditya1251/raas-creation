@@ -204,7 +204,7 @@ export default function ShopPage() {
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row gap-8">
           <LoadingSidebar />
-          <LoadingProducts />
+          <LoadingProducts length={3} />
         </div>
         <SiteFooter />
       </main>

@@ -52,7 +52,7 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <LoadingProducts />
+          <LoadingProducts length={4} />
         )}
       </section>
       {/* New Arrivals */}
@@ -66,7 +66,7 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <LoadingProducts />
+          <LoadingProducts length={4} />
         )}
       </section>
 
