@@ -113,28 +113,6 @@ export default function Home() {
 
 // Product Card Component
 function ProductCard({ product }) {
-  const { toast } = useToast();
-  const { addToCart } = useCart();
-  const handleAddToCart = () => {
-    const cartItem = {
-      id: product.id,
-      name: product.name,
-      price: product.discountPrice || product.price,
-      originalPrice: product.price,
-      quantity: 1,
-      color: product.colors.length > 0 ? product.colors[0].color : "",
-      size:
-        product.colors[0]?.sizes?.length > 0
-          ? product.colors[0].sizes[0].size
-          : "SIZE_DEFAULT",
-      image: product.img,
-    };
-    addToCart(cartItem);
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    });
-  };
   return (
     <div className="group relative">
       <div className="aspect-[3/4] relative overflow-hidden rounded-xl bg-gray-100">
@@ -155,20 +133,6 @@ function ProductCard({ product }) {
         >
           <Heart className="aspect-square w-4 lg:w-6 text-white" />
         </button>
-        {/* Add to Cart Button */}
-        <div
-          className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
-          transform translate-y-0 lg:translate-y-full lg:group-hover:translate-y-0
-          transition-transform duration-300 ease-in-out"
-        >
-          <Button
-            onClick={handleAddToCart}
-            className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white flex items-center justify-center gap-2 text-lg lg:text-xl font-normal opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300"
-          >
-            <ShoppingBag />
-            Add to Cart
-          </Button>
-        </div>
       </div>
       {/* Product Details */}
       <Link href={`/product/${product.slug}`}>

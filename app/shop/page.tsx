@@ -129,7 +129,7 @@ export default function ShopPage() {
     if (!products) return;
     // First filter by price
     let filtered = products.filter(
-      (product) => product.discountPrice?? product.price <= priceRange
+      (product) => product.discountPrice <= priceRange
     );
     // Filter by selected colors if any are selected
     if (selectedColors.length > 0) {
@@ -169,9 +169,15 @@ export default function ShopPage() {
         );
         break;
       case "price-low-high":
-        filtered = filtered.sort((a, b) => (a.discountPrice ?? a.price) - (b.discountPrice ?? b.price));        break;
+        filtered = filtered.sort(
+          (a, b) => (a.discountPrice ?? a.price) - (b.discountPrice ?? b.price)
+        );
+        break;
       case "price-high-low":
-        filtered = filtered.sort((a, b) => (b.discountPrice ?? b.price) - (a.discountPrice ?? a.price));        break;
+        filtered = filtered.sort(
+          (a, b) => (b.discountPrice ?? b.price) - (a.discountPrice ?? a.price)
+        );
+        break;
       default:
         break;
     }
@@ -193,17 +199,17 @@ export default function ShopPage() {
   };
 
   if (isLoading) {
-      return (
-        <main className="min-h-screen bg-white">
-          <Navbar />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row gap-8">
-            <LoadingSidebar/>
-            <LoadingProducts />
-          </div>
-          <SiteFooter />
-        </main>
-      );
-    }
+    return (
+      <main className="min-h-screen bg-white">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row gap-8">
+          <LoadingSidebar />
+          <LoadingProducts />
+        </div>
+        <SiteFooter />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-white">
