@@ -12,6 +12,7 @@ import {
   Briefcase,
   Filter,
   X,
+  HeartOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,10 +21,13 @@ import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { productApi } from "@/lib/api/productdetails";
 import { Products } from "@/components/admin/products-table";
 import { LoadingProducts, LoadingSidebar } from "@/components/ui/loader";
+import { useSession } from "next-auth/react";
+import { wishlistApi } from "@/lib/api/wishlist";
+import toast from "react-hot-toast";
 
 // Define sort options
 const sortOptions = [
@@ -48,6 +52,20 @@ export default function ShopPage() {
   const [availableSizes, setAvailableSizes] = useState<
     { size: string; count: number }[]
   >([]);
+  const { data: session } = useSession();
+  const [wishlist, setWishlist] = useState<string[]>([]);
+
+  const { data: wishlistProducts } = useQuery({
+      queryKey: ["wishlistProducts"],
+      queryFn: wishlistApi.getProductList,
+      enabled: !!session?.user?.id,
+    });
+  
+    useEffect(() => {
+      if (wishlistProducts){
+        setWishlist(wishlistProducts);
+      }
+    }, [wishlistProducts]);
 
   // Get products from API
   const { data: products, isLoading } = useQuery({
@@ -129,7 +147,8 @@ export default function ShopPage() {
     if (!products) return;
     // First filter by price
     let filtered = products.filter(
-      (product) => product.discountPrice <= priceRange
+      (product) => product.discountPrice ?? product.price <= priceRange
+
     );
     // Filter by selected colors if any are selected
     if (selectedColors.length > 0) {
@@ -230,8 +249,7 @@ export default function ShopPage() {
       <div className="md:hidden px-6 mb-4">
         <Button
           onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-          className="w-full flex items-center justify-center gap-2 bg-[#795d2a] text-white"
-        >
+          className="w-full flex items-center justify-center gap-2 bg-[#795d2a] text-white">
           {isMobileFilterOpen ? (
             <>
               <X className="h-5 w-5" /> Close Filters
@@ -253,8 +271,7 @@ export default function ShopPage() {
             ${isMobileFilterOpen ? "block" : "hidden md:block"}
             absolute md:static z-20 bg-white md:bg-transparent 
             left-0 right-0 px-6 md:px-0
-          `}
-          >
+          `}>
             {/* Product Categories */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
@@ -284,8 +301,7 @@ export default function ShopPage() {
                   <Checkbox id="lounge-wear" />
                   <label
                     htmlFor="lounge-wear"
-                    className="text-sm cursor-pointer"
-                  >
+                    className="text-sm cursor-pointer">
                     Lounge Wear
                   </label>
                 </div>
@@ -293,8 +309,7 @@ export default function ShopPage() {
                   <Checkbox id="kurtis-dresses" />
                   <label
                     htmlFor="kurtis-dresses"
-                    className="text-sm cursor-pointer"
-                  >
+                    className="text-sm cursor-pointer">
                     Kurtis & Dresses
                   </label>
                 </div>
@@ -302,8 +317,7 @@ export default function ShopPage() {
                   <Checkbox id="luxe-collection" />
                   <label
                     htmlFor="luxe-collection"
-                    className="text-sm cursor-pointer"
-                  >
+                    className="text-sm cursor-pointer">
                     Luxe Collection
                   </label>
                 </div>
@@ -354,15 +368,13 @@ export default function ShopPage() {
                       />
                       <label
                         htmlFor={`color-${colorData.color.toLowerCase()}`}
-                        className="text-sm cursor-pointer flex items-center"
-                      >
+                        className="text-sm cursor-pointer flex items-center">
                         <div
                           className="w-4 h-4 rounded-sm mr-2"
                           style={{
                             backgroundColor: colorData.color.toLowerCase(),
                             border: "1px solid #e2e8f0",
-                          }}
-                        ></div>
+                          }}></div>
                         {colorData.color} ({colorData.count})
                       </label>
                     </div>
@@ -392,8 +404,7 @@ export default function ShopPage() {
                       />
                       <label
                         htmlFor={`size-${sizeData.size}`}
-                        className="text-sm cursor-pointer"
-                      >
+                        className="text-sm cursor-pointer">
                         {sizeData.size} ({sizeData.count})
                       </label>
                     </div>
@@ -409,8 +420,7 @@ export default function ShopPage() {
               <Button
                 onClick={clearAllFilters}
                 variant="outline"
-                className="w-full border-[#795d2a] text-[#795d2a] hover:bg-[#795d2a] hover:text-white"
-              >
+                className="w-full border-[#795d2a] text-[#795d2a] hover:bg-[#795d2a] hover:text-white">
                 Clear All Filters
               </Button>
             </div>
@@ -419,8 +429,7 @@ export default function ShopPage() {
             <div className="md:hidden my-4">
               <Button
                 onClick={() => setIsMobileFilterOpen(false)}
-                className="w-full bg-[#795d2a] text-white"
-              >
+                className="w-full bg-[#795d2a] text-white">
                 Apply Filters
               </Button>
             </div>
@@ -441,8 +450,7 @@ export default function ShopPage() {
                   <select
                     className="appearance-none border rounded-md px-4 py-2 pr-8 focus:outline-none text-sm"
                     value={sortBy}
-                    onChange={handleSortChange}
-                  >
+                    onChange={handleSortChange}>
                     {sortOptions.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
@@ -460,7 +468,8 @@ export default function ShopPage() {
                 </div>
               ) : filteredProducts?.length ? (
                 filteredProducts.map((product, index) => (
-                  <ProductCard key={product.id || index} product={product} />
+                  <ProductCard key={product.id || index} product={product} wishlistProducts={wishlist || []}
+                  />
                 ))
               ) : (
                 <div className="col-span-3 text-center py-10">
@@ -473,8 +482,7 @@ export default function ShopPage() {
             <div className="mt-10 text-center">
               <Button
                 variant="outline"
-                className="border-[#795d2a] text-[#795d2a] hover:bg-[#795d2a] hover:text-white px-8 py-2 rounded-none"
-              >
+                className="border-[#795d2a] text-[#795d2a] hover:bg-[#795d2a] hover:text-white px-8 py-2 rounded-none">
                 Load More
               </Button>
             </div>
@@ -524,9 +532,55 @@ export default function ShopPage() {
 }
 
 // ProductCard component remains the same
-function ProductCard({ product }: { product: Products }) {
-  const { toast } = useToast();
+function ProductCard({ product,wishlistProducts }: { product: Products , wishlistProducts: any[] }) {
   const { addToCart } = useCart();
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+
+  const [isProductInWishlist, setIsProductInWishlist] = useState(false);
+
+  useEffect(() => {
+    console.log("wishlistProducts", wishlistProducts);
+    if (wishlistProducts) {
+      setIsProductInWishlist(wishlistProducts.includes(product.id));
+    }
+  }, [wishlistProducts]);
+
+  const addToWishlist = useMutation({
+    mutationFn: () => wishlistApi.addtoWishlist(product.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlistProducts"] });
+      toast.success(`${product.name} has been added to your wishlist.`);
+    },
+    onError: () => {
+      toast.error("Failed to add product to wishlist.");
+    },
+  });
+
+  const removeFromWishlist = useMutation({
+    mutationFn: () => wishlistApi.removeFromWishlist(product.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlistProducts"] });
+      toast.success(`${product.name} has been removed from your wishlist.`);
+    },
+    onError: () => {
+      toast.error("Failed to remove product from wishlist.");
+    },
+  });
+
+  const handleWishlistToggle = () => {
+    if (!session?.user) {
+      toast.error("You need to login to manage your wishlist.");
+      return;
+    }
+
+    if (isProductInWishlist) {
+      removeFromWishlist.mutate();
+    } else {
+      addToWishlist.mutate();
+    }
+  };
+
   const handleAddToCart = () => {
     const cartItem = {
       id: product.id,
@@ -547,10 +601,7 @@ function ProductCard({ product }: { product: Products }) {
 
     addToCart(cartItem);
 
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    });
+    toast.success(`${product.name} has been added to your cart.`);
   };
 
   return (
@@ -565,22 +616,24 @@ function ProductCard({ product }: { product: Products }) {
           />
         </Link>
         <button
+        onClick={handleWishlistToggle}
           className="absolute top-3 right-3 aspect-square w-8 bg-[#795D2A] rounded-full flex items-center justify-center 
-          opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[100%] group-hover:translate-x-0"
-        >
-          <Heart className="aspect-square w-4 text-white hover:text-[#A08452]" />
+          opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[100%] group-hover:translate-x-0">
+          {isProductInWishlist ? (
+            <HeartOff className="aspect-square w-4 lg:w-6 text-white" />
+          ) : (
+            <Heart className="aspect-square w-4 lg:w-6 text-white" />
+          )}
         </button>
 
         <div
           className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
           transform translate-y-full group-hover:translate-y-0 
-          transition-transform duration-300 ease-in-out"
-        >
+          transition-transform duration-300 ease-in-out">
           <button
             onClick={handleAddToCart}
             className="w-full flex justify-center gap-4 items-center rounded-lg bg-[#795D2A] text-white text-lg font-normal py-2 
-            opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          >
+            opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             Add to Cart
             <Briefcase />
           </button>

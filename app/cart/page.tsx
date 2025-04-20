@@ -9,6 +9,8 @@ import SiteFooter from "@/components/site-footer";
 import { useCart } from "@/context/cart-context";
 import { orderApi } from "@/lib/api/orders";
 import { useQuery } from "@tanstack/react-query";
+import { discountApi } from "@/lib/api/discount";
+import toast from "react-hot-toast";
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart } = useCart();
@@ -16,6 +18,7 @@ export default function CartPage() {
   const [isDiscountApplied, setIsDiscountApplied] = useState(false);
   const [deliveryCharges, setDeliveryCharges] = useState(0);
   const [gstTaxRate, setGstTaxRate] = useState<number | null>(null);
+  const [discount, setDiscount] = useState(0);
 
   const { data } = useQuery({
     queryKey: ["tax"],
@@ -44,23 +47,75 @@ export default function CartPage() {
   const checkoutItems = cartItems.length > 0 ? cartItems : [];
 
   const subtotal = calculateSubtotal();
-  const discount = isDiscountApplied ? 0 : 0;
   const gstAmount = gstTaxRate ? (subtotal * gstTaxRate) / 100 : 0;
   const grandTotal = subtotal + deliveryCharges - discount + gstAmount;
 
-  const handleApplyDiscount = () => {
-    if (discountCode.trim()) {
-      // Example discount logic - you can customize this
-      // if (discountCode.toLowerCase() === "raas10") {
-      //   const discountAmount = subtotal * 0.1; // 10% discount
-      //   setDiscount(discountAmount);
-      //   setIsDiscountApplied(true);
-      // } else {
-      //   // You might want to show an error message here
-      //   setIsDiscountApplied(false);
-      //   setDiscount(0);
-      // }
+  useEffect(() => {
+    const storedCode = localStorage.getItem("discountCode");
+  
+    if (storedCode && cartItems.length > 0) {
+      // Use local copy of subtotal to avoid stale discount calculations
+      const currentSubtotal = calculateSubtotal();
+  
+      discountApi.getByCode(storedCode)
+        .then((discountData) => {
+          if (discountData) {
+            const discountAmount =
+              discountData.type === "PERCENTAGE"
+                ? (currentSubtotal * discountData.value) / 100
+                : discountData.value;
+  
+            setDiscount(discountAmount);
+            setIsDiscountApplied(true);
+            setDiscountCode("");
+          } else {
+            setIsDiscountApplied(false);
+            setDiscount(0);
+            localStorage.removeItem("discountCode");
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to apply stored discount:", err);
+        });
     }
+  }, [cartItems]);
+  
+
+  const handleApplyDiscount = async () => {
+    const trimmedCode = discountCode.trim();
+
+    if (!trimmedCode) {
+      toast.error("Please enter a discount code.");
+      return;
+    }
+
+    try {
+      const discountData = await discountApi.getByCode(trimmedCode);
+
+      if (discountData) {
+        let discountAmount = 0;
+
+        if (discountData.type === "PERCENTAGE") {
+          discountAmount = (subtotal * discountData.value) / 100;
+        } else {
+          discountAmount = discountData.value;
+        }
+
+        setDiscount(discountAmount);
+        setIsDiscountApplied(true);
+        localStorage.setItem("discountCode", trimmedCode);
+        toast.success("Discount applied!");
+      } else {
+        toast.error("Invalid discount code.");
+        setIsDiscountApplied(false);
+        setDiscount(0);
+      }
+    } catch (error) {
+      toast.error("Error applying discount. Please try again.");
+      console.error("Discount error:", error);
+    }
+
+    setDiscountCode(""); // Clear input either way
   };
 
   return (
