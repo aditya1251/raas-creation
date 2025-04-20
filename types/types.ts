@@ -76,6 +76,7 @@ export const category = z.object({
 export type Category = z.infer<typeof category>;
 
 export const addressSchema = z.object({
+  id: z.string().cuid("Invalid address ID").optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   street: z.string().min(1, "Street address is required"),
@@ -86,7 +87,6 @@ export const addressSchema = z.object({
   country: z.string(),
   phoneNumber: z.string().regex(/^\d{10}$/, "Invalid mobile number format (10 digits)"),
   addressName: z.string().min(1, "Address name is required"),
-  district: z.string().min(1, "District is required"),
 });
 
 export type AddressType = z.infer<typeof addressSchema>;

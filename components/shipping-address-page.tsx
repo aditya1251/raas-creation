@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import AddressForm from "./address-form";
 import OrderSummary from "./order-summary";
@@ -7,10 +7,27 @@ import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
 import Link from "next/link";
 import { useCart } from "@/context/cart-context";
+import { useQuery } from "@tanstack/react-query";
+import {  AddressApi } from "@/lib/api/address";
+import { AddressType } from "@/types/types";
+import { orderApi } from "@/lib/api/orders";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function ShippingAddressPage() {
   const [isDiscountApplied, setIsDiscountApplied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { cartItems } = useCart();
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      toast.error("Your cart is empty.");
+      router.push("/shop");
+    }
+  },[])
+
   const calculateSubtotal = () => {
     return cartItems.reduce(
       (total, item) => total + item.price * item.quantity,
@@ -18,26 +35,112 @@ export default function ShippingAddressPage() {
     );
   };
   const subtotal = calculateSubtotal();
-  const deliveryCharges = 40;
-  const discount = isDiscountApplied ? 0 : 0; // You can implement discount logic here
+  const [deliveryCharges, setDeliveryCharges] = useState(0);
+  const [gstTaxRate, setGstTaxRate] = useState<number | null>(null);
+  const discount = isDiscountApplied ? 0 : 0;
   const grandTotal = subtotal + deliveryCharges - discount;
-  const [selectedAddress, setSelectedAddress] = useState<string>("1");
-  const addresses = [
-    {
-      id: "1",
-      name: "Abhishek Chaudhary",
-      address: "204/2c & d , basement, jeewan nagar, New Delhi 110014",
+  const [selectedAddress, setSelectedAddress] = useState<string>("");
+  const [error, setError] = useState<string>("");
+
+  const { data } = useQuery({
+    queryKey: ["tax"],
+    queryFn: async () => {
+      const response = await orderApi.getTax();
+      return response;
     },
-    {
-      id: "2",
-      name: "Abhishek Chaudhary",
-      address: "204/2c & d , basement, jeewan nagar, New Delhi 110014",
-    },
-  ];
-  const handleApplyDiscount = () => {
-    setIsDiscountApplied(true);
-    // Implement discount logic here
+  });
+
+  useEffect(() => {
+    if (data) {
+      const deliveryCharges = cartItems.length > 0 ? data.ShiippingCharge || 0 : 0;
+      setDeliveryCharges(deliveryCharges);
+      setGstTaxRate(data.GSTtax);
+    }
+  }, [data]);
+
+  
+  const { data: address, isLoading: addressLoading, error: addressError } = useQuery({
+    queryKey: ["address"],
+    queryFn: AddressApi.getAddress,
+  });
+
+  const [addresses, setAddresses] = useState<Array<{id: string; name: string; address: string}>>([]);
+
+  useEffect(() => {
+    if (address) {
+      const add = address.map((address: AddressType) => {
+        return {
+          id: address.id ?? "",
+          name: address.addressName + " | " + address.firstName + " " + address.lastName,
+          address:
+          address.firstName + " " + address.lastName + ", " +
+            address.street +
+            ", " +
+            address.city +
+            ", " +
+            address.state +
+            ", " +
+            address.zipCode,
+        };
+      });
+      setAddresses(add);
+      if(add.length > 0) {
+        setSelectedAddress(add[0].id);
+      }
+    }
+  }, [address]);
+
+  const handleApplyDiscount = (code: string) => {
+    setIsLoading(true);
+    try {
+      setIsDiscountApplied(true);
+      // Implement discount logic here
+    } catch (error) {
+      setError("Failed to apply discount. Please try again.");
+    } finally {
+      setIsLoading(false);
+      return 0;
+    }
   };
+
+  const handleDeliverHere = () => {
+    if (!selectedAddress) {
+      setError("Please select a delivery address");
+      return;
+    }
+    // Save selected address to local storage
+    localStorage.setItem("selectedAddressId", selectedAddress);
+    // Continue to payment page
+  };
+
+  const handleDeleteAddress = async (addressId: string) => {
+    setIsLoading(true);
+    try {
+      // Implement delete logic here
+      setAddresses(addresses.filter(addr => addr.id !== addressId));
+    } catch (error) {
+      setError("Failed to delete address. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (addressLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#795d2a]"></div>
+      </div>
+    );
+  }
+
+  if (addressError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-red-500">Failed to load addresses. Please refresh the page.</div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -58,8 +161,7 @@ export default function ShippingAddressPage() {
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                  strokeLinejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
@@ -80,8 +182,7 @@ export default function ShippingAddressPage() {
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                  strokeLinejoin="round">
                   <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                   <line x1="1" y1="10" x2="23" y2="10"></line>
                 </svg>
@@ -102,8 +203,7 @@ export default function ShippingAddressPage() {
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                  strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                   <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -114,6 +214,12 @@ export default function ShippingAddressPage() {
               <span className="text-xs">Review</span>
             </div>
           </div>
+
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
 
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="flex-1">
@@ -128,79 +234,98 @@ export default function ShippingAddressPage() {
                   enter a new delivery address.
                 </p>
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  {addresses.map((address) => (
-                    <div
-                      key={address.id}
-                      className={`p-4 rounded-md ${
-                        selectedAddress === address.id
-                          ? "bg-[#ffefd4]"
-                          : "bg-[#fff8ea]"
-                      }`}
-                    >
-                      <div className="flex justify-between mb-2">
-                        <h3 className="font-medium">{address.name}</h3>
-                        <div
-                          className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                            selectedAddress === address.id
-                              ? "border-[#795d2a] bg-[#795d2a] text-white"
-                              : "border-gray-300"
-                          }`}
-                          onClick={() => setSelectedAddress(address.id)}
-                        >
-                          {selectedAddress === address.id && (
-                            <Check className="h-3 w-3" />
-                          )}
+                {addresses.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-md">
+                    <p className="text-gray-500">No addresses found. Please add a new address.</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {addresses.map((address) => (
+                      <div
+                        key={address.id}
+                        className={`p-4 rounded-md ${
+                          selectedAddress === address.id
+                            ? "bg-[#ffefd4]"
+                            : "bg-[#fff8ea]"
+                        }`}>
+                        <div className="flex justify-between mb-2">
+                          <h3 className="font-medium">{address.name}</h3>
+                          <div
+                            className={`w-5 h-5 rounded-full border flex items-center justify-center cursor-pointer ${
+                              selectedAddress === address.id
+                                ? "border-[#795d2a] bg-[#795d2a] text-white"
+                                : "border-gray-300"
+                            }`}
+                            onClick={() => setSelectedAddress(address.id)}>
+                            {selectedAddress === address.id && (
+                              <Check className="h-3 w-3" />
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">
+                          {address.address}
+                        </p>
+                        <div className="flex gap-2">
+                          <button 
+                            className="px-4 py-1 text-sm border border-[#795d2a] text-[#795d2a] rounded flex items-center justify-center hover:bg-[#795d2a] hover:text-white transition-colors"
+                            disabled={isLoading}>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="mr-1">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            Edit
+                          </button>
+                          <button 
+                            className="px-4 py-1 text-sm border border-[#795d2a] text-[#795d2a] rounded flex items-center justify-center hover:bg-[#795d2a] hover:text-white transition-colors"
+                            onClick={() => handleDeleteAddress(address.id)}
+                            disabled={isLoading}>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="mr-1">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Delete
+                          </button>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-4">
-                        {address.address}
-                      </p>
-                      <div className="flex gap-2">
-                        <button className="px-4 py-1 text-sm border border-[#795d2a] text-[#795d2a] rounded flex items-center justify-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="mr-1"
-                          >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                          </svg>
-                          Edit
-                        </button>
-                        <button className="px-4 py-1 text-sm border border-[#795d2a] text-[#795d2a] rounded flex items-center justify-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="mr-1"
-                          >
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                          </svg>
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
 
                 <Link href="/payment">
-                  <button className="w-full md:w-auto mt-6 px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white rounded">
-                    Deliver Here
+                  <button 
+                    className={`w-full md:w-auto mt-6 px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white rounded transition-colors ${
+                      isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                    onClick={handleDeliverHere}
+                    disabled={isLoading || !selectedAddress}>
+                    {isLoading ? (
+                      <span className="flex items-center">
+                        <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                        Processing...
+                      </span>
+                    ) : (
+                      'Deliver Here'
+                    )}
                   </button>
                 </Link>
               </div>
@@ -213,7 +338,8 @@ export default function ShippingAddressPage() {
             <div className="w-full lg:w-80 shrink-0">
               <OrderSummary
                 subtotal={subtotal}
-                deliveryCharges={40}
+                deliveryCharges={deliveryCharges}
+                gstTaxRate={gstTaxRate}
                 discountCode="Colors60"
                 onApplyDiscount={handleApplyDiscount}
                 checkoutLink="/shipping-address"

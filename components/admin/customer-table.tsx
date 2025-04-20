@@ -1,8 +1,10 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Eye, Mail, Phone, X } from "lucide-react"
+import { Eye, Mail, Phone, X, Search, Key } from "lucide-react"
 import { apiClient } from "@/lib/axiosClient"
+import { customerApi } from "@/lib/api/customer"
+import { useDebounce } from "@/hooks/useDebounce"
 
 interface Customer {
   id: string
@@ -16,28 +18,46 @@ interface Customer {
 
 export function CustomerTable() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  
+  // Debounce search term to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const { data: customers, isLoading, error } = useQuery({
-    queryKey: ["customers"],
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm]);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["customers", currentPage, itemsPerPage, debouncedSearchTerm],
     queryFn: async () => {
-      const response = await apiClient.get("/api/customers/allcustomers");
+      const response = await customerApi.getAllCustomers(currentPage, itemsPerPage, debouncedSearchTerm);
       return response.data;
     },
   });
 
-  if (isLoading) return (
-    <div className="bg-white shadow-sm rounded-lg p-4 text-center">
-      <p className="text-gray-500">Loading customers...</p>
-    </div>
-  )
-  
-  if (error) return (
-    <div className="bg-white shadow-sm rounded-lg p-4 text-center">
-      <p className="text-red-500">Failed to load customers</p>
-    </div>
-  )
+  const handlePasswordChange = async () => {
+    try {
+      if (selectedCustomerId && newPassword) {
+        await customerApi.changePassword(selectedCustomerId, newPassword);
+        setShowPasswordModal(false);
+        setNewPassword("");
+        setSelectedCustomerId(null);
+      }
+    } catch (error) {
+      console.error("Failed to change password:", error);
+    }
+  };
 
-  const customerList = Array.isArray(customers?.data) ? customers.data : [];
+  const openPasswordModal = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    setShowPasswordModal(true);
+  };
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -49,171 +69,234 @@ export function CustomerTable() {
   };
 
   return (
-    <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-      {/* Desktop Table View - Hidden on small screens */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-              <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Orders
-              </th>
-              <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Spent
-              </th>
-              <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Last Order
-              </th>
-              <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {customerList.map((customer: Customer) => (
-              <tr key={customer.id} className="hover:bg-gray-50">
-                <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{customer.name}</td>
-                <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm text-gray-500">{customer.mobile_no}</td>
-                <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm text-gray-500">{customer.totalOrders}</td>
-                <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm text-gray-500">₹{customer.totalSpent.toFixed(2)}</td>
-                <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm text-gray-500">{formatDate(customer.lastOrderDate)}</td>
-                <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm font-medium">
-                  <button 
-                    onClick={() => setSelectedCustomer(customer)} 
-                    className="text-indigo-600 hover:text-indigo-900 p-1.5 rounded-full hover:bg-indigo-50"
-                    aria-label="View customer details"
-                  >
-                    <Eye size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search customers..."
+          className="w-full bg-white p-2 pl-10 border rounded-lg"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
       </div>
 
-      {/* Mobile Card View - Only visible on small screens */}
-      <div className="md:hidden">
-        <div className="divide-y divide-gray-200">
-          {customerList.map((customer: Customer) => (
-            <div key={customer.id} className="p-4 hover:bg-gray-50">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-sm font-medium text-gray-900">{customer.name}</h3>
-                <button 
-                  onClick={() => setSelectedCustomer(customer)} 
-                  className="text-indigo-600 hover:text-indigo-900 p-1.5 rounded-full hover:bg-indigo-50"
-                  aria-label="View customer details"
-                >
-                  <Eye size={16} />
-                </button>
-              </div>
-              
-              <div className="space-y-1 mb-2">
-                <div className="flex items-center text-xs text-gray-500">
-                  <Phone size={14} className="mr-1.5 text-gray-400" />
-                  <span>{customer.mobile_no}</span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 text-xs text-gray-500 pt-2 border-t border-gray-100">
-                <div>
-                  <p className="text-gray-400">Orders</p>
-                  <p className="font-medium">{customer.totalOrders}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Spent</p>
-                  <p className="font-medium">₹{customer.totalSpent.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Last Order</p>
-                  <p className="font-medium">{formatDate(customer.lastOrderDate)}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Responsive Modal */}
-      {selectedCustomer && (
-        <div
-          className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedCustomer(null)}
-        >
-          <div
-            className="relative mx-auto p-4 sm:p-5 max-w-xs sm:max-w-sm md:max-w-md shadow-lg rounded-md bg-white"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">Customer Details</h3>
-              <button 
-                onClick={() => setSelectedCustomer(null)} 
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
-                aria-label="Close"
+      {/* Password Change Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Change Password</h3>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="text-gray-400 hover:text-gray-500"
               >
                 <X size={20} />
               </button>
             </div>
-            
-            <div className="space-y-3 mb-5">
-              <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm text-gray-500 flex flex-col">
-                  <span className="font-medium text-gray-700">Name</span>
-                  {selectedCustomer.name}
-                </p>
-              </div>
-              
-              <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm text-gray-500 flex flex-col">
-                  <span className="font-medium text-gray-700">Email</span>
-                  {selectedCustomer.email || "Not provided"}
-                </p>
-              </div>
-              
-              <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm text-gray-500 flex flex-col">
-                  <span className="font-medium text-gray-700">Phone</span>
-                  {selectedCustomer.mobile_no}
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <p className="text-xs sm:text-sm text-gray-500 flex flex-col">
-                    <span className="font-medium text-gray-700">Orders</span>
-                    {selectedCustomer.totalOrders}
-                  </p>
-                </div>
-                
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <p className="text-xs sm:text-sm text-gray-500 flex flex-col">
-                    <span className="font-medium text-gray-700">Spent</span>
-                    ₹{selectedCustomer.totalSpent.toFixed(2)}
-                  </p>
-                </div>
-                
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <p className="text-xs sm:text-sm text-gray-500 flex flex-col">
-                    <span className="font-medium text-gray-700">Last Order</span>
-                    {formatDate(selectedCustomer.lastOrderDate)}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-center gap-3">
-              <button className="flex-1 bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 flex items-center justify-center text-sm">
-                <Mail size={16} className="mr-1.5" />
-                Email
+            <input
+              type="password"
+              placeholder="Enter new password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full p-2 border rounded-lg mb-4"
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                Cancel
               </button>
-              <button className="flex-1 bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 flex items-center justify-center text-sm">
-                <Phone size={16} className="mr-1.5" />
-                Call
+              <button
+                onClick={handlePasswordChange}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              >
+                Change Password
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {isLoading ? (
+        <div className="bg-white shadow-sm rounded-lg p-4 text-center">
+          <p className="text-gray-500">Loading customers...</p>
+        </div>
+      ) : error ? (
+        <div className="bg-white shadow-sm rounded-lg p-4 text-center">
+          <p className="text-red-500">Failed to load customers</p>
+        </div>
+      ) : (
+      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+        {/* Desktop Table View - Hidden on small screens */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Orders
+                </th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Spent
+                </th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Last Order
+                </th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {data?.data?.map((customer: Customer) => (
+                <tr key={customer.id} className="hover:bg-gray-50">
+                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{customer.name}</td>
+                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm text-gray-500">{customer.mobile_no}</td>
+                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm text-gray-500">{customer.totalOrders}</td>
+                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm text-gray-500">₹{customer.totalSpent.toFixed(2)}</td>
+                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm text-gray-500">{formatDate(customer.lastOrderDate)}</td>
+                  <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                   
+                      <button 
+                        onClick={() => openPasswordModal(customer.id)}
+                        className="text-indigo-600 hover:text-indigo-900 p-1.5 rounded-full hover:bg-indigo-50"
+                        aria-label="Change password"
+                      >
+                        <Key size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Card View - Only visible on small screens */}
+        <div className="md:hidden">
+          <div className="divide-y divide-gray-200">
+            {data?.data?.map((customer: Customer) => (
+              <div key={customer.id} className="p-4 hover:bg-gray-50">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-sm font-medium text-gray-900">{customer.name}</h3>
+                  <div className="flex space-x-2">
+                   
+                    <button 
+                      onClick={() => openPasswordModal(customer.id)}
+                      className="text-indigo-600 hover:text-indigo-900 p-1.5 rounded-full hover:bg-indigo-50"
+                      aria-label="Change password"
+                    >
+                      <Key size={16} />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="space-y-1 mb-2">
+                  <div className="flex items-center text-xs text-gray-500">
+                    <Phone size={14} className="mr-1.5 text-gray-400" />
+                    <span>{customer.mobile_no}</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2 text-xs text-gray-500 pt-2 border-t border-gray-100">
+                  <div>
+                    <p className="text-gray-400">Orders</p>
+                    <p className="font-medium">{customer.totalOrders}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Spent</p>
+                    <p className="font-medium">₹{customer.totalSpent.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Last Order</p>
+                    <p className="font-medium">{formatDate(customer.lastOrderDate)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
+          {/* Items per page - Stacked on mobile, side by side on larger screens */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div className="w-full sm:w-auto">
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700">
+                <option value="5">5 per page</option>
+                <option value="10">10 per page</option>
+                <option value="25">25 per page</option>
+                <option value="50">50 per page</option>
+              </select>
+            </div>
+            
+            {/* Pagination - Simplified on mobile */}
+            <div className="flex items-center justify-center w-full sm:w-auto">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-2 sm:px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="hidden sm:inline ml-1">Previous</span>
+              </button>
+              
+              <div className="hidden sm:flex items-center mx-2 space-x-1">
+                {Array.from({ length: Math.min(5, data?.pagination?.totalPages || 1) }, (_, i) => {
+                  let pageNum;
+                  const totalPages = data?.pagination?.totalPages || 1;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg transition-colors duration-200 ${
+                        currentPage === pageNum
+                          ? "bg-indigo-600 text-white font-medium shadow-md"
+                          : "border border-gray-300 hover:bg-gray-50 text-gray-700"
+                      }`}>
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <span className="mx-2 text-sm sm:hidden">
+                Page {currentPage} of {data?.pagination?.totalPages || 1}
+              </span>
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, data?.pagination?.totalPages || 1))}
+                disabled={currentPage === (data?.pagination?.totalPages || 1)}
+                className="px-2 sm:px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 flex items-center">
+                <span className="hidden sm:inline mr-1">Next</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      )}
     </div>
-  )
+    )
 }

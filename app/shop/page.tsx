@@ -129,7 +129,7 @@ export default function ShopPage() {
     if (!products) return;
     // First filter by price
     let filtered = products.filter(
-      (product) => product.discountPrice <= priceRange
+      (product) => product.discountPrice?? product.price <= priceRange
     );
     // Filter by selected colors if any are selected
     if (selectedColors.length > 0) {
@@ -169,11 +169,9 @@ export default function ShopPage() {
         );
         break;
       case "price-low-high":
-        filtered = filtered.sort((a, b) => a.discountPrice - b.discountPrice);
-        break;
+        filtered = filtered.sort((a, b) => (a.discountPrice ?? a.price) - (b.discountPrice ?? b.price));        break;
       case "price-high-low":
-        filtered = filtered.sort((a, b) => b.discountPrice - a.discountPrice);
-        break;
+        filtered = filtered.sort((a, b) => (b.discountPrice ?? b.price) - (a.discountPrice ?? a.price));        break;
       default:
         break;
     }

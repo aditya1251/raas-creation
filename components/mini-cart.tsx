@@ -108,9 +108,11 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                   <p className="text-gray-500 text-center mb-6">
                     Looks like you haven't added anything to your cart yet.
                   </p>
+                  <Link  href={ "/shop" }>
                   <Button className="bg-[#a08452] hover:bg-[#8c703d] text-white px-8" onClick={onClose}>
                     Continue Shopping
                   </Button>
+                  </Link>
                 </div>
               ) : (
                 <>
@@ -197,7 +199,7 @@ export default function MiniCart({ isOpen, onClose, cartItems, removeFromCart, u
                       >
                         View Cart
                       </Link>
-                      <Link href="/checkout" onClick={onClose} className="block w-full">
+                      <Link href="/shipping-address" onClick={onClose} className="block w-full">
                         <Button className="w-full bg-[#a08452] hover:bg-[#8c703d] text-white py-2 rounded-md transition-colors text-sm md:text-base">
                           Checkout
                         </Button>

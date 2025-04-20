@@ -120,22 +120,24 @@ model User {
 }
 
 model Address {
-  id      String @id @default(uuid())
-  name    String
-  phone   String
-  street  String
-  city    String
-  state   String
-  country String
-  zipCode String
-  userId  String // Foreign key to User
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  id          String @id @default(cuid())
+  firstName   String
+  lastName    String?
+  addressName String
+  phoneNumber String
+  street      String
+  aptNumber   String
+  city        String
+  state       String
+  country     String
+  zipCode     String
+  userId      String // Foreign key to User
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   Order Order[]
 }
+
 
 enum UserType {
   ADMIN
