@@ -50,14 +50,97 @@ export const Loader: React.FC<LoaderProps> = ({
 
 export const LoadingProducts: React.FC = () => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-      {[...Array(4)].map((_, i) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full">
+      {[...Array(3)].map((_, i) => (
         <div key={i} className="animate-pulse">
           <div className="aspect-[3/4] bg-gray-200 rounded-md mb-3"></div>
           <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
           <div className="h-4 bg-gray-200 rounded w-1/4"></div>
         </div>
       ))}
+    </div>
+  );
+};
+
+export const LoadingSidebar: React.FC = () => {
+  return (
+    <div className="w-full md:w-64 shrink-0 md:block bg-white md:bg-transparent px-6 md:px-0">
+      {/* Product Categories Skeleton */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="h-5 bg-gray-200 rounded w-32 animate-pulse"></div>
+          <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div className="space-y-2">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="flex items-center space-x-2">
+              <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Filter By Price Skeleton */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="h-5 bg-gray-200 rounded w-28 animate-pulse"></div>
+          <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div>
+          <div className="h-4 bg-gray-200 rounded w-36 mb-2 animate-pulse"></div>
+          <div className="w-full h-1 bg-gray-200 rounded-lg animate-pulse"></div>
+          <div className="flex justify-between mt-1">
+            <div className="h-3 bg-gray-200 rounded w-6 animate-pulse"></div>
+            <div className="h-3 bg-gray-200 rounded w-10 animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter By Color Skeleton */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="h-5 bg-gray-200 rounded w-28 animate-pulse"></div>
+          <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div className="space-y-2">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex items-center space-x-2">
+              <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="flex items-center">
+                <div className="w-4 h-4 rounded-sm mr-2 bg-gray-200 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Size Skeleton */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="h-5 bg-gray-200 rounded w-12 animate-pulse"></div>
+          <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div className="space-y-2">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex items-center space-x-2">
+              <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Clear All Filters Button Skeleton */}
+      <div className="mb-6">
+        <div className="h-10 bg-gray-200 rounded w-full animate-pulse"></div>
+      </div>
+
+      {/* Mobile Apply Filters Button Skeleton */}
+      <div className="md:hidden my-4">
+        <div className="h-10 bg-gray-200 rounded w-full animate-pulse"></div>
+      </div>
     </div>
   );
 };

@@ -23,7 +23,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { productApi } from "@/lib/api/productdetails";
 import { Products } from "@/components/admin/products-table";
-import { LoadingProducts } from "@/components/ui/loader";
+import { LoadingProducts, LoadingSidebar } from "@/components/ui/loader";
 
 // Define sort options
 const sortOptions = [
@@ -198,7 +198,8 @@ export default function ShopPage() {
       return (
         <main className="min-h-screen bg-white">
           <Navbar />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row gap-8">
+            <LoadingSidebar/>
             <LoadingProducts />
           </div>
           <SiteFooter />
