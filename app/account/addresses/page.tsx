@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Plus, PenSquare, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AddressApi } from "@/lib/api/address";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -10,10 +10,14 @@ import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
 import { LoadingAddress } from "@/components/ui/loader";
 import { set } from "zod";
+import { AddressType } from "@/types/types";
 
 export default function ManageAddressesPage() {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editAddressId, setEditAddressId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
+
   // Fetch addresses
   const { data: addresses, isLoading } = useQuery({
     queryKey: ["addresses"],
@@ -21,7 +25,7 @@ export default function ManageAddressesPage() {
   });
   const openAddressModal = () => setShowAddressModal(true);
   const closeAddressModal = () => setShowAddressModal(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<AddressType>({
     addressName: "Home",
     firstName: "",
     lastName: "",
@@ -33,7 +37,7 @@ export default function ManageAddressesPage() {
     phoneNumber: "",
     country: "India",
   });
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: { target: { name: any; value: any; }; }) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
@@ -45,38 +49,71 @@ export default function ManageAddressesPage() {
   };
   // Add new address
   const handleAddAddress = async () => {
-    const res = await AddressApi.addAddress(formData);
-    if (res.success) {
-      toast.success("Address added successfully!");
-    } else {
-      toast.error("Something went wrong. Please try again.");
+    setIsSubmitting(true);
+    try {
+      const res = await AddressApi.addAddress(formData);
+      if (res.success) {
+        toast.success("Address added successfully!");
+        await queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
+      closeAddressModal();
+    } catch (error) {
+      toast.error("Failed to add address");
+    } finally {
+      setIsSubmitting(false);
     }
-    closeAddressModal();
   };
   // edit address
   const handleEditAddress = async (id: string) => {
-    const res = await AddressApi.editAddress(id, formData);
-    setEditAddressId(null);
-    setFormData({
-      addressName: "Home",
-      firstName: "",
-      lastName: "",
-      street: "",
-      aptNumber: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      phoneNumber: "",
-      country: "India",
-    });
-    closeAddressModal();
+    setIsSubmitting(true);
+    try {
+      const res = await AddressApi.editAddress(id, formData);
+      if (res.success) {
+        toast.success("Address updated successfully!");
+        await queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      } else {
+        toast.error("Failed to update address");
+      }
+      setEditAddressId(null);
+      setFormData({
+        addressName: "Home",
+        firstName: "",
+        lastName: "",
+        street: "",
+        aptNumber: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        phoneNumber: "",
+        country: "India",
+      });
+      closeAddressModal();
+    } catch (error) {
+      toast.error("Failed to update address");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   // delete address
   const handleDeleteAddress = async (id: string) => {
-    const res = await AddressApi.deleteAddress(id);
-    console.log(res);
+    setIsSubmitting(true);
+    try {
+      const res = await AddressApi.deleteAddress(id);
+      if (res.success) {
+        toast.success("Address deleted successfully!");
+        await queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      } else {
+        toast.error("Failed to delete address");
+      }
+    } catch (error) {
+      toast.error("Failed to delete address");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     editAddressId ? handleEditAddress(editAddressId) : handleAddAddress();
   };
@@ -89,8 +126,7 @@ export default function ManageAddressesPage() {
         <div>
           <Button
             className="bg-[#a08452] hover:bg-[#8c703d] text-white mb-8 flex items-center gap-2"
-            onClick={openAddressModal}
-          >
+            onClick={openAddressModal}>
             <Plus className="h-5 w-5" />
             Add New Address
           </Button>
@@ -117,20 +153,20 @@ export default function ManageAddressesPage() {
                 <div className="flex gap-2">
                   <Button
                     onClick={() => {
-                      openAddressModal(),
-                        setFormData(address),
-                        setEditAddressId(address.id);
+                      openAddressModal();
+                      setFormData(address);
+                      setEditAddressId(address.id || null);
                     }}
-                    className="bg-[#a08452] hover:bg-[#8c703d] text-white h-9 px-3 flex items-center gap-1"
-                  >
+                    disabled={isSubmitting}
+                    className="bg-[#a08452] hover:bg-[#8c703d] text-white h-9 px-3 flex items-center gap-1">
                     <PenSquare className="h-4 w-4" />
                     Edit
                   </Button>
                   <Button
                     variant="outline"
+                    disabled={isSubmitting}
                     className="border-gray-300 text-gray-700 hover:bg-gray-50 h-9 px-3 flex items-center gap-1"
-                    onClick={() => handleDeleteAddress(address.id)}
-                  >
+                    onClick={() => address.id && handleDeleteAddress(address.id)}>
                     <Trash2 className="h-4 w-4" />
                     Delete
                   </Button>
@@ -153,8 +189,7 @@ export default function ManageAddressesPage() {
                 <RadioGroup
                   value={formData.addressName}
                   onValueChange={handleAddressTypeChange}
-                  className="flex gap-4"
-                >
+                  className="flex gap-4">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="Home" id="home" />
                     <Label htmlFor="home">Home</Label>
@@ -276,14 +311,14 @@ export default function ManageAddressesPage() {
                   type="button"
                   variant="outline"
                   onClick={closeAddressModal}
-                >
+                  disabled={isSubmitting}>
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-[#a08452] hover:bg-[#8c703d] text-white"
-                >
-                  {editAddressId ? "Update Address" : "Add Address"}
+                  disabled={isSubmitting}
+                  className="bg-[#a08452] hover:bg-[#8c703d] text-white">
+                  {isSubmitting ? "Loading..." : editAddressId ? "Update Address" : "Add Address"}
                 </Button>
               </div>
             </form>
