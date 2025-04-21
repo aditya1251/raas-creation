@@ -1,6 +1,8 @@
 "use client";
 import React from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "./button";
+import { Plus } from "lucide-react";
 
 interface LoaderProps {
   size?: "sm" | "md" | "lg";
@@ -48,9 +50,11 @@ export const Loader: React.FC<LoaderProps> = ({
   );
 };
 
-export const LoadingProducts: React.FC = ({length}) => {
+export const LoadingProducts: React.FC = ({ length }) => {
   return (
-    <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${length} gap-6 w-full`}>
+    <div
+      className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${length} gap-6 w-full`}
+    >
       {[...Array(length)].map((_, i) => (
         <div key={i} className="animate-pulse">
           <div className="aspect-[3/4] bg-gray-200 rounded-md mb-3"></div>
@@ -58,6 +62,55 @@ export const LoadingProducts: React.FC = ({length}) => {
           <div className="h-4 bg-gray-200 rounded w-1/4"></div>
         </div>
       ))}
+    </div>
+  );
+};
+export const LoadingAddress: React.FC = () => {
+  return (
+    <div className="flex-1">
+      <Button
+        className="bg-[#a08452] hover:bg-[#8c703d] text-white mb-8 flex items-center gap-2 opacity-70"
+        disabled
+      >
+        <Plus className="h-5 w-5" />
+        Add New Address
+      </Button>
+
+      {Array(2)
+        .fill(0)
+        .map((_, index) => (
+          <div key={index} className="border-b pb-6 mb-6 animate-pulse">
+            <div className="flex justify-between items-center">
+              <div className="w-full max-w-md">
+                {/* Address name */}
+                <div className="h-7 bg-gray-200 rounded w-1/3 mb-3"></div>
+
+                {/* Name */}
+                <div className="h-5 bg-gray-200 rounded w-1/2 mb-2"></div>
+
+                {/* Street */}
+                <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+
+                {/* City, state zip */}
+                <div className="h-5 bg-gray-200 rounded w-2/3 mb-2"></div>
+
+                {/* Country */}
+                <div className="h-5 bg-gray-200 rounded w-1/4 mb-2"></div>
+
+                {/* Phone */}
+                <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+              </div>
+
+              <div className="flex gap-2">
+                {/* Edit button skeleton */}
+                <div className="h-9 w-20 bg-gray-200 rounded"></div>
+
+                {/* Delete button skeleton */}
+                <div className="h-9 w-24 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          </div>
+        ))}
     </div>
   );
 };

@@ -11,9 +11,9 @@ export const customerApi = {
         });
         return response;
     },
-    getCustomer: async (currentPage:number, itemsPerPage:number, debouncedSearchTerm:string) => {
+    getCustomer: async () => {
         const response = await apiClient.get("/api/customers/customer");
-        return response;
+        return response.data.customer;
     },
     changePassword: async (customerId:string, newPassword:string) => {
         const response = await apiClient.post(`/api/customers//change-password`, {

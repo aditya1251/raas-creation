@@ -10,6 +10,14 @@ export const AddressApi = {
     const response = await apiClient.post("/api/customers/address", formData);
     return response.data;
   },
+  editAddress: async (id: string,formData:AddressType): Promise<any> => {
+    const response=await apiClient.put(`/api/customers/address/${id}`,{
+      params:{
+        addressId: id
+      },formData
+    });
+    return response.data;
+  },
   deleteAddress: async (id: string): Promise<any> => {
     const response=await apiClient.delete(`/api/customers/address/${id}`,{
       params:{
