@@ -19,8 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useCart } from "@/context/cart-context";
 import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
-import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { productApi } from "@/lib/api/productdetails";
 import { Products } from "@/components/admin/products-table";
@@ -28,35 +27,86 @@ import { LoadingProducts, LoadingSidebar } from "@/components/ui/loader";
 import { wishlistApi } from "@/lib/api/wishlist";
 import toast from "react-hot-toast";
 import { customerApi } from "@/lib/api/customer";
+import { categoryApi } from "@/lib/api/categories";
+import { Category } from "@/types/types";
 
-// Define sort options
 const sortOptions = [
   { value: "latest", label: "Sort by latest" },
-  // { value: "popularity", label: "Sort by popularity" },
   { value: "price-low-high", label: "Sort by price: low to high" },
   { value: "price-high-low", label: "Sort by price: high to low" },
 ];
+const fixedColors = ["Red", "Green", "Blue", "Pink", "Purple"];
+const fixedSizes = [
+  "SIZE_36",
+  "SIZE_38",
+  "SIZE_40",
+  "SIZE_42",
+  "SIZE_44",
+  "SIZE_46",
+];
+
+const maxPriceValue = 10000;
 
 export default function ShopPage() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<string>("latest");
-  const [priceRange, setPriceRange] = useState<number>(6000);
-  const [maxPriceValue, setMaxPriceValue] = useState<number>(6000);
-
-  // New state for color and size filters
+  const [sortBy, setSortBy] = useState<string>("");
+  const [priceRange, setPriceRange] = useState<number>(10000);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [availableColors, setAvailableColors] = useState<
-    { color: string; count: number }[]
-  >([]);
-  const [availableSizes, setAvailableSizes] = useState<
-    { size: string; count: number }[]
-  >([]);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isExpandedCategories, setIsExpandedCategories] = useState(false);
+  const itemsPerPage = 12;
+
+  const [filterValues, setFilterValues] = useState({
+    priceRange: 6000,
+    sortBy: "",
+    selectedColors: [] as string[],
+    selectedSizes: [] as string[],
+    selectedCategories: [] as string[],
+  });
+
+  const { data: productResponse, isLoading } = useQuery({
+    queryKey: [
+      "filteredProducts",
+      currentPage,
+      filterValues.priceRange,
+      filterValues.sortBy,
+      filterValues.selectedColors,
+      filterValues.selectedSizes,
+      filterValues.selectedCategories,
+    ],
+    queryFn: () =>
+      productApi.getProducts(currentPage, itemsPerPage, "", {
+        min_price: 0,
+        max_price: filterValues.priceRange,
+        sort_by: filterValues.sortBy.includes("price") ? "price" : "createdAt",
+        sort_order: filterValues.sortBy === "price-high-low" ? "desc" : "asc",
+        color: filterValues.selectedColors.join(",") || undefined,
+        size: filterValues.selectedSizes.join(",") || undefined,
+        category: filterValues.selectedCategories.join(",") || undefined,
+      }),
+  });
+
+  useEffect(() => {
+    if (!productResponse?.products) return;
+
+    if (currentPage === 1) {
+      setProducts(productResponse.products);
+    } else {
+      setProducts((prev) => [...prev, ...productResponse.products]);
+    }
+
+    const totalPages = productResponse?.pagination?.totalPages || 1;
+    setHasMore(currentPage < totalPages);
+  }, [productResponse]);
+
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
   });
-  const [wishlist, setWishlist] = useState<string[]>([]);
 
   const { data: wishlistProducts } = useQuery({
     queryKey: ["wishlistProducts"],
@@ -64,66 +114,35 @@ export default function ShopPage() {
     enabled: !!user?.id,
   });
 
-  useEffect(() => {
-    if (wishlistProducts) {
-      setWishlist(wishlistProducts);
-    }
-  }, [wishlistProducts]);
-
-  // Get products from API
-  const { data: products, isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: productApi.getAll,
+  const { data: categories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: categoryApi.getAll,
   });
 
-  // State for sorted and filtered products
-  const [filteredProducts, setFilteredProducts] = useState<Products[]>([]);
+  const [products, setProducts] = useState<Products[]>([]);
 
-  // Extract available colors and sizes from products
   useEffect(() => {
-    if (products && products.length > 0) {
-      const colorsMap = new Map<string, number>();
-      const sizesMap = new Map<string, number>();
-      products.forEach((product) => {
-        product.colors.forEach((colorObj) => {
-          const colorName = colorObj.color;
-          colorsMap.set(colorName, (colorsMap.get(colorName) || 0) + 1);
-          // Process sizes for each color
-          if (colorObj.sizes && Array.isArray(colorObj.sizes)) {
-            colorObj.sizes.forEach((sizeObj) => {
-              if (sizeObj && sizeObj.size) {
-                const sizeName = sizeObj.size;
-                sizesMap.set(sizeName, (sizesMap.get(sizeName) || 0) + 1);
-              }
-            });
-          }
-        });
-      });
-      // Convert maps to arrays for state
-      setAvailableColors(
-        Array.from(colorsMap.entries()).map(([color, count]) => ({
-          color,
-          count,
-        }))
-      );
-      setAvailableSizes(
-        Array.from(sizesMap.entries()).map(([size, count]) => ({ size, count }))
-      );
+    if (productResponse) {
+      setProducts(productResponse.products);
     }
-  }, [products]);
+  }, [productResponse]);
 
-  // Calculate max price when products load
+  const lastProductRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
-    if (products && products.length > 0) {
-      const highestPrice = Math.max(...products.map((p) => p.price));
-      // Round up to nearest 1000 for better UI
-      const roundedMax = Math.ceil(highestPrice / 1000) * 1000;
-      setMaxPriceValue(roundedMax > 0 ? roundedMax : 6000);
-      setPriceRange(roundedMax > 0 ? roundedMax : 6000);
-    }
-  }, [products]);
+    if (observerRef.current) observerRef.current.disconnect();
 
-  // Handle color selection
+    observerRef.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore && !isLoading) {
+        setCurrentPage((prev) => prev + 1);
+      }
+    });
+
+    if (lastProductRef.current) {
+      observerRef.current.observe(lastProductRef.current);
+    }
+  }, [products, hasMore, isLoading]);
+
   const handleColorSelect = (color: string) => {
     setSelectedColors((prev) => {
       if (prev.includes(color)) {
@@ -134,7 +153,6 @@ export default function ShopPage() {
     });
   };
 
-  // Handle size selection
   const handleSizeSelect = (size: string) => {
     setSelectedSizes((prev) => {
       if (prev.includes(size)) {
@@ -145,78 +163,49 @@ export default function ShopPage() {
     });
   };
 
-  // Sort and filter products when required states change
-  useEffect(() => {
-    if (!products) return;
-    // First filter by price
-    let filtered = products.filter(
-      (product) => product.discountPrice ?? product.price <= priceRange
-    );
-    // Filter by selected colors if any are selected
-    if (selectedColors.length > 0) {
-      filtered = filtered.filter((product) =>
-        product.colors.some((colorObj) =>
-          selectedColors.includes(colorObj.color)
-        )
-      );
-    }
-    // Filter by selected sizes if any are selected
-    if (selectedSizes.length > 0) {
-      filtered = filtered.filter((product) => {
-        // Check if any of the product's colors have any of the selected sizes
-        return product.colors.some((colorObj) => {
-          // Ensure sizes array exists and is not empty
-          if (
-            !colorObj.sizes ||
-            !Array.isArray(colorObj.sizes) ||
-            colorObj.sizes.length === 0
-          ) {
-            return false;
-          }
-          // Check if any of the sizes match selected sizes
-          return colorObj.sizes.some(
-            (sizeObj) =>
-              sizeObj && sizeObj.size && selectedSizes.includes(sizeObj.size)
-          );
-        });
-      });
-    }
-    // Then sort the filtered results
-    switch (sortBy) {
-      case "latest":
-        filtered = filtered.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        break;
-      case "price-low-high":
-        filtered = filtered.sort(
-          (a, b) => (a.discountPrice ?? a.price) - (b.discountPrice ?? b.price)
-        );
-        break;
-      case "price-high-low":
-        filtered = filtered.sort(
-          (a, b) => (b.discountPrice ?? b.price) - (a.discountPrice ?? a.price)
-        );
-        break;
-      default:
-        break;
-    }
-    setFilteredProducts(filtered);
-  }, [products, sortBy, priceRange, selectedColors, selectedSizes]);
-  // Handle sort change
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortBy(e.target.value);
   };
-  // Handle price range change
+
   const handlePriceRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPriceRange(Number(e.target.value));
   };
-  // Clear all filters
+
   const clearAllFilters = () => {
     setSelectedColors([]);
     setSelectedSizes([]);
     setPriceRange(maxPriceValue);
+    setSelectedCategories([]);
+    setSortBy("");
+    setFilterValues({
+      priceRange: maxPriceValue,
+      sortBy: "",
+      selectedColors: [],
+      selectedSizes: [],
+      selectedCategories: [],
+    });
+  };
+
+  const handleCategorySelect = (category: Category) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(category.id)) {
+        return prev.filter((c) => c !== category.id);
+      } else {
+        return [...prev, category.id];
+      }
+    });
+  };
+
+  const applyFilters = () => {
+    setFilterValues({
+      priceRange,
+      sortBy,
+      selectedColors,
+      selectedSizes,
+      selectedCategories,
+    });
+    setCurrentPage(1);
+    setIsMobileFilterOpen(false);
   };
 
   if (isLoading) {
@@ -234,305 +223,276 @@ export default function ShopPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <Navbar />
+    <Navbar />
 
-      {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex items-center text-sm">
-          <Link href="/shop" className="text-gray-600 hover:text-[#795d2a]">
-            Shop
-          </Link>
-          <ChevronRight className="h-4 w-4 mx-1 text-gray-400" />
-          <span className="text-gray-900">All Products</span>
-        </div>
+    <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="flex items-center text-sm">
+        <Link href="/shop" className="text-gray-600 hover:text-[#795d2a]">
+          Shop
+        </Link>
+        <ChevronRight className="h-4 w-4 mx-1 text-gray-400" />
+        <span className="text-gray-900">All Products</span>
       </div>
+    </div>
 
-      {/* Mobile Filter Toggle Button */}
-      <div className="md:hidden px-6 mb-4">
-        <Button
-          onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-          className="w-full flex items-center justify-center gap-2 bg-[#795d2a] text-white">
-          {isMobileFilterOpen ? (
-            <>
-              <X className="h-5 w-5" /> Close Filters
-            </>
-          ) : (
-            <>
-              <Filter className="h-5 w-5" /> Open Filters
-            </>
-          )}
-        </Button>
-      </div>
+    <div className="md:hidden px-6 mb-4">
+      <Button
+        onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+        className="w-full flex items-center justify-center gap-2 bg-[#795d2a] text-white">
+        {isMobileFilterOpen ? (
+          <>
+            <X className="h-5 w-5" /> Close Filters
+          </>
+        ) : (
+          <>
+            <Filter className="h-5 w-5" /> Open Filters
+          </>
+        )}
+      </Button>
+    </div>
 
-      <div className="max-w-7xl mx-auto px-6 pb-16">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar Filters */}
-          <div
-            className={`
-            w-full md:w-64 shrink-0 
-            ${isMobileFilterOpen ? "block" : "hidden md:block"}
-            absolute md:static z-20 bg-white md:bg-transparent 
-            left-0 right-0 px-6 md:px-0
-          `}>
-            {/* Product Categories */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-medium">Product Categories</h3>
-                <ChevronDown className="h-4 w-4" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="kurta-set" defaultChecked />
-                  <label htmlFor="kurta-set" className="text-sm cursor-pointer">
-                    Kurta Set
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="suit-set" />
-                  <label htmlFor="suit-set" className="text-sm cursor-pointer">
-                    Suit Set
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="anarkali" />
-                  <label htmlFor="anarkali" className="text-sm cursor-pointer">
-                    Anarkali
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="lounge-wear" />
-                  <label
-                    htmlFor="lounge-wear"
-                    className="text-sm cursor-pointer">
-                    Lounge Wear
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="kurtis-dresses" />
-                  <label
-                    htmlFor="kurtis-dresses"
-                    className="text-sm cursor-pointer">
-                    Kurtis & Dresses
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="luxe-collection" />
-                  <label
-                    htmlFor="luxe-collection"
-                    className="text-sm cursor-pointer">
-                    Luxe Collection
-                  </label>
-                </div>
-              </div>
+    <div className="max-w-7xl mx-auto px-6 pb-16">
+      <div className="flex flex-col md:flex-row gap-8">
+        <div
+          className={`
+          w-full md:w-64 shrink-0 
+          ${isMobileFilterOpen ? "block" : "hidden md:block"}
+          absolute md:static z-20 bg-white md:bg-transparent 
+          left-0 right-0 px-6 md:px-0
+        `}>
+          <Button
+              onClick={applyFilters}
+              className="w-full mb-4 bg-[#795d2a] text-white">
+              Apply Filters
+            </Button>
+          <div className="mb-6 bg-gray-50 rounded-lg p-4">
+            <div 
+              className="flex items-center justify-between mb-3 cursor-pointer"
+              onClick={() => setIsExpandedCategories(!isExpandedCategories)}
+            >
+              <h3 className="font-medium">Product Categories</h3>
+              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpandedCategories ? 'rotate-180' : ''}`} />
             </div>
-
-            {/* Filter By Price - Now Dynamic */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-medium">Filter By Price</h3>
-                <ChevronDown className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm mb-2">Price: ₹0 - ₹{priceRange}</p>
-                <input
-                  type="range"
-                  min="0"
-                  max={maxPriceValue}
-                  value={priceRange}
-                  onChange={handlePriceRangeChange}
-                  className="w-full h-1 bg-[#A08452] rounded-lg appearance-none cursor-pointer"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>₹0</span>
-                  <span>₹{maxPriceValue}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Filter By Color - Now Dynamic */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-medium">Filter By Color</h3>
-                <ChevronDown className="h-4 w-4" />
-              </div>
-              <div className="space-y-2">
-                {isLoading ? (
-                  <p className="text-sm text-gray-500">Loading colors...</p>
-                ) : availableColors.length > 0 ? (
-                  availableColors.map((colorData, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`color-${colorData.color.toLowerCase()}`}
-                        checked={selectedColors.includes(colorData.color)}
-                        onCheckedChange={() =>
-                          handleColorSelect(colorData.color)
-                        }
-                      />
-                      <label
-                        htmlFor={`color-${colorData.color.toLowerCase()}`}
-                        className="text-sm cursor-pointer flex items-center">
-                        <div
-                          className="w-4 h-4 rounded-sm mr-2"
-                          style={{
-                            backgroundColor: colorData.color.toLowerCase(),
-                            border: "1px solid #e2e8f0",
-                          }}></div>
-                        {colorData.color} ({colorData.count})
-                      </label>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">No colors available</p>
-                )}
-              </div>
-            </div>
-
-            {/* Size - Now Dynamic */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-medium">Size</h3>
-                <ChevronDown className="h-4 w-4" />
-              </div>
-              <div className="space-y-2">
-                {isLoading ? (
-                  <p className="text-sm text-gray-500">Loading sizes...</p>
-                ) : availableSizes.length > 0 ? (
-                  availableSizes.map((sizeData, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`size-${sizeData.size}`}
-                        checked={selectedSizes.includes(sizeData.size)}
-                        onCheckedChange={() => handleSizeSelect(sizeData.size)}
-                      />
-                      <label
-                        htmlFor={`size-${sizeData.size}`}
-                        className="text-sm cursor-pointer">
-                        {sizeData.size} ({sizeData.count})
-                      </label>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">No sizes available</p>
-                )}
-              </div>
-            </div>
-
-            {/* Clear All Filters Button */}
-            <div className="mb-6">
-              <Button
-                onClick={clearAllFilters}
-                variant="outline"
-                className="w-full border-[#795d2a] text-[#795d2a] hover:bg-[#795d2a] hover:text-white">
-                Clear All Filters
-              </Button>
-            </div>
-
-            {/* Mobile Apply Filters Button */}
-            <div className="md:hidden my-4">
-              <Button
-                onClick={() => setIsMobileFilterOpen(false)}
-                className="w-full bg-[#795d2a] text-white">
-                Apply Filters
-              </Button>
-            </div>
-          </div>
-
-          {/* Product Grid */}
-          <div className="flex-1">
-            <div className="flex justify-between items-center mb-6">
-              {/* Product count */}
-              <div className="text-sm text-gray-500">
-                Showing {filteredProducts.length} of {products?.length || 0}{" "}
-                products
-              </div>
-
-              {/* Sort by dropdown */}
-              <div>
-                <div className="relative inline-block">
-                  <select
-                    className="appearance-none border rounded-md px-4 py-2 pr-8 focus:outline-none text-sm"
-                    value={sortBy}
-                    onChange={handleSortChange}>
-                    {sortOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-            {/* Products Grid - Only Column View */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className={`space-y-2 overflow-hidden transition-all duration-300 ${isExpandedCategories ? 'max-h-[400px]' : 'max-h-48'} overflow-y-auto scrollbar-thin scrollbar-thumb-[#795d2a] scrollbar-track-gray-100 pr-2`}>
               {isLoading ? (
-                <div className="col-span-3 text-center py-10">
-                  Loading products...
-                </div>
-              ) : filteredProducts?.length ? (
-                filteredProducts.map((product, index) => (
-                  <ProductCard
-                    key={product.id || index}
-                    product={product}
-                    wishlistProducts={wishlist || []}
-                  />
-                ))
+                <p className="text-sm text-gray-500">Loading categories...</p>
               ) : (
-                <div className="col-span-3 text-center py-10">
-                  No products found with the selected filters
+                <div className="grid grid-cols-1 gap-1">
+                  {categories?.map((category, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 hover:bg-white p-2 rounded-md transition-colors">
+                      <Checkbox
+                        id={category.id}
+                        checked={selectedCategories.includes(category.id)}
+                        onCheckedChange={() => handleCategorySelect(category)}
+                        className="text-[#795d2a] focus:ring-[#795d2a]"
+                      />
+                      <label
+                        htmlFor={category.id}
+                        className="text-sm cursor-pointer hover:text-[#795d2a] transition-colors flex-1">
+                        {category.name}
+                      </label>
+                      <span className="text-xs text-gray-500">({category.productCount || 0})</span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-
-            {/* Load More Button */}
-            <div className="mt-10 text-center">
-              <Button
-                variant="outline"
-                className="border-[#795d2a] text-[#795d2a] hover:bg-[#795d2a] hover:text-white px-8 py-2 rounded-none">
-                Load More
-              </Button>
+            {categories && categories.length > 6 && (
+              <button
+                onClick={() => setIsExpandedCategories(!isExpandedCategories)}
+                className="text-sm text-[#795d2a] hover:text-[#5d4720] mt-2 w-full text-center"
+              >
+                {isExpandedCategories ? 'Show Less' : 'Show More'}
+              </button>
+            )}
+          </div>
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium">Filter By Price</h3>
+              <ChevronDown className="h-4 w-4" />
             </div>
+            <div>
+              <p className="text-sm mb-2">Price: ₹0 - ₹{priceRange}</p>
+              <input
+                type="range"
+                min="0"
+                max={maxPriceValue}
+                value={priceRange}
+                onChange={handlePriceRangeChange}
+                className="w-full h-1 bg-[#A08452] rounded-lg appearance-none cursor-pointer"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>₹0</span>
+                <span>₹{maxPriceValue}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium">Size</h3>
+              <ChevronDown className="h-4 w-4" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {fixedSizes.map((size, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleSizeSelect(size)}
+                  className={`w-10 h-10 flex items-center justify-center border rounded cursor-pointer ${
+                    selectedSizes.includes(size)
+                      ? "bg-[#795d2a] text-white border-[#795d2a]"
+                      : "border-gray-300 hover:border-[#795d2a]"
+                  }`}>
+                  {size.split("SIZE_")[1]}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Color Filter Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium">Filter By Color</h3>
+              <ChevronDown className="h-4 w-4" />
+            </div>
+            <div className="space-y-2">
+              {fixedColors.map((color, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`color-${color.toLowerCase()}`}
+                    checked={selectedColors.includes(color)}
+                    onCheckedChange={() => handleColorSelect(color)}
+                  />
+                  <label
+                    htmlFor={`color-${color.toLowerCase()}`}
+                    className="text-sm cursor-pointer flex items-center">
+                    <div
+                      className="w-4 h-4 rounded-sm mr-2"
+                      style={{
+                        backgroundColor: color.toLowerCase(),
+                        border: "1px solid #e2e8f0",
+                      }}></div>
+                    {color}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <Button
+              onClick={clearAllFilters}
+              variant="outline"
+              className="w-full border-[#795d2a] text-[#795d2a] hover:bg-[#795d2a] hover:text-white">
+              Clear All Filters
+            </Button>
+          </div>
+
+          <div className="md:hidden my-4">
+            <Button
+              onClick={() => {setIsMobileFilterOpen(false); applyFilters()}}
+              className="w-full bg-[#795d2a] text-white">
+              Apply Filters
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <div className="flex justify-between items-center mb-6">
+            <div className="text-sm text-gray-500">
+              Showing {products.length} of {products?.length || 0} products
+            </div>
+
+            <div>
+              <div className="relative inline-block">
+                <select
+                  className="appearance-none border rounded-md px-4 py-2 pr-8 focus:outline-none text-sm"
+                  value={sortBy}
+                  onChange={handleSortChange}>
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {isLoading ? (
+              <div className="col-span-3 text-center py-10">
+                Loading products...
+              </div>
+            ) : products?.length ? (
+              products.map((product, index) => (
+                <ProductCard
+                  key={product.id || index}
+                  product={product}
+                  wishlistProducts={wishlistProducts || []}
+                />
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-10">
+                No products found with the selected filters
+              </div>
+            )}
+          </div>
+          {/* Infinite Scroll Observer Trigger */}
+          <div
+            ref={lastProductRef}
+            className="mt-10 text-center text-sm text-gray-500">
+            {isLoading
+              ? "Loading more..."
+              : hasMore
+              ? "Scroll down to load more"
+              : "No more products"}
           </div>
         </div>
       </div>
-
-      {/* (Rest of the component remains the same) */}
-      <section className="py-10 border-t">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="flex flex-col items-center">
-              <Package className="h-10 w-10 mb-3 text-[#795d2a]" />
-              <h3 className="font-medium text-base mb-1">Free Shipping</h3>
-              <p className="text-sm text-gray-600">
-                Free shipping for order above $150
-              </p>
-            </div>
-            <div className="flex flex-col items-center">
-              <RefreshCw className="h-10 w-10 mb-3 text-[#795d2a]" />
-              <h3 className="font-medium text-base mb-1">Money Guarantee</h3>
-              <p className="text-sm text-gray-600">
-                Within 30 days for an exchange
-              </p>
-            </div>
-            <div className="flex flex-col items-center">
-              <HeadphonesIcon className="h-10 w-10 mb-3 text-[#795d2a]" />
-              <h3 className="font-medium text-base mb-1">Online Support</h3>
-              <p className="text-sm text-gray-600">
-                24 hours a day, 7 days a week
-              </p>
-            </div>
-            <div className="flex flex-col items-center">
-              <CreditCard className="h-10 w-10 mb-3 text-[#795d2a]" />
-              <h3 className="font-medium text-base mb-1">Flexible Payment</h3>
-              <p className="text-sm text-gray-600">
-                Pay with multiple credit cards
-              </p>
-            </div>
+    </div>
+    <ProductLastSection />
+    <SiteFooter />
+  </main>
+  );
+}
+export function ProductLastSection() {
+  return (
+    <section className="py-10 border-t">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="flex flex-col items-center">
+            <Package className="h-10 w-10 mb-3 text-[#795d2a]" />
+            <h3 className="font-medium text-base mb-1">Free Shipping</h3>
+            <p className="text-sm text-gray-600">
+              Free shipping for order above $150
+            </p>
+          </div>
+          <div className="flex flex-col items-center">
+            <RefreshCw className="h-10 w-10 mb-3 text-[#795d2a]" />
+            <h3 className="font-medium text-base mb-1">Money Guarantee</h3>
+            <p className="text-sm text-gray-600">
+              Within 30 days for an exchange
+            </p>
+          </div>
+          <div className="flex flex-col items-center">
+            <HeadphonesIcon className="h-10 w-10 mb-3 text-[#795d2a]" />
+            <h3 className="font-medium text-base mb-1">Online Support</h3>
+            <p className="text-sm text-gray-600">
+              24 hours a day, 7 days a week
+            </p>
+          </div>
+          <div className="flex flex-col items-center">
+            <CreditCard className="h-10 w-10 mb-3 text-[#795d2a]" />
+            <h3 className="font-medium text-base mb-1">Flexible Payment</h3>
+            <p className="text-sm text-gray-600">
+              Pay with multiple credit cards
+            </p>
           </div>
         </div>
-      </section>
-
-      <SiteFooter />
-    </main>
+      </div>
+    </section>
   );
 }
 

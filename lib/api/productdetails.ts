@@ -14,8 +14,17 @@ export const productApi = {
   getProducts: async (
     currentPage: number,
     itemsPerPage: number,
-    debouncedSearchTerm: string,
-    status?: string
+    searchTerm: string,
+    filters: {
+      status?: string;
+      min_price?: number;
+      max_price?: number;
+      sort_by?: string;
+      sort_order?: 'asc' | 'desc';
+      color?: string;
+      size?: string;
+      category?: string;
+    } = {}
   ): Promise<{
     success: boolean,
     products: Products[];
@@ -30,12 +39,12 @@ export const productApi = {
       params: {
         page: currentPage,
         limit: itemsPerPage,
-        search: debouncedSearchTerm,
-        ...(status && { status }),
+        search: searchTerm,
+        ...filters,
       },
     });
     return response.data;
-  },
+  },  
   getById: async (id: string): Promise<Products> => {
     const response = await apiClient.get(`/api/products/${id}`);
     return response.data.product;
