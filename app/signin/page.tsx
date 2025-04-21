@@ -37,15 +37,11 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { data: user } = useQuery({
+  const { data: user, isLoading: waiting } = useQuery({
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
   });
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/");
-    }
-  }, [status]);
+
 
   if (user) {
     router.push("/account/orders");
@@ -59,7 +55,7 @@ export default function LoginPage() {
     },
   });
 
-  if (status === "loading") {
+  if (waiting) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-lg font-semibold text-gray-700">Checking authentication...</div>
