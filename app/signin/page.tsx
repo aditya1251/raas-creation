@@ -25,7 +25,8 @@ import "react-phone-input-2/lib/style.css";
 import { loginFunction } from "./actions/sign-in-action";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
+import { customerApi } from "@/lib/api/customer";
 
 type FormValues = {
   mobileNumber: string;
@@ -36,17 +37,18 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-
-  const { data: session, status } = useSession();
-
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: customerApi.getCustomer,
+  });
   useEffect(() => {
     if (status === "authenticated") {
       router.push("/");
     }
   }, [status]);
 
-  if (session?.user) {
-    router.push("/account");
+  if (user) {
+    router.push("/account/orders");
   }
 
   const form = useForm<FormValues>({

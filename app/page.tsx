@@ -22,11 +22,15 @@ import toast from "react-hot-toast";
 import { useCart } from "@/context/cart-context";
 import Link from "next/link";
 import { wishlistApi } from "@/lib/api/wishlist";
-import { useSession } from "next-auth/react";
 import { JSX, useEffect, useState } from "react";
+import { customerApi } from "@/lib/api/customer";
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: customerApi.getCustomer,
+  });
+
   const [wishlist, setWishlist] = useState<string[]>([]);
 
   const { data: bestSellers, isLoading: bestSellerLoad } = useQuery({
@@ -42,7 +46,7 @@ export default function Home() {
   const { data: wishlistProducts } = useQuery({
     queryKey: ["wishlistProducts"],
     queryFn: wishlistApi.getProductList,
-    enabled: !!session?.user?.id,
+    enabled: !!user?.id,
   });
 
   useEffect(() => {
@@ -130,7 +134,11 @@ function ProductCard({
   wishlistProducts: any[];
 }) {
   const { addToCart } = useCart();
-  const { data: session } = useSession();
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: customerApi.getCustomer,
+  });
+
   const queryClient = useQueryClient();
 
   const [isProductInWishlist, setIsProductInWishlist] = useState(false);
@@ -165,7 +173,7 @@ function ProductCard({
   });
 
   const handleWishlistToggle = () => {
-    if (!session?.user) {
+    if (!user) {
       toast.error("You need to login to manage your wishlist.");
       return;
     }

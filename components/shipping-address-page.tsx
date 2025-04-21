@@ -8,7 +8,7 @@ import SiteFooter from "@/components/site-footer";
 import Link from "next/link";
 import { useCart } from "@/context/cart-context";
 import { useQuery } from "@tanstack/react-query";
-import {  AddressApi } from "@/lib/api/address";
+import { AddressApi } from "@/lib/api/address";
 import { AddressType } from "@/types/types";
 import { orderApi } from "@/lib/api/orders";
 import toast from "react-hot-toast";
@@ -26,7 +26,7 @@ export default function ShippingAddressPage() {
       toast.error("Your cart is empty.");
       router.push("/shop");
     }
-  },[])
+  }, []);
 
   const calculateSubtotal = () => {
     return cartItems.reduce(
@@ -39,7 +39,7 @@ export default function ShippingAddressPage() {
   const [gstTaxRate, setGstTaxRate] = useState<number | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [error, setError] = useState<string>("");
-  
+
   const { data } = useQuery({
     queryKey: ["tax"],
     queryFn: async () => {
@@ -50,28 +50,42 @@ export default function ShippingAddressPage() {
 
   useEffect(() => {
     if (data) {
-      const deliveryCharges = cartItems.length > 0 ? data.ShiippingCharge || 0 : 0;
+      const deliveryCharges =
+        cartItems.length > 0 ? data.ShiippingCharge || 0 : 0;
       setDeliveryCharges(deliveryCharges);
       setGstTaxRate(data.GSTtax);
     }
   }, [data]);
 
-  
-  const { data: address, isLoading: addressLoading, error: addressError } = useQuery({
+  const {
+    data: address,
+    isLoading: addressLoading,
+    error: addressError,
+  } = useQuery({
     queryKey: ["address"],
     queryFn: AddressApi.getAddress,
   });
 
-  const [addresses, setAddresses] = useState<Array<{id: string; name: string; address: string}>>([]);
+  const [addresses, setAddresses] = useState<
+    Array<{ id: string; name: string; address: string }>
+  >([]);
 
   useEffect(() => {
     if (address) {
       const add = address.map((address: AddressType) => {
         return {
           id: address.id ?? "",
-          name: address.addressName + " | " + address.firstName + " " + address.lastName,
+          name:
+            address.addressName +
+            " | " +
+            address.firstName +
+            " " +
+            address.lastName,
           address:
-          address.firstName + " " + address.lastName + ", " +
+            address.firstName +
+            " " +
+            address.lastName +
+            ", " +
             address.street +
             ", " +
             address.city +
@@ -82,7 +96,7 @@ export default function ShippingAddressPage() {
         };
       });
       setAddresses(add);
-      if(add.length > 0) {
+      if (add.length > 0) {
         setSelectedAddress(add[0].id);
       }
     }
@@ -115,7 +129,7 @@ export default function ShippingAddressPage() {
     setIsLoading(true);
     try {
       // Implement delete logic here
-      setAddresses(addresses.filter(addr => addr.id !== addressId));
+      setAddresses(addresses.filter((addr) => addr.id !== addressId));
     } catch (error) {
       setError("Failed to delete address. Please try again.");
     } finally {
@@ -134,11 +148,12 @@ export default function ShippingAddressPage() {
   if (addressError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500">Failed to load addresses. Please refresh the page.</div>
+        <div className="text-red-500">
+          Failed to load addresses. Please refresh the page.
+        </div>
       </div>
     );
   }
-
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -234,7 +249,9 @@ export default function ShippingAddressPage() {
 
                 {addresses.length === 0 ? (
                   <div className="text-center py-8 bg-gray-50 rounded-md">
-                    <p className="text-gray-500">No addresses found. Please add a new address.</p>
+                    <p className="text-gray-500">
+                      No addresses found. Please add a new address.
+                    </p>
                   </div>
                 ) : (
                   <div className="grid md:grid-cols-2 gap-4">
@@ -263,56 +280,21 @@ export default function ShippingAddressPage() {
                         <p className="text-sm text-gray-600 mb-4">
                           {address.address}
                         </p>
-                        <div className="flex gap-2">
-                          <button 
-                            className="px-4 py-1 text-sm border border-[#795d2a] text-[#795d2a] rounded flex items-center justify-center hover:bg-[#795d2a] hover:text-white transition-colors"
-                            disabled={isLoading}>
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="mr-1">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                            Edit
-                          </button>
-                          <button 
-                            className="px-4 py-1 text-sm border border-[#795d2a] text-[#795d2a] rounded flex items-center justify-center hover:bg-[#795d2a] hover:text-white transition-colors"
-                            onClick={() => handleDeleteAddress(address.id)}
-                            disabled={isLoading}>
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="mr-1">
-                              <polyline points="3 6 5 6 21 6"></polyline>
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                            Delete
-                          </button>
-                        </div>
                       </div>
                     ))}
                   </div>
                 )}
 
+                <Link
+                  href={"/account/addresses"}
+                  className="w-full md:w-auto mt-6 px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white rounded transition-colors">
+                  Manage Addresses
+                </Link>
+
                 <Link href="/payment">
-                  <button 
-                    className={`w-full md:w-auto mt-6 px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white rounded transition-colors ${
-                      isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  <button
+                    className={`w-full md:w-auto mt-6 px-6 py-3 mx-4 bg-[#a08452] hover:bg-[#8c703d] text-white rounded transition-colors ${
+                      isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                     onClick={handleDeliverHere}
                     disabled={isLoading || !selectedAddress}>
@@ -322,7 +304,7 @@ export default function ShippingAddressPage() {
                         Processing...
                       </span>
                     ) : (
-                      'Deliver Here'
+                      "Deliver Here"
                     )}
                   </button>
                 </Link>

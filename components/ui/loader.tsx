@@ -50,7 +50,7 @@ export const Loader: React.FC<LoaderProps> = ({
   );
 };
 
-export const LoadingProducts: React.FC = ({ length }) => {
+export const LoadingProducts: React.FC<{ length: number }> = ({ length }) => {
   return (
     <div
       className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${length} gap-6 w-full`}
@@ -64,8 +64,7 @@ export const LoadingProducts: React.FC = ({ length }) => {
       ))}
     </div>
   );
-};
-export const LoadingAddress: React.FC = () => {
+};export const LoadingAddress: React.FC = () => {
   return (
     <div className="flex-1">
       <Button

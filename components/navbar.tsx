@@ -5,8 +5,15 @@ import Image from "next/image"
 import { Search, Heart, ShoppingBag, User, Menu, X } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import MiniCart from "@/components/mini-cart"
+import { useQuery } from "@tanstack/react-query"
+import { customerApi } from "@/lib/api/customer"
 
 export default function Navbar() {
+
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: customerApi.getCustomer,
+  });
   const cartContext = useCart()
   const cartItems = cartContext?.cartItems || []
   const cartCount = cartContext?.cartCount || 0
@@ -110,7 +117,7 @@ export default function Navbar() {
               <Search className="h-5 w-5" />
             </button>
             <Link
-              href="/account/wishlists"
+              href={user ? "/account/wishlists" : "/signin"}
               aria-label="Wishlist"
               className="focus:outline-none p-1 rounded-full hover:bg-gray-100 transition-colors"
             >
@@ -129,7 +136,7 @@ export default function Navbar() {
               )}
             </button>
             <Link
-              href="/account/orders"
+              href={user ? "/account/orders" : "/signin"}
               aria-label="Account"
               className="focus:outline-none p-1 rounded-full hover:bg-gray-100 transition-colors"
             >
@@ -196,4 +203,3 @@ export default function Navbar() {
     </header>
   )
 }
-

@@ -1,18 +1,23 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { customerApi } from "@/lib/api/customer";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 export default function AccountPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: user , isLoading} = useQuery({
+    queryKey: ["user"],
+    queryFn: customerApi.getCustomer,
+  });
 
-  if (status === "loading") {
+  if (isLoading) {
     return <h2>Loading...</h2>;
   }
+  
 
-  if (!session?.user) {
-    return router.push("/login");
+  if (!user) {
+    return router.push("/signin");
   }
 
   router.push("/account/orders");
