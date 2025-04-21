@@ -1,7 +1,9 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function HeroBanner() {
+  const router = useRouter();
   return (
     <section className="relative w-full h-[80dvh] md:h-[50dvh] lg:h-[80dvh]">
       <div className="w-full h-full z-[5] relative overflow-hidden">
@@ -26,7 +28,7 @@ export default function HeroBanner() {
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit
               tellus, luctus nec ullamcorper mattis.
             </p>
-            <Button className="bg-[#8c738d] hover:bg-[#7a6279] text-white rounded-none px-10 py-6 text-sm uppercase tracking-wider font-medium w-1/2">
+            <Button onClick={() => router.push("/shop")} className="bg-[#8c738d] hover:bg-[#7a6279] text-white rounded-none px-10 py-6 text-sm uppercase tracking-wider font-medium w-1/2">
               BUY NOW
             </Button>
         </div>

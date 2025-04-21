@@ -12,8 +12,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Order, orderApi, OrderItems } from "@/lib/api/orders";
 import toast from "react-hot-toast";
 import Script from "next/script";
-import { useSession } from "next-auth/react";
 import { discountApi } from "@/lib/api/discount";
+import { customerApi } from "@/lib/api/customer";
 
 export default function PaymentPage() {
   const router = useRouter();
@@ -41,11 +41,16 @@ export default function PaymentPage() {
     },
   });
 
-  const { data: session } = useSession();
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: customerApi.getCustomer,
+  });
 
   useEffect(() => {
-    if(cartItems.length === 0){
-      toast.error("Please add items to your cart before proceeding to payment.");
+    if (cartItems.length === 0) {
+      toast.error(
+        "Please add items to your cart before proceeding to payment."
+      );
       router.push("/shop");
     }
   }, []);
@@ -72,32 +77,33 @@ export default function PaymentPage() {
   const grandTotal = subtotal + deliveryCharges - discount + gstAmount;
 
   useEffect(() => {
-        const storedCode = localStorage.getItem("discountCode");
-      
-        if (storedCode && cartItems.length > 0) {
-          // Use local copy of subtotal to avoid stale discount calculations
-          const currentSubtotal = subtotal;
-      
-          discountApi.getByCode(storedCode)
-            .then((discountData) => {
-              if (discountData) {
-                const discountAmount =
-                  discountData.type === "PERCENTAGE"
-                    ? (currentSubtotal * discountData.value) / 100
-                    : discountData.value;
-      
-                setDiscount(discountAmount);
-              } else {
-                setDiscount(0);
-                localStorage.removeItem("discountCode");
-              }
-            })
-            .catch((err) => {
-              console.error("Failed to apply stored discount:", err);
-            });
-        }
-      }, [cartItems]);
-      
+    const storedCode = localStorage.getItem("discountCode");
+
+    if (storedCode && cartItems.length > 0) {
+      // Use local copy of subtotal to avoid stale discount calculations
+      const currentSubtotal = subtotal;
+
+      discountApi
+        .getByCode(storedCode)
+        .then((discountData) => {
+          if (discountData) {
+            const discountAmount =
+              discountData.type === "PERCENTAGE"
+                ? (currentSubtotal * discountData.value) / 100
+                : discountData.value;
+
+            setDiscount(discountAmount);
+          } else {
+            setDiscount(0);
+            localStorage.removeItem("discountCode");
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to apply stored discount:", err);
+        });
+    }
+  }, [cartItems]);
+
   const { data } = useQuery({
     queryKey: ["tax"],
     queryFn: async () => {
@@ -110,7 +116,7 @@ export default function PaymentPage() {
     if (data) {
       const deliveryCharges =
         cartItems.length > 0 ? data.ShiippingCharge || 0 : 0;
-      const codLimit = data.CodLimit === 0 ? 0 : (data.CodLimit || 100000000);
+      const codLimit = data.CodLimit === 0 ? 0 : data.CodLimit || 100000000;
       setCodLimit(codLimit);
       setGstTaxRate(data.GSTtax);
       setDeliveryCharges(deliveryCharges);
@@ -143,7 +149,7 @@ export default function PaymentPage() {
     // };
     // createOrderMutation.mutate(orderData);
   };
- 
+
   const createOrderId = async () => {
     try {
       const response = await fetch("/api/order", {
@@ -234,8 +240,8 @@ export default function PaymentPage() {
           }
         },
         prefill: {
-          name: session?.user?.name,
-          contact: session?.user?.mobile_no,
+          name: user?.name,
+          contact: user?.mobile_no.substring(3, 12),
         },
         theme: {
           color: "#3399cc",
@@ -445,17 +451,20 @@ export default function PaymentPage() {
                                 : ""
                             }`}
                             onClick={() =>
-                              !(grandTotal > codLimit || 
-                              codLimit === 0) &&
+                              !(grandTotal > codLimit || codLimit === 0) &&
                               setPaymentMethod("cod")
                             }>
                             Cash On Delivery
                           </label>
-                          {grandTotal > codLimit && (codLimit !== 0) && (
-                            <span className="text-red-500 text-sm mt-1">COD not available for this order amount</span>
+                          {grandTotal > codLimit && codLimit !== 0 && (
+                            <span className="text-red-500 text-sm mt-1">
+                              COD not available for this order amount
+                            </span>
                           )}
                           {codLimit === 0 && (
-                            <span className="text-red-500 text-sm mt-1">COD not available</span>
+                            <span className="text-red-500 text-sm mt-1">
+                              COD not available
+                            </span>
                           )}
                         </div>
                         <input
