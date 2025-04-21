@@ -65,13 +65,17 @@ export default function ManageAddressesPage() {
     } else {
       toast.error("Something went wrong. Please try again.");
     }
-    // Close modal
     closeAddressModal();
   };
 
   // delete address
-  const handleDeleteAddress = (id) => {
-    // setAddresses(addresses?.filter((address) => address.id !== id))
+  const handleDeleteAddress = (id:string) => {
+    const res = AddressApi.deleteAddress(id);
+    if (res.success) {
+      toast.success(res.message);
+    } else {
+      toast.error("Something went wrong. Please try again.");
+    }
   };
 
   return (

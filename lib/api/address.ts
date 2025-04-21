@@ -10,4 +10,12 @@ export const AddressApi = {
     const response = await apiClient.post("/api/customers/address", formData);
     return response.data;
   },
+  deleteAddress: async (id: string): Promise<any> => {
+    const response=await apiClient.delete(`/api/customers/address/${id}`,{
+      params:{
+        addressId: id
+      }
+    });
+    return response.data;
+  }
 };
