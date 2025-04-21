@@ -17,10 +17,16 @@ import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
 import { useQuery } from "@tanstack/react-query";
 import { AddressApi } from "@/lib/api/address";
+import { Label } from "@/components/ui/label";
+import { MenubarRadioGroup } from "@/components/ui/menubar";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
+import toast from "react-hot-toast";
 
 export default function ManageAddressesPage() {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [isDefaultAddress, setIsDefaultAddress] = useState(false);
+  // Fetch addresses
   const { data: addresses, isLoading } = useQuery({
     queryKey: ["addresses"],
     queryFn: AddressApi.getAddress,
@@ -28,31 +34,37 @@ export default function ManageAddressesPage() {
 
   const openAddressModal = () => setShowAddressModal(true);
   const closeAddressModal = () => setShowAddressModal(false);
+  const [formData, setFormData] = useState({
+    addressName: "Home",
+    firstName: "",
+    lastName: "",
+    street: "",
+    aptNumber: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    phoneNumber: "",
+    country: "India",
+  });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+  const handleAddressTypeChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, addressName: value }));
+  };
   // Add new address
-  const handleAddAddress = (e) => {
+  const handleAddAddress = async (e) => {
     e.preventDefault();
-
-    // Get form data
-    const formData = new FormData(e.target);
-    const name = formData.get("name");
-    const mobile = formData.get("mobile");
-    const building = formData.get("building");
-    const area = formData.get("area");
-    const city = formData.get("city");
-    const pincode = formData.get("pincode");
-    const state = formData.get("state");
-
-    // Create new address object
-    // const newAddress = {
-    //   id: addresses?.length + 1,
-    //   name: name.toString(),
-    //   address: `${building}, ${area}, ${city}, ${state}-${pincode}`,
-    //   phone: mobile.toString(),
-    // };
-
-    // Add to addresses array
-    // setAddresses([...addresses, newAddress]);
-
+    const res = await AddressApi.addAddress(formData);
+    if (res.success) {
+      toast.success("Address added successfully!");
+    } else {
+      toast.error("Something went wrong. Please try again.");
+    }
     // Close modal
     closeAddressModal();
   };
@@ -126,14 +138,25 @@ export default function ManageAddressesPage() {
               <Plus className="h-5 w-5" />
               Add New Address
             </Button>
-
             {addresses?.map((address) => (
               <div key={address.id} className="border-b pb-6 mb-6">
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-medium text-lg mb-2">{address.name}</h3>
-                    <p className="text-gray-700 mb-1">{address.street}</p>
-                    <p className="text-gray-700">{address.name}</p>
+                    <h3 className="font-medium text-lg mb-2">
+                      {address.addressName}
+                    </h3>
+                    <p className="text-gray-700 mb-1">
+                      {address.firstName} {address.lastName}
+                    </p>
+                    <p className="text-gray-700 mb-1">
+                      {address.street}
+                      {address.aptNumber ? `, ${address.aptNumber}` : ""}
+                    </p>
+                    <p className="text-gray-700 mb-1">
+                      {address.city}, {address.state} {address.zipCode}
+                    </p>
+                    <p className="text-gray-700 mb-1">{address.country}</p>
+                    <p className="text-gray-700">{address.phoneNumber}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button className="bg-[#a08452] hover:bg-[#8c703d] text-white h-9 px-3 flex items-center gap-1">
@@ -152,14 +175,6 @@ export default function ManageAddressesPage() {
                 </div>
               </div>
             ))}
-
-            {addresses?.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-gray-500">
-                  No addresses found. Please add a new address.
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -170,133 +185,153 @@ export default function ManageAddressesPage() {
           <div className="bg-white rounded-md max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-medium mb-6">Enter a New Address</h2>
 
-            <form onSubmit={handleAddAddress}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="Enter Name"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452]"
+            <form onSubmit={handleAddAddress} className="space-y-4 mt-4">
+              {/* Address Type Selection */}
+              <div className="space-y-2">
+                <Label>Address Type</Label>
+                <RadioGroup
+                  value={formData.addressName}
+                  onValueChange={handleAddressTypeChange}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Home" id="home" />
+                    <Label htmlFor="home">Home</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Office" id="office" />
+                    <Label htmlFor="office">Office</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Other" id="other" />
+                    <Label htmlFor="other">Other</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
                     required
                   />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Mobile Number
-                  </label>
-                  <input
-                    type="tel"
-                    name="mobile"
-                    placeholder="Enter Your Mobile Number"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452]"
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
                     required
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Flat, House No, Building, Company, Apartment
-                  </label>
-                  <input
-                    type="text"
-                    name="building"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452]"
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Mobile Number</Label>
+                <Input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleInputChange}
+                  type="text"
+                  required
+                  placeholder="Enter 10-digit mobile number"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Area, Colony, Street, Sector, Village
-                  </label>
-                  <input
-                    type="text"
-                    name="area"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452]"
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="street">Street</Label>
+                <Input
+                  id="street"
+                  name="street"
+                  value={formData.street}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Street"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">City</label>
-                  <select
+              <div className="space-y-2">
+                <Label htmlFor="aptNumber">
+                  Apartment/Suite Number (Optional)
+                </Label>
+                <Input
+                  id="aptNumber"
+                  name="aptNumber"
+                  value={formData.aptNumber || ""}
+                  onChange={handleInputChange}
+                  placeholder="Apartment, suite, floor, etc."
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
                     name="city"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452] appearance-none"
-                    required
-                  >
-                    <option value="">Select City</option>
-                    <option value="delhi">Delhi</option>
-                    <option value="mumbai">Mumbai</option>
-                    <option value="bangalore">Bangalore</option>
-                    <option value="chennai">Chennai</option>
-                    <option value="kolkata">Kolkata</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Pin Code
-                  </label>
-                  <input
-                    type="text"
-                    name="pincode"
-                    placeholder="Enter Pin Code"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452]"
+                    value={formData.city}
+                    onChange={handleInputChange}
                     required
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="zipCode">PIN Code</Label>
+                  <Input
+                    id="zipCode"
+                    name="zipCode"
+                    value={formData.zipCode}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="6-digit PIN code"
+                  />
+                </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    State
-                  </label>
-                  <select
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="state">State</Label>
+                  <Input
+                    id="state"
                     name="state"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452] appearance-none"
+                    value={formData.state}
+                    onChange={handleInputChange}
                     required
-                  >
-                    <option value="">Select State</option>
-                    <option value="delhi">Delhi</option>
-                    <option value="maharashtra">Maharashtra</option>
-                    <option value="karnataka">Karnataka</option>
-                    <option value="tamil-nadu">Tamil Nadu</option>
-                    <option value="west-bengal">West Bengal</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="default-address"
-                    checked={isDefaultAddress}
-                    onCheckedChange={setIsDefaultAddress}
                   />
-                  <label
-                    htmlFor="default-address"
-                    className="text-sm cursor-pointer"
-                  >
-                    Use as My Default Address
-                  </label>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    name="country"
+                    value={formData.country}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              </div>
 
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="submit"
-                    className="flex-1 bg-[#a08452] hover:bg-[#8c703d] text-white py-3"
-                  >
-                    Add New Address
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 border-gray-300 hover:bg-gray-50 py-3"
-                    onClick={closeAddressModal}
-                  >
-                    Cancel
-                  </Button>
-                </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={closeAddressModal}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-[#a08452] hover:bg-[#8c703d] text-white"
+                >
+                  {/* {isSubmitting ? "Saving..." : editAddress ? "Update Address" : "Save Address"} */}
+                  Update Address
+                </Button>
               </div>
             </form>
           </div>
