@@ -6,7 +6,7 @@ import { Upload } from "lucide-react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { testimonialApi } from "@/lib/api/testimonials"
 import type { Testimonial } from "./testimonials-manager"
-import UploadPopup from "../UploadPopup"
+import MultiUploadPopup from "../MultiUploadPopup"
 import { toast } from "react-hot-toast" // Assuming you use toast for notifications
 import Image from "next/image"
 
@@ -82,8 +82,8 @@ export function TestimonialForm({ testimonial, onSubmit, onCancel }: Testimonial
     setFormData({ ...formData, [name]: value })
   }
 
-  const handleImageUpload = (imageUrl: string) => {
-    setFormData({ ...formData, image: imageUrl })
+  const handleImageUpload = (imageUrl: string[]) => {
+    setFormData({ ...formData, image: imageUrl[0] })
     setUploadPopup(false)
   }
 
@@ -211,7 +211,7 @@ export function TestimonialForm({ testimonial, onSubmit, onCancel }: Testimonial
         </div>
       </form>
       {isUploadPopup && (
-        <UploadPopup
+        <MultiUploadPopup
           onSuccess={handleImageUpload}
           onClose={() => setUploadPopup(false)}
         />

@@ -6,6 +6,7 @@ import { useDropzone } from "react-dropzone"
 import axios from "axios"
 import { Upload, X } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { apiClient } from "@/lib/axiosClient"
 
 interface UploadPopupProps {
   onSuccess: (url: string) => void
@@ -43,7 +44,7 @@ export default function UploadPopup({ onSuccess, onClose }: UploadPopupProps) {
     formData.append("file", file)
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/upload`, formData, {
+      const response = await apiClient.post(`/api/upload/profile`, formData, { 
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
