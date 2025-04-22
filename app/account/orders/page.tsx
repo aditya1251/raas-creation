@@ -24,7 +24,7 @@ export default function OrdersPage() {
 
   // Fetch orders with React Query
   const { data, isLoading } = useQuery({
-    queryKey: ["Orders", currentPage, itemsPerPage, debouncedSearchTerm],
+    queryKey: ["Orders"],
     queryFn: () =>
       orderApi.getOrders(currentPage, itemsPerPage, debouncedSearchTerm),
   });

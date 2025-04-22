@@ -7,15 +7,16 @@ import { User, Package, Heart, MapPin, PenSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { customerApi } from "@/lib/api/customer";
 import { usePathname } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AccountLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-    const pathname = usePathname();
+  const pathname = usePathname();
   const { data, isLoading } = useQuery({
-    queryKey: ["user"],
+    queryKey: [],
     queryFn: async () => {
       const res = await customerApi.getCustomer();
       return res;
@@ -35,7 +36,7 @@ export default function AccountLayout({
             <div className="border rounded-md p-4 mb-4 flex flex-col items-center">
               <div className="w-20 h-20 rounded-full overflow-hidden mb-3">
                 <Image
-                  src="/placeholder.svg?height=80&width=80"
+                  src={data?.image || "/placeholder.svg?height=80&width=80"}
                   alt="Profile Picture"
                   width={80}
                   height={80}
@@ -43,34 +44,54 @@ export default function AccountLayout({
                 />
               </div>
               <p className="text-sm text-gray-600 mb-1">Hello 👋</p>
-              <h2 className="font-medium">{data?.name}</h2>
+              {isLoading ? (
+                <Skeleton className="h-6 w-full rounded" />
+              ) : (
+                <h2 className="font-medium">{data?.name}</h2>
+              )}
             </div>
             {/* Navigation */}
             <nav className="border rounded-md overflow-hidden">
               <Link
                 href="/account/personal-information"
-                className={`flex items-center space-x-3 px-4 py-3 ${pathname==="/account/personal-information"? "bg-[#a08452] text-white":"hover:bg-gray-50"}`}
+                className={`flex items-center space-x-3 px-4 py-3 ${
+                  pathname === "/account/personal-information"
+                    ? "bg-[#a08452] text-white"
+                    : "hover:bg-gray-50"
+                }`}
               >
                 <User className="h-5 w-5" />
                 <span>Personal Information</span>
               </Link>
               <Link
                 href="/account/orders"
-                className={`flex items-center space-x-3 px-4 py-3 ${pathname==="/account/orders"? "bg-[#a08452] text-white":"hover:bg-gray-50"} border-b`}
+                className={`flex items-center space-x-3 px-4 py-3 ${
+                  pathname === "/account/orders"
+                    ? "bg-[#a08452] text-white"
+                    : "hover:bg-gray-50"
+                } border-b`}
               >
                 <Package className="h-5 w-5" />
                 <span>My Orders</span>
               </Link>
               <Link
                 href="/account/wishlists"
-                className={`flex items-center space-x-3 px-4 py-3 ${pathname==="/account/wishlists"? "bg-[#a08452] text-white":"hover:bg-gray-50"} border-b`}
+                className={`flex items-center space-x-3 px-4 py-3 ${
+                  pathname === "/account/wishlists"
+                    ? "bg-[#a08452] text-white"
+                    : "hover:bg-gray-50"
+                } border-b`}
               >
                 <Heart className="h-5 w-5" />
                 <span>My Wishlists</span>
               </Link>
               <Link
                 href="/account/addresses"
-                className={`flex items-center space-x-3 px-4 py-3 ${pathname==="/account/addresses"? "bg-[#a08452] text-white":"hover:bg-gray-50"}`}
+                className={`flex items-center space-x-3 px-4 py-3 ${
+                  pathname === "/account/addresses"
+                    ? "bg-[#a08452] text-white"
+                    : "hover:bg-gray-50"
+                }`}
               >
                 <MapPin className="h-5 w-5" />
                 <span>Manage Addresses</span>

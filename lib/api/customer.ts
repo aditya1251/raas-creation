@@ -15,6 +15,10 @@ export const customerApi = {
         const response = await apiClient.get("/api/customers/customer");
         return response.data.customer;
     },
+    updateCustomer: async (id:string,data) => {
+        const response = await apiClient.put(`/api/customers/customer/${id}`,data);
+        return response.data;
+    },
     changePassword: async (customerId:string, newPassword:string) => {
         const response = await apiClient.post(`/api/customers//change-password`, {
             newPassword: newPassword,

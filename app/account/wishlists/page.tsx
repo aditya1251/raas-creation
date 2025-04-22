@@ -7,6 +7,7 @@ import { wishlistApi } from "@/lib/api/wishlist";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { LoadingProducts } from "@/components/ui/loader";
 
 interface PaginatedWishlistResponse {
   wishlists: any[];
@@ -66,9 +67,7 @@ export default function WishlistsPage() {
   return (
     <div className="flex-1">
       {isLoading && (
-        <div className="flex justify-center items-center h-40">
-          <p>Loading...</p>
-        </div>
+        <LoadingProducts length={3} />
       )}
 
       {!isLoading && wishlistProducts.length === 0 && (

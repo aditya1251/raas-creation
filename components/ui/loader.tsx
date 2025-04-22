@@ -3,6 +3,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { Plus } from "lucide-react";
+import { Skeleton } from "./skeleton";
 
 interface LoaderProps {
   size?: "sm" | "md" | "lg";
@@ -64,7 +65,8 @@ export const LoadingProducts: React.FC<{ length: number }> = ({ length }) => {
       ))}
     </div>
   );
-};export const LoadingAddress: React.FC = () => {
+};
+export const LoadingAddress: React.FC = () => {
   return (
     <div className="flex-1">
       <Button
@@ -113,7 +115,46 @@ export const LoadingProducts: React.FC<{ length: number }> = ({ length }) => {
     </div>
   );
 };
+export const ProfileSkeleton: React.FC = () => {
+  return (
+    <>
+      <div className="flex justify-between items-start mb-8">
+        <div className="relative">
+          <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 animate-pulse">
+            {/* Profile picture skeleton */}
+            <Skeleton className="w-full h-full" />
+          </div>
+          <div className="absolute bottom-0 right-0 rounded-full">
+            <Skeleton className="h-6 w-6 rounded-full" />
+          </div>
+        </div>
 
+        <Skeleton className="h-10 w-28" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <Skeleton className="h-5 w-24 mb-1" />
+          <Skeleton className="w-full h-12" />
+        </div>
+
+        <div>
+          <Skeleton className="h-5 w-24 mb-1" />
+          <Skeleton className="w-full h-12" />
+        </div>
+
+        <div>
+          <Skeleton className="h-5 w-32 mb-1" />
+          <Skeleton className="w-full h-12" />
+        </div>
+
+        <div>
+          <Skeleton className="h-5 w-32 mb-1" />
+          <Skeleton className="w-full h-12" />
+        </div>
+      </div>
+    </>
+  );
+};
 export const LoadingSidebar: React.FC = () => {
   return (
     <div className="w-full md:w-64 shrink-0 md:block bg-white md:bg-transparent px-6 md:px-0">
