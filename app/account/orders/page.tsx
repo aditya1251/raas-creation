@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { orderApi } from "@/lib/api/orders";
+import { useRouter } from "next/navigation";
 
 export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState("1");
@@ -11,6 +12,7 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
+  const router = useRouter();
   // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -25,32 +27,31 @@ export default function OrdersPage() {
   // Fetch orders with React Query
   const { data, isLoading } = useQuery({
     queryKey: ["Orders"],
-    queryFn: () =>
-      orderApi.getOrders(currentPage, itemsPerPage, debouncedSearchTerm),
+    queryFn: async () =>
+    {
+      const response = await orderApi.getOrders(currentPage, itemsPerPage, searchTerm);
+      return response;
+    },
   });
 
   console.log(data);
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage("1"); // Reset to first page on new search
-  };
+
 
   // Pagination controls
   const handlePreviousPage = () => {
-    if (data?.pagination.currentPage > 1) {
+    if (data?.pagination?.currentPage && data.pagination.currentPage > 1) {
       setCurrentPage(String(data.pagination.currentPage - 1));
     }
   };
 
   const handleNextPage = () => {
-    if (data?.pagination.currentPage < data?.pagination.totalPages) {
+    if (data?.pagination?.currentPage && data?.pagination?.totalPages && data.pagination.currentPage < data.pagination.totalPages) {
       setCurrentPage(String(data.pagination.currentPage + 1));
     }
   };
 
   // Function to determine status style based on order status
-  const getStatusStyle = (status) => {
+  const getStatusStyle = (status : string | undefined) => {
     switch (status?.toLowerCase()) {
       case "delivered":
         return "bg-green-100 text-green-800";
@@ -93,10 +94,10 @@ export default function OrdersPage() {
                 <div className="w-20 h-24 relative">
                   <Image
                     src={
-                      order.productImage ||
+                      order.items[0].productImage ||
                       "/placeholder.svg?height=96&width=80"
                     }
-                    alt={order.productName || "Product Image"}
+                    alt={order.items[0].productName || "Product Image"}
                     fill
                     className="object-cover"
                   />
@@ -104,32 +105,32 @@ export default function OrdersPage() {
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-medium">{order.productName}</h3>
+                      <h3 className="font-medium">{order.items[0].productName}</h3>
                       <p className="text-sm text-gray-600 mt-1">
-                        Size: {order.size}
+                        Size: {order.items[0].size}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Qty: {order.quantity}
+                        Qty: {order.items[0].quantity}
                       </p>
                       <div className="mt-2">
                         <span
                           className={`inline-block px-3 py-1 ${getStatusStyle(
-                            order.status
+                            order.fulfillment
                           )} text-xs rounded-full`}
                         >
-                          {order.status}
+                          {order.fulfillment}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-2">
-                        {order.statusMessage ||
-                          `Your product has been ${order.status}`}
-                      </p>
+                     
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">₹{order.price}</p>
+                      <p className="font-medium">₹{order.total.toFixed(2)}</p>
                       <div className="mt-4 space-y-2">
                         <Button
                           variant="outline"
+                          onClick={() => {
+                            router.push(`/account/orders/${order.id}`);
+                          }}
                           className="w-full border-gray-300 hover:bg-gray-50"
                         >
                           View Order
