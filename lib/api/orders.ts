@@ -24,6 +24,10 @@ export interface Order {
   fulfillment: string;
   createdAt?: string;
   updatedAt?: string;
+  isDiscount: boolean;
+  discount?: number;
+  discountCode?: string;
+  razorpayOrderId?: string;
 }
 
 export const orderApi = {

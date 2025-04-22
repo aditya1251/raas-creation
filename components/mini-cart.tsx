@@ -12,6 +12,7 @@ export type CartItem = {
   price: number
   originalPrice?: number
   quantity: number
+  productVariantId: string
   color: string
   size: string
   image: string
