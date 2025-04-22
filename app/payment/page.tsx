@@ -28,16 +28,17 @@ export default function PaymentPage() {
   const [codLimit, setCodLimit] = useState(100000000);
   const createOrderMutation = useMutation({
     mutationFn: (orderData: Order) => orderApi.createOrder(orderData),
-    onSuccess: async (data) => {
+    onSuccess:(data) => {
+      clearCart();
       toast.success("Order placed successfully!");
       clearCart();
-      localStorage.setItem("lastOrderId", data.id || "");
+      localStorage.setItem("lastOrderId", data.id ?? "");
+      if(discountCode !== ""){
+        localStorage.removeItem("discountCode");
+      }
+      localStorage.removeItem("selectedAddressId");
       router.push("/order-confirmation");
-    },
-    onError: (error) => {
-      console.error("Error creating order:", error);
-      toast.error("Error placing order. Please try again.");
-    },
+    }
   });
 
   const { data: user } = useQuery({
@@ -133,7 +134,7 @@ export default function PaymentPage() {
     } else if (paymentMethod === "upi") {
       await processPayment();
     } else {
-         const orderItems: OrderItems[] = cartItems.map((item) => ({
+      const orderItems: OrderItems[] = cartItems.map((item) => ({
         productId: item.id,
         quantity: item.quantity,
         priceAtOrder: item.price,
@@ -143,7 +144,7 @@ export default function PaymentPage() {
         productName: item.name,
         size: item.size,
       }));
-        const orderData: Order = {
+      const orderData: Order = {
         userId: user.id || "",
         items: orderItems,
         total: grandTotal,
@@ -215,32 +216,29 @@ export default function PaymentPage() {
           const res = await result.json();
           if (res.isOk) {
             toast.success("Payment successful");
-            createOrderMutation.mutate(
-              {
-                userId: user.id,
-                addressId: addressId,
-                total: subtotal,
-                items: cartItems.map((item) => ({
-                  productId: item.id,
-                  quantity: item.quantity,
-                  priceAtOrder: item.price,
-                  productVariantId: item.productVariantId,
-                  color: item.color,
-                  productImage: item.image || "",
-                  productName: item.name,
-                  size: item.size,
-                })),
-                status: "PENDING",
-                fulfillment: "PENDING",
-                isDiscount: discountCode !== "",
-                discount: discount,
-                discountCode: discountCode,
-                paid: true,
-                razorpayOrderId: orderId
-              }
-            );
-            clearCart();
-            router.push("/order-confirmation");
+             const orderdata = await createOrderMutation.mutate({
+              userId: user.id,
+              addressId: addressId,
+              total: subtotal,
+              items: cartItems.map((item) => ({
+                productId: item.id,
+                quantity: item.quantity,
+                priceAtOrder: item.price,
+                productVariantId: item.productVariantId,
+                color: item.color,
+                productImage: item.image || "",
+                productName: item.name,
+                size: item.size,
+              })),
+              status: "PENDING",
+              fulfillment: "PENDING",
+              isDiscount: discountCode !== "",
+              discount: discount,
+              discountCode: discountCode,
+              paid: true,
+              razorpayOrderId: orderId,
+            });
+            
           } else {
             toast.error("Payment failed");
           }
