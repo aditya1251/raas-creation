@@ -31,6 +31,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
   const { addToCart } = useCart();
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedSizeId, setSelectedSizeId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("descriptions");
   const [reviewRating, setReviewRating] = useState(0);
@@ -40,7 +41,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [product, setProduct] = useState<Products | null>(null);
   const [availableSizes, setAvailableSizes] = useState<
-    { size: string; stock: number; available: boolean }[]
+    { id: string; size: string; stock: number; available: boolean }[]
   >([]);
 
   const decreaseQuantity = () => {
@@ -66,6 +67,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
       color: selectedColor,
       size: selectedSize,
       image: product?.assets[0].asset_url,
+      productVariantId: selectedSizeId,
     });
     toast({
       title: "Added to cart",
@@ -85,8 +87,9 @@ export default function ProductDetails({ slug }: { slug: string }) {
         // Reset selected size or select first available size
         if (color.sizes.length > 0) {
           const firstAvailableSize =
-            color.sizes.find((s) => s.stock > 0)?.size || color.sizes[0].size;
-          setSelectedSize(firstAvailableSize);
+            color.sizes.find((s) => s.stock > 0) || color.sizes[0];
+          setSelectedSize(firstAvailableSize.size);
+          setSelectedSizeId(firstAvailableSize.id);
         } else {
           setSelectedSize("");
         }
@@ -195,9 +198,10 @@ export default function ProductDetails({ slug }: { slug: string }) {
           setAvailableSizes(data.colors[0].sizes);
           // Select first available size
           const firstAvailableSize =
-            data.colors[0].sizes.find((s) => s.stock > 0)?.size ||
-            data.colors[0].sizes[0].size;
-          setSelectedSize(firstAvailableSize);
+            data.colors[0].sizes.find((s) => s.stock > 0) ||
+            data.colors[0].sizes[0];
+          setSelectedSize(firstAvailableSize.size);
+          setSelectedSizeId(firstAvailableSize.id);
         }
       }
     }
@@ -349,7 +353,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                           : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
                       }`}
                       onClick={() =>
-                        isAvailable && setSelectedSize(sizeObj.size)
+                        isAvailable && setSelectedSize(sizeObj.size) && setSelectedSizeId(sizeObj.id)
                       }
                       disabled={!isAvailable}
                     >

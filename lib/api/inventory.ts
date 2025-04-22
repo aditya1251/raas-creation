@@ -54,14 +54,14 @@ const addNewSize = async (colorId: string, sizes: Array<{ size: string; stock: n
   return response.data.variants;
 };
 
-const addNewColor = async (productId: string, newColorData: {name : string,imageUrl:string, sizes: Array<{ size: string; stock: number }>}): Promise<Varient[]> => {
+const addNewColor = async (productId: string, newColorData: {name : string,imageUrl:string[], sizes: Array<{ size: string; stock: number }>}): Promise<Varient[]> => {
   const response = await apiClient.post(`/api/products/color`, {
     productId,
     color: newColorData.name,
-    assets : [{
+    assets : newColorData.imageUrl.map((data) => ({
       type : "IMAGE",
-      url : newColorData.imageUrl
-    }],
+      url : data
+    })),
     sizes : newColorData.sizes
   });
   return response.data.productColor;

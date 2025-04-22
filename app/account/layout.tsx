@@ -16,7 +16,7 @@ export default function AccountLayout({
 }) {
   const pathname = usePathname();
   const { data, isLoading } = useQuery({
-    queryKey: [],
+    queryKey: ["user"],
     queryFn: async () => {
       const res = await customerApi.getCustomer();
       return res;

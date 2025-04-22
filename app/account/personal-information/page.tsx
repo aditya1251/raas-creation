@@ -7,18 +7,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customerApi } from "@/lib/api/customer";
 import toast from "react-hot-toast";
 import { ProfileSkeleton } from "@/components/ui/loader";
+import UploadPopup from "@/components/UploadPopup";
 
 export default function PersonalInformationPage() {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     mobileNo: "",
     email: "",
-    profileImage: null,
+    profileImage: "",
   });
-  const [previewImage, setPreviewImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
   const { data, isLoading } = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
@@ -26,24 +28,30 @@ export default function PersonalInformationPage() {
       return res;
     },
   });
+  
   useEffect(() => {
-    setFormData({
-      firstName: data?.name?.split(" ")[0] || "",
-      lastName: data?.name?.split(" ")[1] || "",
-      mobileNo: data?.mobile_no || "",
-      email: data?.email || "",
-      profileImage: null,
-    });
-  }, [isLoading]);
+    if (data) {
+      setFormData({
+        firstName: data?.name?.split(" ")[0] || "",
+        lastName: data?.name?.split(" ")[1] || "",
+        mobileNo: data?.mobile_no || "",
+        email: data?.email || "",
+        profileImage: data?.image || "",
+      });
+      
+      if (data?.image) {
+        setPreviewImage(data.image);
+      }
+    }
+  }, [data, isLoading]);
 
   const updateCustomerMutation = useMutation({
-    mutationFn: async (updatedData) => {
-      return await customerApi.updateCustomer(data.id,updatedData);
+    mutationFn: async (updatedData : any) => {
+      return await customerApi.updateCustomer(data.id, updatedData);
     },
     onSuccess: () => {
-      // Invalidate and refetch the user data
       toast.success("Profile updated successfully!");
-      queryClient.invalidateQueries(["user"]);
+      queryClient.invalidateQueries({ queryKey: ["user"] });
       setIsEditing(false);
     },
   });
@@ -53,10 +61,9 @@ export default function PersonalInformationPage() {
       // Save the changes
       const updatedData = {
         name: `${formData.firstName} ${formData.lastName}`,
-        mobile_no: formData.mobileNo,
+        mobile_no: data.mobile_no,
         email: formData.email,
-        // If you have an API endpoint to upload profile image, handle it here
-        // profile_image: formData.profileImage
+        profile_image: formData.profileImage || data?.image,
       };
 
       updateCustomerMutation.mutate(updatedData);
@@ -66,23 +73,20 @@ export default function PersonalInformationPage() {
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: { target: { name: any; value: any; }; }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFormData((prev) => ({ ...prev, profileImage: file }));
+  const handleImageUploadSuccess = (imageUrl: string) => {
+    setFormData((prev) => ({ ...prev, profileImage: imageUrl }));
+    setPreviewImage(imageUrl);
+    setShowUploadPopup(false);
+    queryClient.invalidateQueries({ queryKey: ["user"] });
+  };
 
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setPreviewImage(event.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleImageClick = () => {
+      setShowUploadPopup(true);
   };
 
   if (isLoading) {
@@ -93,7 +97,10 @@ export default function PersonalInformationPage() {
     <>
       <div className="flex justify-between items-start mb-8">
         <div className="relative">
-          <div className="w-24 h-24 rounded-full overflow-hidden">
+          <div 
+            className="w-24 h-24 rounded-full overflow-hidden cursor-pointer"
+            onClick={handleImageClick}
+          >
             <Image
               src={previewImage || "/placeholder.svg?height=96&width=96"}
               alt="Profile Picture"
@@ -102,30 +109,20 @@ export default function PersonalInformationPage() {
               className="object-cover"
             />
           </div>
-          {isEditing && (
-            <label className="absolute bottom-0 right-0 bg-[#a08452] text-white p-1 rounded-full cursor-pointer">
-              <Camera className="h-4 w-4" />
-              <input
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-            </label>
-          )}
-          {!isEditing && (
-            <div className="absolute bottom-0 right-0 bg-[#a08452] text-white p-1 rounded-full">
-              <PenSquare className="h-4 w-4" />
+            <div 
+              className="absolute bottom-0 right-0 bg-[#a08452] text-white p-1 rounded-full cursor-pointer"
+              onClick={handleImageClick}
+            >
+             <PenSquare className="h-4 w-4" />
             </div>
-          )}
         </div>
 
         <Button
           className="bg-[#a08452] hover:bg-[#8c703d] text-white"
           onClick={handleEditProfile}
-          disabled={updateCustomerMutation.isLoading}
+          disabled={updateCustomerMutation.isPending}
         >
-          {updateCustomerMutation.isLoading
+          {updateCustomerMutation.isPending
             ? "Saving..."
             : isEditing
             ? "Save Profile"
@@ -172,12 +169,10 @@ export default function PersonalInformationPage() {
           <input
             type="tel"
             name="mobileNo"
-            value={formData.mobileNo}
+            value={formData.mobileNo.substring(2,12)}
             onChange={handleInputChange}
-            readOnly={!isEditing}
-            className={`w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452] ${
-              isEditing ? "bg-white" : "bg-gray-50"
-            }`}
+            readOnly={true}
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452] bg-gray-50"
           />
         </div>
 
@@ -197,6 +192,14 @@ export default function PersonalInformationPage() {
           />
         </div>
       </div>
+
+      {/* Upload Popup */}
+      {showUploadPopup && (
+        <UploadPopup 
+          onSuccess={handleImageUploadSuccess} 
+          onClose={() => setShowUploadPopup(false)} 
+        />
+      )}
     </>
   );
 }

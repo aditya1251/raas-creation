@@ -567,6 +567,9 @@ function ProductCard({
         product.colors[0]?.sizes?.length > 0
           ? product.colors[0].sizes[0].size
           : "SIZE_DEFAULT",
+      productVariantId: product.colors[0]?.sizes?.length > 0
+      ? product.colors[0].sizes[0].id
+      : "ID_NOT_FOUND",
       image:
         product.assets && product.assets.length > 0
           ? product.assets[0].asset_url

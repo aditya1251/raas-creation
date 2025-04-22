@@ -24,6 +24,26 @@ export interface Order {
   fulfillment: string;
   createdAt?: string;
   updatedAt?: string;
+  isDiscount: boolean;
+  discount?: number;
+  discountCode?: string;
+  razorpayOrderId?: string;
+  address?: {
+    id: string;
+    firstName: string;
+    lastName?: string;
+    addressName: string;
+    phoneNumber: string;
+    street: string;
+    aptNumber?: string;
+    city: string;
+    state: string;
+    country: string;
+    zipCode: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+  }
 }
 
 export const orderApi = {

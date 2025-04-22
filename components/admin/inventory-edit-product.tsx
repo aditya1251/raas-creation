@@ -6,7 +6,7 @@ import Link from "next/link";
 import { productApi } from "@/lib/api/productdetails";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Products } from "./products-table";
-import UploadPopup from "../UploadPopup";
+import MultiUploadPopup from "../MultiUploadPopup";
 import { inventoryApi } from "@/lib/api/inventory";
 import Image from "next/image";
 
@@ -34,11 +34,11 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
   const [stockUpdates, setStockUpdates] = useState<Record<string, number>>({});
   const [successMessage, setSuccessMessage] = useState("");
   const [showAddColorForm, setShowAddColorForm] = useState(false);
-  const [newColor, setNewColor] = useState({ name: "", imageUrl: "" });
+  const [newColor, setNewColor] = useState<{ name: string; imageUrl: string[] }>({ name: "", imageUrl: [] });
   const [newColors, setNewColors] = useState<
     Array<{
       name: string;
-      imageUrl: string;
+      imageUrl: string[];
       sizes: Array<{ size: string; stock: number }>;
     }>
   >([]);
@@ -89,7 +89,7 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
     }
 
     setNewColors([...newColors, { ...newColor, sizes: [] }]);
-    setNewColor({ name: "", imageUrl: "" });
+    setNewColor({ name: "", imageUrl: [] });
     setShowAddColorForm(false);
   };
 
@@ -148,7 +148,7 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
     }
   };
 
-  const handleImageUpload = (imageUrl: string) => {
+  const handleImageUpload = (imageUrl: string[]) => {
     // In a real implementation, this would open a file picker and upload the image
     setNewColor({ ...newColor, imageUrl });
     setUpload(false);
@@ -194,7 +194,7 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
     mutationFn: async (
       newColors: Array<{
         name: string;
-        imageUrl: string;
+        imageUrl: string[];
         sizes: Array<{ size: string; stock: number }>;
       }>
     ) => {
@@ -395,16 +395,19 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                   Color Image
                 </label>
                 <div className="flex items-center gap-3 sm:gap-4">
-                  {newColor.imageUrl !== "" ? (
+                  {newColor.imageUrl.length !== 0 ? (
+                    newColor.imageUrl.map((imageUrl) => (
                     <div className="relative w-10 h-10 sm:w-12 sm:h-12 border border-gray-200 rounded-md overflow-hidden flex-shrink-0">
                       <Image
                         width={100}
                         height={100}
-                        src={newColor.imageUrl || "/logo.svg"}
+                        src={imageUrl || "/logo.svg"}
                         alt="Color"
                         className="w-full h-full object-cover"
                       />
                     </div>
+                    )
+                  )
                   ) : null}
 
                   <button
@@ -445,17 +448,20 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                   className="border border-gray-200 rounded-lg overflow-hidden">
                   <div className="bg-gray-50 p-3 sm:p-4 border-b border-gray-200 flex justify-between items-center">
                     <div className="flex items-center gap-2 sm:gap-3">
-                      {newColorData.imageUrl !== "" ? (
-                        <div className="w-8 h-8 sm:w-12 sm:h-12 overflow-hidden flex-shrink-0">
-                          <Image
-                            width={100}
-                            height={100}
-                            src={newColorData.imageUrl}
-                            alt="Color"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : null}
+                    {newColor.imageUrl.length !== 0 ? (
+                    newColor.imageUrl.map((imageUrl) => (
+                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 border border-gray-200 rounded-md overflow-hidden flex-shrink-0">
+                      <Image
+                        width={100}
+                        height={100}
+                        src={imageUrl || "/logo.svg"}
+                        alt="Color"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    )
+                  )
+                  ) : null}
                       <div>
                         <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                           {newColorData.name}
@@ -815,7 +821,7 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
         </div>
       </div>
       {Uploadz && (
-        <UploadPopup
+        <MultiUploadPopup
           onSuccess={handleImageUpload}
           onClose={() => setUpload(false)}
         />

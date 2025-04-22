@@ -133,7 +133,7 @@ function ProductCard({
   product: any;
   wishlistProducts: any[];
 }) {
-  const { addToCart } = useCart();
+  // const { addToCart } = useCart();
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
@@ -185,23 +185,26 @@ function ProductCard({
     }
   };
 
-  const handleAddToCart = () => {
-    const cartItem = {
-      id: product.id,
-      name: product.name,
-      price: product.discountPrice || product.price,
-      originalPrice: product.price,
-      quantity: 1,
-      color: product.colors.length > 0 ? product.colors[0].color : "",
-      size:
-        product.colors[0]?.sizes?.length > 0
-          ? product.colors[0].sizes[0].size
-          : "SIZE_DEFAULT",
-      image: product.img,
-    };
-    addToCart(cartItem);
-    toast.success(`${product.name} has been added to your cart.`);
-  };
+  // const handleAddToCart = () => {
+  //   const cartItem = {
+  //     id: product.id,
+  //     name: product.name,
+  //     price: product.discountPrice || product.price,
+  //     originalPrice: product.price,
+  //     quantity: 1,
+  //     color: product.colors.length > 0 ? product.colors[0].color : "",
+  //     size:
+  //       product.colors[0]?.sizes?.length > 0
+  //         ? product.colors[0].sizes[0].size
+  //         : "SIZE_DEFAULT",
+  //     image: product.img,
+  //     productVariantId: product.colors[0]?.sizes?.length > 0
+  //     ? product.colors[0].sizes[0].id
+  //     : "SIZE_DEFAULT",
+  //   };
+  //   addToCart(cartItem);
+  //   toast.success(`${product.name} has been added to your cart.`);
+  // };
 
   return (
     <div className="group relative">

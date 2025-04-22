@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useDropzone } from "react-dropzone";
 import { Upload, X, Trash2, ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { apiClient } from "@/lib/axiosClient";
 
 interface FileWithPreview extends File {
   preview: string;
@@ -55,8 +56,8 @@ export default function MediaManager({
     if (loadingMore) return;
     setLoadingMore(true);
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/upload/previous`,
+      const res = await apiClient.get(
+        `/api/upload/previous`,
         {
           params: { limit: 20, cursor: initial ? null : cursor },
         }
@@ -105,8 +106,8 @@ export default function MediaManager({
     files.forEach((file) => formData.append("files", file));
 
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/upload/multiple`,
+      const res = await apiClient.post(
+        `/api/upload/multiple`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

@@ -23,22 +23,22 @@ export default function PaymentPage() {
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
   const [discountCode, setDiscountCode] = useState("");
-  const [addressId, setAddressId] = useState<string | null>(null);
+  const [addressId, setAddressId] = useState<string>("");
   const { cartItems, clearCart } = useCart();
   const [codLimit, setCodLimit] = useState(100000000);
   const createOrderMutation = useMutation({
     mutationFn: (orderData: Order) => orderApi.createOrder(orderData),
-    onSuccess: async (data) => {
-      await processPayment();
+    onSuccess:(data) => {
       clearCart();
-      console.log(data);
-      localStorage.setItem("lastOrderId", data.id || "");
+      toast.success("Order placed successfully!");
+      clearCart();
+      localStorage.setItem("lastOrderId", data.id ?? "");
+      if(discountCode !== ""){
+        localStorage.removeItem("discountCode");
+      }
+      localStorage.removeItem("selectedAddressId");
       router.push("/order-confirmation");
-    },
-    onError: (error) => {
-      console.error("Error creating order:", error);
-      alert("There was a problem processing your order. Please try again.");
-    },
+    }
   });
 
   const { data: user } = useQuery({
@@ -82,6 +82,7 @@ export default function PaymentPage() {
     if (storedCode && cartItems.length > 0) {
       // Use local copy of subtotal to avoid stale discount calculations
       const currentSubtotal = subtotal;
+      setDiscountCode(storedCode);
 
       discountApi
         .getByCode(storedCode)
@@ -125,29 +126,38 @@ export default function PaymentPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Convert cart items to the OrderItems format required by the API
-    await processPayment();
 
-    // const orderItems: OrderItems[] = cartItems.map((item) => ({
-    //   productId: item.id,
-    //   quantity: item.quantity,
-    //   priceAtOrder: item.price,
-    //   productVariantId: `${item.id}_${item.color}_${item.size}`,
-    //   color: item.color,
-    //   productImage: item.image || "",
-    //   productName: item.name,
-    //   size: item.size,
-    // }));
-    // const orderData: Order = {
-    //   userId: "yashsingh9651",
-    //   items: orderItems,
-    //   total: grandTotal,
-    //   addressId: addressId || "adress123839df56",
-    //   paid: paymentMethod !== "cod",
-    //   status: "pending", // Assuming initial status is pending
-    //   fulfillment: "pending", // Assuming initial status is pending
-    // };
-    // createOrderMutation.mutate(orderData);
+    // await processPayment();
+
+    if (paymentMethod === "card") {
+      await processPayment();
+    } else if (paymentMethod === "upi") {
+      await processPayment();
+    } else {
+      const orderItems: OrderItems[] = cartItems.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        priceAtOrder: item.price,
+        productVariantId: item.productVariantId,
+        color: item.color,
+        productImage: item.image || "",
+        productName: item.name,
+        size: item.size,
+      }));
+      const orderData: Order = {
+        userId: user.id || "",
+        items: orderItems,
+        total: grandTotal,
+        addressId: addressId || "adress123839df56",
+        paid: false,
+        status: "PENDING",
+        fulfillment: "PENDING",
+        isDiscount: discountCode !== "",
+        discount: discount,
+        discountCode: discountCode,
+      };
+      createOrderMutation.mutate(orderData);
+    }
   };
 
   const createOrderId = async () => {
@@ -176,8 +186,9 @@ export default function PaymentPage() {
   const processPayment = async () => {
     try {
       const orderId: string = await createOrderId();
+      console.log(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
       const options = {
-        key: process.env.RAZORPAY_KEY_ID,
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: grandTotal * 100,
         currency: "INR",
         name: "Raas - The Creation",
@@ -204,44 +215,37 @@ export default function PaymentPage() {
           });
           const res = await result.json();
           if (res.isOk) {
-            // orderMutaion.mutate(
-            //   {
-            //     userId: session?.user?.id as string,
-            //     addressId: selectedAddress,
-            //     total: subtotal,
-            //     items: cart.map((item) => ({
-            //       productId: item.productId,
-            //       color: item.color,
-            //       productName: item.name,
-            //       size: item.size,
-            //       productVariantId: item.productVariantId as string,
-            //       quantity: item.quantity,
-            //       priceAtOrder: item.price,
-            //       productImage: item.image,
-            //     })),
-            //     status: "PENDING",
-            //   },
-            //   {
-            //     onSuccess: async (data) => {
-            //       const orderId = data?.id;
-            //       // 🔥 Shiprocket Order
-            //       await createShiprocketOrder(orderId as string);
-            //       router.push("/profile");
-            //     },
-            //     onError: (error) => {
-            //       console.error("Error creating order:", error);
-            //     },
-            //   }
-            // );
+            toast.success("Payment successful");
+             const orderdata = await createOrderMutation.mutate({
+              userId: user.id,
+              addressId: addressId,
+              total: subtotal,
+              items: cartItems.map((item) => ({
+                productId: item.id,
+                quantity: item.quantity,
+                priceAtOrder: item.price,
+                productVariantId: item.productVariantId,
+                color: item.color,
+                productImage: item.image || "",
+                productName: item.name,
+                size: item.size,
+              })),
+              status: "PENDING",
+              fulfillment: "PENDING",
+              isDiscount: discountCode !== "",
+              discount: discount,
+              discountCode: discountCode,
+              paid: true,
+              razorpayOrderId: orderId,
+            });
+            
           } else {
-            // setIsPaymentProcessing(false);
-            // setIsPaymentFailed(true);
-            // setPaymentErrorMessage(res.message);
+            toast.error("Payment failed");
           }
         },
         prefill: {
           name: user?.name,
-          contact: user?.mobile_no.substring(3, 12),
+          contact: user?.mobile_no.substring(2, 12),
         },
         theme: {
           color: "#3399cc",
@@ -251,13 +255,12 @@ export default function PaymentPage() {
       paymentObject.on(
         "payment.failed",
         function (response: { error: { description: string } }) {
-          // setIsPaymentProcessing(false);
-          // setIsPaymentFailed(true);
-          // setPaymentErrorMessage(response.error.description);
+          toast.error("Payment failed");
         }
       );
       paymentObject.open();
     } catch (error) {
+      toast.error("Payment failed");
       console.log(error);
     }
   };
