@@ -215,12 +215,12 @@ export default function ProductDetails({ slug }: { slug: string }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
           {/* Product Images */}
           <div>
-            <div className="mb-4 aspect-[1] relative">
+            <div className="mb-4 aspect-square relative">
               <Image
                 src={product?.assets[0].asset_url || "/placeholder.svg"}
                 alt={product?.name || "image"}
                 fill
-                className="object-cover rounded-md w-full h-full"
+                className="object-cover object-top rounded-md w-full h-full"
               />
             </div>
             <div className="grid grid-cols-4 gap-2">
