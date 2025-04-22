@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -13,9 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
+import { useParams } from "next/navigation";
 
 export default function OrderDetailsPage() {
   // In a real app, you would fetch order details based on the ID
+
+  const orderId = useParams().id;
   const orderDetails = {
     id: "ORD-2023-1234",
     date: "March 15, 2024",

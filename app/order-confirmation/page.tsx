@@ -12,8 +12,15 @@ import { useEffect, useState } from "react"
 
 export default function OrderConfirmationPage() {
 
-  const lastOrderId = localStorage.getItem("lastOrderId");
+  const [lastOrderId, setLastOrderId] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const lastOrderId = localStorage.getItem("lastOrderId");
+    if (lastOrderId) {
+      setLastOrderId(lastOrderId);
+    }
+  }, []);
 
   const [order, setOrder] = useState<Order | null>(null);
   if (!lastOrderId) {

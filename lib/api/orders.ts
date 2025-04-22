@@ -50,7 +50,7 @@ export const orderApi = {
   getOrders: async (
     currentPage: string,
     itemsPerPage: string,
-    debouncedSearchTerm: string
+    debouncedSearchTerm?: string
   ): Promise<{
     success: boolean;
     orders: Order[];
@@ -65,7 +65,7 @@ export const orderApi = {
       params: {
         page: currentPage,
         limit: itemsPerPage,
-        search: debouncedSearchTerm,
+        search: debouncedSearchTerm??"",
       },
     });
     return response.data;
