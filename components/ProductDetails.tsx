@@ -24,6 +24,7 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { productApi } from "@/lib/api/productdetails";
 import { Products } from "./admin/products-table";
+import { productReviewApi } from "@/lib/api/productreview";
 
 export default function ProductDetails({ slug }: { slug: string }) {
   const { toast } = useToast();
@@ -36,6 +37,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
   const [reviewName, setReviewName] = useState("");
   const [reviewEmail, setReviewEmail] = useState("");
   const [reviewText, setReviewText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [product, setProduct] = useState<Products | null>(null);
   const [availableSizes, setAvailableSizes] = useState<
     { size: string; stock: number; available: boolean }[]
@@ -51,22 +53,12 @@ export default function ProductDetails({ slug }: { slug: string }) {
     setQuantity(quantity + 1);
   };
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle review submission
-    console.log({ reviewRating, reviewName, reviewEmail, reviewText });
-    setReviewRating(0);
-    setReviewName("");
-    setReviewEmail("");
-    setReviewText("");
-  };
-
   const handleAddToCart = () => {
     if (!product) {
       return;
     }
     addToCart({
-      id : product.id,
+      id: product.id,
       name: product.name,
       price: product.discountPrice ?? product.price,
       originalPrice: product.price,
@@ -101,33 +93,30 @@ export default function ProductDetails({ slug }: { slug: string }) {
       }
     }
   };
-
-  // Mock customer reviews
-  const customerReviews = [
-    {
-      id: 1,
-      name: "Sakhi Sharma",
-      avatar: "/placeholder.svg?height=50&width=50",
-      rating: 5,
-      date: "May 29, 2024",
-      verified: true,
-      text: "Love this product, the fabric is soft & good ❤️❤️",
-      details:
-        "I love this product! The fabric is soft, high-quality, and extremely comfortable. The craftsmanship is impressive, making it both durable and stylish. Highly recommended!",
+  // Fetching Product Details
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["product", slug],
+    queryFn: async () => {
+      try {
+        const res = await productApi.getBySlug(slug);
+        return res;
+      } catch (err) {
+        throw new Error("Failed to fetch product");
+      }
     },
-    {
-      id: 2,
-      name: "Tanya Kapoor",
-      avatar: "/placeholder.svg?height=50&width=50",
-      rating: 5,
-      date: "May 29, 2024",
-      verified: true,
-      text: "Love this product, the fabric is soft & good ❤️❤️",
-      details:
-        "I love this product! The fabric is soft, high-quality, and extremely comfortable. The craftsmanship is impressive, making it both durable and stylish. Highly recommended!",
+  });
+  // Fetching Product Reviews
+  const { data: customerReviews, isLoading: loadingReview } = useQuery({
+    queryKey: ["productReview", data?.id],
+    queryFn: async () => {
+      try {
+        const res = await productReviewApi.getById(data?.id);
+        return res.reviews;
+      } catch (err) {
+        throw new Error("Failed to fetch product reviews");
+      }
     },
-  ];
-
+  });
   const relatedProducts = [
     {
       id: "1",
@@ -155,17 +144,44 @@ export default function ProductDetails({ slug }: { slug: string }) {
     },
   ];
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["product", slug],
-    queryFn: async () => {
-      try {
-        const res = await productApi.getBySlug(slug);
-        return res;
-      } catch (err) {
-        throw new Error("Failed to fetch product");
-      }
-    },
-  });
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    // Validate form
+    if (reviewRating === 0) {
+      toast({
+        title: "Error",
+        description: "Please select a rating.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      const reviewData = {
+        title: reviewName,
+        rating: reviewRating,
+        description: reviewText,
+      };
+      await productReviewApi.create(data.id, reviewData);
+      toast({
+        title: "Success",
+        description: "Review submitted successfully.",
+      });
+      setReviewRating(0);
+      setReviewName("");
+      setReviewEmail("");
+      setReviewText("");
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit review. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (data) {
@@ -186,6 +202,12 @@ export default function ProductDetails({ slug }: { slug: string }) {
       }
     }
   }, [data]);
+  // Split by lines that start with asterisk and process each line
+  const mainDesc = data?.description.split("\n\nSpecifications\n\n*")[0];
+  const specLines = data?.description
+    .split("\n\nSpecifications\n\n*")[1]
+    .split(/\n\*/)
+    .map((line) => line.trim());
 
   if (error) {
     return <div>Error loading product</div>;
@@ -280,7 +302,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
               </span>
             </div>
             {/* Description */}
-            <p className="text-gray-700 mb-6">{product?.description}</p>
+            <p className="text-gray-700 mb-6">{mainDesc}</p>
             {/* Stock Status */}
             <div className="mb-6">
               <span className="inline-block px-4 py-1.5 border rounded-md border-green-500 text-green-700 text-sm font-medium">
@@ -421,21 +443,14 @@ export default function ProductDetails({ slug }: { slug: string }) {
 
             <TabsContent value="descriptions" className="mt-0">
               <div className="prose max-w-none">
-                <p>
-                  Discover our mid cotton anarkali set with pillan work yok
-                  paired with pant and back print dupatta. This outfit exudes a
-                  charming and delicate appeal, making it perfect for festive
-                  event, pooja, light gathering, day to day life.
-                </p>
+                <p>{mainDesc}</p>
                 <p>
                   <strong>Features:</strong>
                 </p>
                 <ul>
-                  <li>Premium quality cotton fabric</li>
-                  <li>Intricate embroidery work</li>
-                  <li>Comfortable fit for all-day wear</li>
-                  <li>Includes kurta, pants, and dupatta</li>
-                  <li>Perfect for festive occasions</li>
+                  {specLines?.map((line, index) => (
+                    <li key={index}>{line}</li>
+                  ))}
                 </ul>
               </div>
             </TabsContent>
@@ -452,7 +467,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                       >
                         <div
                           className="w-4 h-4 rounded-sm border border-gray-300"
-                          style={{ backgroundColor: `${color.color}` }} // Fixed to use the correct color
+                          style={{ backgroundColor: `${color.color}` }}
                         ></div>
                       </div>
                     ))}
@@ -475,13 +490,13 @@ export default function ProductDetails({ slug }: { slug: string }) {
 
                 {/* Customer Reviews List */}
                 <div className="space-y-8 mb-12">
-                  {customerReviews.map((review) => (
+                  {customerReviews?.map((review) => (
                     <div key={review.id} className="border-b pb-8">
                       <div className="flex items-start">
                         <div className="mr-4">
                           <div className="w-12 h-12 rounded-full overflow-hidden">
                             <Image
-                              src={review.avatar || "/placeholder.svg"}
+                              src={review.image || "/placeholder.svg"}
                               alt={review.name}
                               width={48}
                               height={48}
@@ -490,7 +505,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                           </div>
                         </div>
                         <div>
-                          <h3 className="font-medium">{review.name}</h3>
+                          <h3 className="font-medium">{review.title}</h3>
                           <div className="flex my-1">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <svg
@@ -503,14 +518,15 @@ export default function ProductDetails({ slug }: { slug: string }) {
                               </svg>
                             ))}
                           </div>
-                          <p className="font-medium mb-2">{review.text}</p>
+                          <p className="font-medium mb-2">title</p>
+                          {/* <p className="font-medium mb-2">{review.title}</p> */}
                           <p className="text-gray-600 text-sm mb-2">
-                            {review.details}
+                            {review.description}
                           </p>
                           <p className="text-xs text-gray-500">
                             Verified by{" "}
                             <span className="font-medium">Raas</span> (verified
-                            purchase) on {review.date}
+                            purchase) on {review.updatedAt}
                           </p>
                         </div>
                       </div>
@@ -521,7 +537,6 @@ export default function ProductDetails({ slug }: { slug: string }) {
                 {/* Add Review Form */}
                 <div>
                   <h2 className="text-xl font-medium mb-6">Add your Review</h2>
-
                   <form onSubmit={handleReviewSubmit}>
                     <div className="space-y-6">
                       <div>
@@ -604,8 +619,9 @@ export default function ProductDetails({ slug }: { slug: string }) {
                         <Button
                           type="submit"
                           className="bg-[#a08452] hover:bg-[#8c703d] text-white px-8"
+                          disabled={isSubmitting}
                         >
-                          Submit
+                          {isSubmitting ? "Submitting..." : "Submit"}
                         </Button>
                       </div>
                     </div>
