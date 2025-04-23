@@ -40,7 +40,7 @@ export default function BrowseCategorySection() {
   const handleScrollLeft = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({
-        left: -350, // Adjusted for responsiveness
+        left: -window.innerWidth, // Adjusted for responsiveness
         behavior: 'smooth'
       });
     }
@@ -50,7 +50,7 @@ export default function BrowseCategorySection() {
   const handleScrollRight = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({
-        left: 350, // Adjusted for responsiveness
+        left: window.innerWidth, // Adjusted for responsiveness
         behavior: 'smooth'
       });
     }

@@ -174,7 +174,7 @@ export default function Navbar() {
           {/* Icons */}
           <div className="flex items-center space-x-3 sm:space-x-4">
             {/* Search Icon & Dropdown */}
-            <div className="relative" ref={searchRef}>
+            <div className="relative w-full" ref={searchRef}>
               <button
                 aria-label="Search"
                 className="focus:outline-none p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -185,7 +185,7 @@ export default function Navbar() {
 
               {/* Search Dropdown */}
               {isSearchOpen && (
-                <div className="absolute right-0 mt-2 w-96 bg-white border border-gray-200 rounded-md shadow-lg p-3 z-50">
+                <div className="absolute -left-10 transform -translate-x-1/2 md:transform-none md:left-auto md:right-0 mt-2 w-[90vw] max-w-[480px] md:w-96 bg-white border border-gray-200 rounded-md shadow-lg p-3 z-50">
                   <form
                     onSubmit={handleSearchSubmit}
                     className="flex items-center"

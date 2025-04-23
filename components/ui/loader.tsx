@@ -115,6 +115,51 @@ export const LoadingAddress: React.FC = () => {
     </div>
   );
 };
+export const OrderSkeleton: React.FC<{ count: number }> = ({ count = 3 }) => {
+  return (
+    <>
+      {Array(count)
+        .fill(0)
+        .map((_, index) => (
+          <div
+            key={`skeleton-${index}`}
+            className={index !== count - 1 ? "border-b pb-6 mb-6" : "pb-6 mb-6"}
+          >
+            <div className="flex items-center space-x-4">
+              {/* Image skeleton */}
+              <div className="w-20 h-24 relative bg-gray-200 animate-pulse"></div>
+              <div className="flex-1">
+                <div className="flex justify-between items-start">
+                  <div>
+                    {/* Product name skeleton */}
+                    <div className="h-5 bg-gray-200 rounded w-40 mb-2 animate-pulse"></div>
+                    {/* Size skeleton */}
+                    <div className="h-4 bg-gray-200 rounded w-16 mt-1 animate-pulse"></div>
+                    {/* Quantity skeleton */}
+                    <div className="h-4 bg-gray-200 rounded w-12 mt-2 animate-pulse"></div>
+                    {/* Status badge skeleton */}
+                    <div className="mt-2">
+                      <div className="inline-block px-3 py-1 bg-gray-200 h-6 w-24 rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {/* Price skeleton */}
+                    <div className="h-5 bg-gray-200 rounded w-20 ml-auto animate-pulse"></div>
+                    <div className="mt-4 space-y-2">
+                      {/* View Order button skeleton */}
+                      <div className="h-9 bg-gray-200 rounded w-full animate-pulse"></div>
+                      {/* Action button skeleton */}
+                      <div className="h-9 bg-gray-200 rounded w-full animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+    </>
+  );
+};
 export const ProfileSkeleton: React.FC = () => {
   return (
     <>
@@ -159,7 +204,7 @@ export const LoadingSidebar: React.FC = () => {
   return (
     <div className="w-full md:w-64 shrink-0 md:block bg-white md:bg-transparent px-6 md:px-0">
       {/* Product Categories Skeleton */}
-      <div className="mb-6">
+      <div className="mb-6 hidden md:block">
         <div className="flex items-center justify-between mb-3">
           <div className="h-5 bg-gray-200 rounded w-32 animate-pulse"></div>
           <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
@@ -173,9 +218,8 @@ export const LoadingSidebar: React.FC = () => {
           ))}
         </div>
       </div>
-
       {/* Filter By Price Skeleton */}
-      <div className="mb-6">
+      <div className="mb-6 hidden md:block">
         <div className="flex items-center justify-between mb-3">
           <div className="h-5 bg-gray-200 rounded w-28 animate-pulse"></div>
           <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
@@ -189,9 +233,8 @@ export const LoadingSidebar: React.FC = () => {
           </div>
         </div>
       </div>
-
       {/* Filter By Color Skeleton */}
-      <div className="mb-6">
+      <div className="mb-6 hidden md:block">
         <div className="flex items-center justify-between mb-3">
           <div className="h-5 bg-gray-200 rounded w-28 animate-pulse"></div>
           <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
@@ -208,9 +251,8 @@ export const LoadingSidebar: React.FC = () => {
           ))}
         </div>
       </div>
-
       {/* Size Skeleton */}
-      <div className="mb-6">
+      <div className="mb-6 hidden md:block">
         <div className="flex items-center justify-between mb-3">
           <div className="h-5 bg-gray-200 rounded w-12 animate-pulse"></div>
           <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
@@ -224,12 +266,10 @@ export const LoadingSidebar: React.FC = () => {
           ))}
         </div>
       </div>
-
       {/* Clear All Filters Button Skeleton */}
       <div className="mb-6">
         <div className="h-10 bg-gray-200 rounded w-full animate-pulse"></div>
       </div>
-
       {/* Mobile Apply Filters Button Skeleton */}
       <div className="md:hidden my-4">
         <div className="h-10 bg-gray-200 rounded w-full animate-pulse"></div>
@@ -237,7 +277,6 @@ export const LoadingSidebar: React.FC = () => {
     </div>
   );
 };
-
 export const LoadingProductDetails: React.FC = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-pulse">

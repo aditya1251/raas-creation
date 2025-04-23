@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { orderApi } from "@/lib/api/orders";
 import { useRouter } from "next/navigation";
+import { OrderSkeleton } from "@/components/ui/loader";
 
 export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState("1");
@@ -70,9 +71,7 @@ export default function OrdersPage() {
     <>
       {isLoading ? (
         // Loading state
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#a08452]"></div>
-        </div>
+        <OrderSkeleton count={3} />
       ) : data?.orders?.length === 0 ? (
         // No orders state
         <div className="text-center py-16">
@@ -154,7 +153,6 @@ export default function OrdersPage() {
               </div>
             </div>
           ))}
-
           {/* Pagination controls */}
           {data?.pagination && data.pagination.totalPages > 1 && (
             <div className="flex justify-between items-center mt-8">

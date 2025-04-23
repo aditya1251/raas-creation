@@ -28,24 +28,22 @@ export default function PaymentPage() {
   const [codLimit, setCodLimit] = useState(100000000);
   const createOrderMutation = useMutation({
     mutationFn: (orderData: Order) => orderApi.createOrder(orderData),
-    onSuccess:(data) => {
+    onSuccess: (data) => {
       clearCart();
       toast.success("Order placed successfully!");
       clearCart();
       localStorage.setItem("lastOrderId", data.id ?? "");
-      if(discountCode !== ""){
+      if (discountCode !== "") {
         localStorage.removeItem("discountCode");
       }
       localStorage.removeItem("selectedAddressId");
       router.push("/order-confirmation");
-    }
+    },
   });
-
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
   });
-
   useEffect(() => {
     if (cartItems.length === 0) {
       toast.error(
@@ -75,15 +73,12 @@ export default function PaymentPage() {
   const [gstTaxRate, setGstTaxRate] = useState<number | null>(null);
   const gstAmount = gstTaxRate ? (subtotal * gstTaxRate) / 100 : 0;
   const grandTotal = subtotal + deliveryCharges - discount + gstAmount;
-
   useEffect(() => {
     const storedCode = localStorage.getItem("discountCode");
-
     if (storedCode && cartItems.length > 0) {
       // Use local copy of subtotal to avoid stale discount calculations
       const currentSubtotal = subtotal;
       setDiscountCode(storedCode);
-
       discountApi
         .getByCode(storedCode)
         .then((discountData) => {
@@ -104,7 +99,6 @@ export default function PaymentPage() {
         });
     }
   }, [cartItems]);
-
   const { data } = useQuery({
     queryKey: ["tax"],
     queryFn: async () => {
@@ -112,7 +106,6 @@ export default function PaymentPage() {
       return response;
     },
   });
-
   useEffect(() => {
     if (data) {
       const deliveryCharges =
@@ -123,12 +116,9 @@ export default function PaymentPage() {
       setDeliveryCharges(deliveryCharges);
     }
   }, [data]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     // await processPayment();
-
     if (paymentMethod === "card") {
       await processPayment();
     } else if (paymentMethod === "upi") {
@@ -159,7 +149,6 @@ export default function PaymentPage() {
       createOrderMutation.mutate(orderData);
     }
   };
-
   const createOrderId = async () => {
     try {
       const response = await fetch("/api/order", {
@@ -171,18 +160,15 @@ export default function PaymentPage() {
           amount: grandTotal * 100,
         }),
       });
-
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-
       const data = await response.json();
       return data.orderId;
     } catch (error) {
       console.error("There was a problem with your fetch operation:", error);
     }
   };
-
   const processPayment = async () => {
     try {
       const orderId: string = await createOrderId();
@@ -216,7 +202,7 @@ export default function PaymentPage() {
           const res = await result.json();
           if (res.isOk) {
             toast.success("Payment successful");
-             const orderdata = await createOrderMutation.mutate({
+            const orderdata = await createOrderMutation.mutate({
               userId: user.id,
               addressId: addressId,
               total: subtotal,
@@ -238,7 +224,6 @@ export default function PaymentPage() {
               paid: true,
               razorpayOrderId: orderId,
             });
-            
           } else {
             toast.error("Payment failed");
           }
@@ -268,11 +253,9 @@ export default function PaymentPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-
       <main className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-2xl font-medium mb-8">Payment Method</h1>
-
           {/* Progress Steps */}
           <div className="flex items-center justify-between mb-10 max-w-xl">
             <div className="flex flex-col items-center">
@@ -300,7 +283,6 @@ export default function PaymentPage() {
               <span className="text-xs">Review</span>
             </div>
           </div>
-
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col lg:flex-row gap-8">
               <div className="flex-1">
@@ -321,7 +303,8 @@ export default function PaymentPage() {
                         <label
                           htmlFor="card-payment"
                           className="font-medium cursor-pointer"
-                          onClick={() => setPaymentMethod("card")}>
+                          onClick={() => setPaymentMethod("card")}
+                        >
                           Debit/Credit Card
                         </label>
                         <input
@@ -341,7 +324,8 @@ export default function PaymentPage() {
                             <div>
                               <label
                                 htmlFor="card-number"
-                                className="block text-sm font-medium mb-1">
+                                className="block text-sm font-medium mb-1"
+                              >
                                 Card Number
                               </label>
                               <input
@@ -356,7 +340,8 @@ export default function PaymentPage() {
                             <div>
                               <label
                                 htmlFor="card-name"
-                                className="block text-sm font-medium mb-1">
+                                className="block text-sm font-medium mb-1"
+                              >
                                 Name On The Card
                               </label>
                               <input
@@ -372,7 +357,8 @@ export default function PaymentPage() {
                               <div>
                                 <label
                                   htmlFor="expiry-date"
-                                  className="block text-sm font-medium mb-1">
+                                  className="block text-sm font-medium mb-1"
+                                >
                                   Expiry Date
                                 </label>
                                 <input
@@ -390,7 +376,8 @@ export default function PaymentPage() {
                               <div>
                                 <label
                                   htmlFor="cvv"
-                                  className="block text-sm font-medium mb-1">
+                                  className="block text-sm font-medium mb-1"
+                                >
                                   CVV
                                 </label>
                                 <input
@@ -406,7 +393,8 @@ export default function PaymentPage() {
                             <div>
                               <Button
                                 type="button"
-                                className="w-full md:w-auto px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white">
+                                className="w-full md:w-auto px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white"
+                              >
                                 Add Card
                               </Button>
                             </div>
@@ -424,7 +412,8 @@ export default function PaymentPage() {
                         <label
                           htmlFor="upi-payment"
                           className="font-medium cursor-pointer"
-                          onClick={() => setPaymentMethod("upi")}>
+                          onClick={() => setPaymentMethod("upi")}
+                        >
                           UPI (Google Pay, Paytm, Phonepe)
                         </label>
                         <input
@@ -456,7 +445,8 @@ export default function PaymentPage() {
                             onClick={() =>
                               !(grandTotal > codLimit || codLimit === 0) &&
                               setPaymentMethod("cod")
-                            }>
+                            }
+                          >
                             Cash On Delivery
                           </label>
                           {grandTotal > codLimit && codLimit !== 0 && (
@@ -490,7 +480,8 @@ export default function PaymentPage() {
                     type="submit"
                     className="w-full md:w-auto px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white"
                     onClick={handleSubmit}
-                    disabled={createOrderMutation.isPending}>
+                    disabled={createOrderMutation.isPending}
+                  >
                     {createOrderMutation.isPending
                       ? "Processing..."
                       : "Place Order"}

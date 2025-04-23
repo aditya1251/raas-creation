@@ -17,17 +17,22 @@ import { useRouter } from "next/navigation";
 export default function ShippingAddressPage() {
   const [isDiscountApplied, setIsDiscountApplied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { cartItems } = useCart();
-
   const router = useRouter();
-
-  useEffect(() => {
-    if (cartItems.length === 0) {
-      toast.error("Your cart is empty.");
-      router.push("/shop");
-    }
-  }, []);
-
+  
+useEffect(() => {
+  // Skip the first check to allow cart to be loaded
+  if (isInitialLoad) {
+    setIsInitialLoad(false);
+    return;
+  }
+  
+  if (cartItems.length === 0) {
+    toast.error("Your cart is empty.");
+    router.push("/shop");
+  }
+}, [cartItems, isInitialLoad]);
   const calculateSubtotal = () => {
     return cartItems.reduce(
       (total, item) => total + item.price * item.quantity,
@@ -39,7 +44,6 @@ export default function ShippingAddressPage() {
   const [gstTaxRate, setGstTaxRate] = useState<number | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [error, setError] = useState<string>("");
-
   const { data } = useQuery({
     queryKey: ["tax"],
     queryFn: async () => {
@@ -47,7 +51,6 @@ export default function ShippingAddressPage() {
       return response;
     },
   });
-
   useEffect(() => {
     if (data) {
       const deliveryCharges =
@@ -56,7 +59,6 @@ export default function ShippingAddressPage() {
       setGstTaxRate(data.GSTtax);
     }
   }, [data]);
-
   const {
     data: address,
     isLoading: addressLoading,
@@ -65,7 +67,6 @@ export default function ShippingAddressPage() {
     queryKey: ["address"],
     queryFn: AddressApi.getAddress,
   });
-
   const [addresses, setAddresses] = useState<
     Array<{ id: string; name: string; address: string }>
   >([]);
@@ -174,7 +175,8 @@ export default function ShippingAddressPage() {
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
-                  strokeLinejoin="round">
+                  strokeLinejoin="round"
+                >
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
@@ -195,7 +197,8 @@ export default function ShippingAddressPage() {
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
-                  strokeLinejoin="round">
+                  strokeLinejoin="round"
+                >
                   <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                   <line x1="1" y1="10" x2="23" y2="10"></line>
                 </svg>
@@ -216,7 +219,8 @@ export default function ShippingAddressPage() {
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
-                  strokeLinejoin="round">
+                  strokeLinejoin="round"
+                >
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                   <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -227,7 +231,6 @@ export default function ShippingAddressPage() {
               <span className="text-xs">Review</span>
             </div>
           </div>
-
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               {error}
@@ -246,7 +249,6 @@ export default function ShippingAddressPage() {
                   the corresponding "Deliver to this address" button. Or you can
                   enter a new delivery address.
                 </p>
-
                 {addresses.length === 0 ? (
                   <div className="text-center py-8 bg-gray-50 rounded-md">
                     <p className="text-gray-500">
@@ -262,7 +264,8 @@ export default function ShippingAddressPage() {
                           selectedAddress === address.id
                             ? "bg-[#ffefd4]"
                             : "bg-[#fff8ea]"
-                        }`}>
+                        }`}
+                      >
                         <div className="flex justify-between mb-2">
                           <h3 className="font-medium">{address.name}</h3>
                           <div
@@ -271,7 +274,8 @@ export default function ShippingAddressPage() {
                                 ? "border-[#795d2a] bg-[#795d2a] text-white"
                                 : "border-gray-300"
                             }`}
-                            onClick={() => setSelectedAddress(address.id)}>
+                            onClick={() => setSelectedAddress(address.id)}
+                          >
                             {selectedAddress === address.id && (
                               <Check className="h-3 w-3" />
                             )}
@@ -284,20 +288,19 @@ export default function ShippingAddressPage() {
                     ))}
                   </div>
                 )}
-
-                <Link
-                  href={"/account/addresses"}
-                  className="w-full md:w-auto mt-6 px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white rounded transition-colors">
-                  Manage Addresses
+                <Link href="/account/addresses">
+                  <button className="w-full md:w-auto mt-6 px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white rounded transition-colors">
+                    Manage Addresses
+                  </button>
                 </Link>
-
                 <Link href="/payment">
                   <button
-                    className={`w-full md:w-auto mt-6 px-6 py-3 mx-4 bg-[#a08452] hover:bg-[#8c703d] text-white rounded transition-colors ${
+                    className={`w-full md:w-auto mt-6 px-6 py-3 md:mx-4 bg-[#a08452] hover:bg-[#8c703d] text-white rounded transition-colors ${
                       isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                     onClick={handleDeliverHere}
-                    disabled={isLoading || !selectedAddress}>
+                    disabled={isLoading || !selectedAddress}
+                  >
                     {isLoading ? (
                       <span className="flex items-center">
                         <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
@@ -309,7 +312,6 @@ export default function ShippingAddressPage() {
                   </button>
                 </Link>
               </div>
-
               {/* Add a new address */}
               <AddressForm />
             </div>

@@ -6,7 +6,6 @@ import {
   RefreshCw,
   HeadphonesIcon,
   CreditCard,
-  ShoppingBag,
   HeartOff,
 } from "lucide-react";
 import Navbar from "@/components/navbar";
@@ -14,12 +13,10 @@ import HeroBanner from "@/components/hero-banner";
 import RaasKurtiesSection from "@/components/raas-kurties-section";
 import BrowseCategorySection from "@/components/browse-category-section";
 import SiteFooter from "@/components/site-footer";
-import { Button } from "@/components/ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { analyticApi } from "@/lib/api/analyticApi";
 import { LoadingProducts } from "@/components/ui/loader";
 import toast from "react-hot-toast";
-import { useCart } from "@/context/cart-context";
 import Link from "next/link";
 import { wishlistApi } from "@/lib/api/wishlist";
 import { JSX, useEffect, useState } from "react";
@@ -50,7 +47,7 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (wishlistProducts){
+    if (wishlistProducts) {
       setWishlist(wishlistProducts);
     }
   }, [wishlistProducts]);
@@ -61,10 +58,11 @@ export default function Home() {
       <HeroBanner />
       <RaasKurtiesSection />
       <BrowseCategorySection />
-
       {/* Best Sellers */}
       <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 w-full">
-        <h2 className="text-xl font-medium text-center mb-8">Our Best Seller</h2>
+        <h2 className="text-xl font-medium text-center mb-8">
+          Our Best Seller
+        </h2>
         {!bestSellerLoad ? (
           <div className="grid md:grid-cols-3 gap-6">
             {bestSellers?.map((product, index) => (
@@ -79,7 +77,6 @@ export default function Home() {
           <LoadingProducts length={4} />
         )}
       </section>
-
       {/* New Arrivals */}
       <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 w-full">
         <h2 className="text-xl font-medium text-center mb-8">New Arrivals</h2>
@@ -97,25 +94,47 @@ export default function Home() {
           <LoadingProducts length={4} />
         )}
       </section>
-
       {/* Features */}
       <section className="py-12 border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <Feature icon={<Package />} title="Free Shipping" text="Free shipping for order above $100" />
-            <Feature icon={<RefreshCw />} title="Money Guarantee" text="Within 30 days for exchange" />
-            <Feature icon={<HeadphonesIcon />} title="Online Support" text="24 hours a day, 7 days a week" />
-            <Feature icon={<CreditCard />} title="Flexible Payment" text="Pay with multiple credit cards" />
+            <Feature
+              icon={<Package />}
+              title="Free Shipping"
+              text="Free shipping for order above $100"
+            />
+            <Feature
+              icon={<RefreshCw />}
+              title="Money Guarantee"
+              text="Within 30 days for exchange"
+            />
+            <Feature
+              icon={<HeadphonesIcon />}
+              title="Online Support"
+              text="24 hours a day, 7 days a week"
+            />
+            <Feature
+              icon={<CreditCard />}
+              title="Flexible Payment"
+              text="Pay with multiple credit cards"
+            />
           </div>
         </div>
       </section>
-
       <SiteFooter />
     </main>
   );
 }
 
-function Feature({ icon, title, text }: { icon: JSX.Element; title: string; text: string }) {
+function Feature({
+  icon,
+  title,
+  text,
+}: {
+  icon: JSX.Element;
+  title: string;
+  text: string;
+}) {
   return (
     <div className="flex flex-col items-center">
       <div className="h-6 w-6 mb-2">{icon}</div>
@@ -133,7 +152,6 @@ function ProductCard({
   product: any;
   wishlistProducts: any[];
 }) {
-  // const { addToCart } = useCart();
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
@@ -184,28 +202,6 @@ function ProductCard({
       addToWishlist.mutate();
     }
   };
-
-  // const handleAddToCart = () => {
-  //   const cartItem = {
-  //     id: product.id,
-  //     name: product.name,
-  //     price: product.discountPrice || product.price,
-  //     originalPrice: product.price,
-  //     quantity: 1,
-  //     color: product.colors.length > 0 ? product.colors[0].color : "",
-  //     size:
-  //       product.colors[0]?.sizes?.length > 0
-  //         ? product.colors[0].sizes[0].size
-  //         : "SIZE_DEFAULT",
-  //     image: product.img,
-  //     productVariantId: product.colors[0]?.sizes?.length > 0
-  //     ? product.colors[0].sizes[0].id
-  //     : "SIZE_DEFAULT",
-  //   };
-  //   addToCart(cartItem);
-  //   toast.success(`${product.name} has been added to your cart.`);
-  // };
-
   return (
     <div className="group relative">
       <div className="aspect-[3/4] relative overflow-hidden rounded-xl bg-gray-100">
