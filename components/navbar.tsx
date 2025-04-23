@@ -8,6 +8,8 @@ import MiniCart from "@/components/mini-cart";
 import { useQuery } from "@tanstack/react-query";
 import { customerApi } from "@/lib/api/customer";
 import { useRouter } from "next/navigation";
+import { useDebounce } from "@/hooks/useDebounce";
+import { productApi } from "@/lib/api/productdetails";
 
 export default function Navbar() {
   const router = useRouter();
@@ -21,12 +23,10 @@ export default function Navbar() {
   const removeFromCart = cartContext?.removeFromCart || ((id: string) => {});
   const updateQuantity =
     cartContext?.updateQuantity || ((id: string, quantity: number) => {});
-
   const [isMiniCartOpen, setIsMiniCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   const searchRef = useRef<HTMLDivElement>(null);
 
@@ -74,31 +74,46 @@ export default function Navbar() {
       setIsMiniCartOpen(false); // Close cart if opening search
     }
   };
+  // Searching products
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  // Debounce search term to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm]);
 
+  // Get search results from API
+  const { data: searchResults, isLoading } = useQuery({
+    queryKey: ["products", currentPage, itemsPerPage, debouncedSearchTerm],
+    queryFn: () =>
+      productApi.getProducts(currentPage, itemsPerPage, debouncedSearchTerm),
+    enabled: !!debouncedSearchTerm && debouncedSearchTerm.length >= 2,
+  });
+  // Save search to history when user clicks on a product
+  const saveSearchToHistory = (term: string) => {
+    if (typeof window !== "undefined" && term) {
+      const history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+      // Remove if already exists (to move it to top)
+      const filteredHistory = history.filter((h: string) => h !== term);
+      // Add to beginning of array (most recent first)
+      const newHistory = [term, ...filteredHistory].slice(0, 5); // Keep only most recent 5
+      localStorage.setItem("searchHistory", JSON.stringify(newHistory));
+      localStorage.setItem("lastSearch", term);
+    }
+  };
+  const handleProductClick = (productId: string, productName: string) => {
+    saveSearchToHistory(searchTerm);
+    setIsSearchOpen(false);
+    router.push(`/product/${productId}`);
+  };
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      localStorage.setItem("lastSearch", searchQuery.trim());
-
-      // Save to search history (optional)
-      const searchHistory = JSON.parse(
-        localStorage.getItem("searchHistory") || "[]"
-      );
-      if (!searchHistory.includes(searchQuery.trim())) {
-        searchHistory.unshift(searchQuery.trim());
-        // Keep only the last 5 searches
-        if (searchHistory.length > 5) {
-          searchHistory.pop();
-        }
-        localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
-      }
-
-      // Redirect to search results page (optional, depends on your app structure)
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-
-      // Close the search dropdown
+    if (searchTerm) {
+      saveSearchToHistory(searchTerm);
       setIsSearchOpen(false);
-      setSearchQuery("");
     }
   };
 
@@ -182,10 +197,9 @@ export default function Navbar() {
               >
                 <Search className="h-5 w-5" />
               </button>
-
               {/* Search Dropdown */}
               {isSearchOpen && (
-                <div className="absolute -left-10 transform -translate-x-1/2 md:transform-none md:left-auto md:right-0 mt-2 w-[90vw] max-w-[480px] md:w-96 bg-white border border-gray-200 rounded-md shadow-lg p-3 z-50">
+                <div className="absolute -left-10 transform -translate-x-1/2 md:transform-none md:left-auto md:right-0 mt-2 w-[90vw] md:w-[600px] bg-white border border-gray-200 rounded-md shadow-lg p-3 z-50">
                   <form
                     onSubmit={handleSearchSubmit}
                     className="flex items-center"
@@ -193,8 +207,8 @@ export default function Navbar() {
                     <input
                       type="text"
                       placeholder="Search products..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                       className="flex-1 border border-gray-300 rounded-l-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#a08452] focus:border-[#a08452]"
                       autoFocus
                     />
@@ -205,9 +219,59 @@ export default function Navbar() {
                       <Search className="h-4 w-4" />
                     </button>
                   </form>
-
-                  {/* Search History (Optional) */}
-                  {(() => {
+                  {/* Search Results */}
+                  {debouncedSearchTerm && debouncedSearchTerm.length >= 2 && (
+                    <div className="mt-3">
+                      {isLoading ? (
+                        <div className="py-3 text-center text-gray-500">
+                          <div className="animate-pulse">Searching...</div>
+                        </div>
+                      ) : searchResults?.products && searchResults.products.length > 0 ? (
+                        <div>
+                          <p className="text-gray-500 mb-2 text-xs">
+                            Products ({searchResults.products.length})
+                          </p>
+                          <div className="grid grid-cols-2 gap-2 max-h-[70vh] overflow-y-auto">
+                            {searchResults.products.map((product) => (
+                              <div
+                                key={product.id}
+                                className="border border-gray-100 rounded-md p-2 cursor-pointer hover:border-[#a08452] transition-colors"
+                                onClick={() => handleProductClick(product.slug, product.name)}
+                              >
+                                <div className="aspect-square w-full overflow-hidden rounded-md bg-gray-100 mb-2">
+                                  {product.assets && product.assets[0]?.asset_url ? (
+                                    <Image
+                                      src={product.assets[0]?.asset_url}
+                                      alt={product.name}
+                                      width={100}
+                                      height={100}
+                                      className="h-full w-full object-cover object-center"
+                                    />
+                                  ) : (
+                                    <div className="h-full w-full flex items-center justify-center bg-gray-200">
+                                      <span className="text-xs text-gray-400">No image</span>
+                                    </div>
+                                  )}
+                                </div>
+                                <h3 className="text-xs font-medium truncate">
+                                  {product.name}
+                                </h3>
+                                <p className="text-xs text-[#a08452] mt-1">
+                                  ₹{product.price?.toFixed(2)}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-3 text-center text-gray-500">
+                          No products found
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Search History */}
+                  {!debouncedSearchTerm && (() => {
                     // Only execute in client-side
                     if (typeof window !== "undefined") {
                       const searchHistory = JSON.parse(
@@ -226,7 +290,7 @@ export default function Navbar() {
                                     <button
                                       className="text text-gray-700 hover:text-[#a08452] flex items-center w-full text-left"
                                       onClick={() => {
-                                        setSearchQuery(search);
+                                        setSearchTerm(search);
                                         localStorage.setItem(
                                           "lastSearch",
                                           search
@@ -255,7 +319,6 @@ export default function Navbar() {
                 </div>
               )}
             </div>
-
             <Link
               href={user ? "/account/wishlists" : "/signin"}
               aria-label="Wishlist"
@@ -285,7 +348,6 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-
       {/* Mobile menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white">
@@ -331,7 +393,6 @@ export default function Navbar() {
           </nav>
         </div>
       )}
-
       {/* Mini Cart */}
       <MiniCart
         isOpen={isMiniCartOpen}
