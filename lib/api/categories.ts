@@ -1,9 +1,17 @@
 import { apiClient } from "@/lib/axiosClient";
 import { Category } from "@/types/types"; 
 
+interface CategoryResponse extends Category {
+  // product
+}
+
 export const categoryApi = {
   getAll: async (): Promise<Category[]> => {
     const response = await apiClient.get("/api/category");
+    return response.data.categories;
+  },
+  getAllInDetail: async (): Promise<Category[]> => {
+    const response = await apiClient.get("/api/category/detail");
     return response.data.categories;
   },
   getById: async (id: string): Promise<Category> => {
