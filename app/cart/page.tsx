@@ -52,19 +52,20 @@ export default function CartPage() {
 
   useEffect(() => {
     const storedCode = localStorage.getItem("discountCode");
-  
+
     if (storedCode && cartItems.length > 0) {
       // Use local copy of subtotal to avoid stale discount calculations
       const currentSubtotal = calculateSubtotal();
-  
-      discountApi.getByCode(storedCode)
+
+      discountApi
+        .getByCode(storedCode)
         .then((discountData) => {
           if (discountData) {
             const discountAmount =
               discountData.type === "PERCENTAGE"
                 ? (currentSubtotal * discountData.value) / 100
                 : discountData.value;
-  
+
             setDiscount(discountAmount);
             setIsDiscountApplied(true);
             setDiscountCode("");
@@ -79,7 +80,6 @@ export default function CartPage() {
         });
     }
   }, [cartItems]);
-  
 
   const handleApplyDiscount = async () => {
     const trimmedCode = discountCode.trim();
@@ -340,21 +340,21 @@ export default function CartPage() {
 
                   <div>
                     <p className="mb-2 text-sm">Enter Discount Code</p>
-                    <div className="flex">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
                       <input
                         type="text"
                         value={discountCode}
                         onChange={(e) => setDiscountCode(e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-l-md px-3 py-2 focus:outline-none text-sm"
-                        placeholder="Enter code"
+                        className="w-full sm:flex-1 border border-gray-300 rounded-md sm:rounded-l-md sm:rounded-r-none px-3 py-2 focus:outline-none text-sm"
                       />
                       <Button
-                        className="rounded-l-none bg-[#a08452] hover:bg-[#8c703d] py-2 px-4 h-auto"
+                        className="w-full sm:w-auto rounded-md sm:rounded-l-none bg-[#a08452] hover:bg-[#8c703d] py-2 px-4 h-auto"
                         onClick={handleApplyDiscount}>
                         Apply
                       </Button>
                     </div>
                   </div>
+
                   {gstTaxRate !== null && (
                     <div className="flex justify-between">
                       <span>GST ({gstTaxRate}%)</span>

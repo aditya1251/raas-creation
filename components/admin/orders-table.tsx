@@ -138,14 +138,13 @@ export function OrdersTable() {
               setItemsPerPage(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="px-4 bg-white py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700">
+            className="px-4 pr-8 bg-white py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-700">
             <option value="5">5 per page</option>
             <option value="10">10 per page</option>
             <option value="25">25 per page</option>
             <option value="50">50 per page</option>
           </select>
-        </div>
-        
+        </div>        
         <div className="flex justify-center space-x-3">
           <button
             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}

@@ -249,14 +249,14 @@ export function DiscountList() {
 
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="text-sm text-gray-500">
+        <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-lg shadow-sm">
+          <div className="text-sm text-gray-600 font-medium">
             Showing {discountQuery.data?.discounts.length || 0} items
           </div>
           <select
             value={itemsPerPage}
             onChange={(e) => setItemsPerPage(Number(e.target.value))}
-            className="border rounded-md px-2 py-1 text-sm">
+            className="block w-full sm:w-auto px-3 py-2 pl-3 pr-8 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm transition-colors duration-200 hover:border-gray-400">
             <option value={5}>5 per page</option>
             <option value={10}>10 per page</option>
             <option value={20}>20 per page</option>

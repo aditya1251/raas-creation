@@ -21,13 +21,15 @@ import { useCart } from "@/context/cart-context";
 import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { productApi } from "@/lib/api/productdetails";
 import { Products } from "./admin/products-table";
 import { productReviewApi } from "@/lib/api/productreview";
+import { wishlistApi } from "@/lib/api/wishlist";
+import { customerApi } from "@/lib/api/customer";
+import toast from "react-hot-toast";
 
 export default function ProductDetails({ slug }: { slug: string }) {
-  const { toast } = useToast();
   const { addToCart } = useCart();
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
@@ -43,6 +45,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
   const [availableSizes, setAvailableSizes] = useState<
     { id: string; size: string; stock: number; available: boolean }[]
   >([]);
+  const [isProductInWishlist, setIsProductInWishlist] = useState(false);
+  const queryClient = useQueryClient();
 
   const decreaseQuantity = () => {
     if (quantity > 1) {
@@ -69,10 +73,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
       image: product?.assets[0].asset_url,
       productVariantId: selectedSizeId,
     });
-    toast({
-      title: "Added to cart",
-      description: `${product?.name} has been added to your cart.`,
-    });
+    toast.success("Product added to cart");
   };
 
   // Set sizes based on selected color
@@ -151,11 +152,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
     e.preventDefault();
     // Validate form
     if (reviewRating === 0) {
-      toast({
-        title: "Error",
-        description: "Please select a rating.",
-        variant: "destructive",
-      });
+      toast.error("Please select a rating.");
       return;
     }
     try {
@@ -166,21 +163,14 @@ export default function ProductDetails({ slug }: { slug: string }) {
         description: reviewText,
       };
       await productReviewApi.create(data.id, reviewData);
-      toast({
-        title: "Success",
-        description: "Review submitted successfully.",
-      });
+      toast.success("Review submitted successfully!");
       setReviewRating(0);
       setReviewName("");
       setReviewEmail("");
       setReviewText("");
     } catch (error) {
       console.error("Error submitting review:", error);
-      toast({
-        title: "Error",
-        description: "Failed to submit review. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to submit review.");
     } finally {
       setIsSubmitting(false);
     }
@@ -206,6 +196,60 @@ export default function ProductDetails({ slug }: { slug: string }) {
       }
     }
   }, [data]);
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: customerApi.getCustomer,
+  });
+
+  const { data: wishlistProducts } = useQuery({
+    queryKey: ["wishlistProducts"],
+    queryFn: wishlistApi.getProductList,
+    enabled: !!user?.id,
+  });
+
+  // Add these mutations
+  const addToWishlist = useMutation({
+    mutationFn: () => wishlistApi.addtoWishlist(product?.id || ""),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlistProducts"] });
+      toast.success(`${product?.name} added to wishlist`);
+    },
+    onError: () => {
+      toast.error("Failed to add product to wishlist");
+    },
+  });
+
+  const removeFromWishlist = useMutation({
+    mutationFn: () => wishlistApi.removeFromWishlist(product?.id || ""),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlistProducts"] });
+      toast.success(`${product?.name} removed from wishlist`);
+    },
+    onError: () => {
+      toast.error("Failed to remove product from wishlist");
+    },
+  });
+
+  // Add this effect to check if product is in wishlist
+  useEffect(() => {
+    if (wishlistProducts && product) {
+      setIsProductInWishlist(wishlistProducts.includes(product.id));
+    }
+  }, [wishlistProducts, product]);
+
+  // Add this handler function
+  const handleWishlistToggle = () => {
+    if (!user) {
+      toast.error("Please log in to add products to your wishlist.");
+      return;
+    }
+
+    if (isProductInWishlist) {
+      removeFromWishlist.mutate();
+    } else {
+      addToWishlist.mutate();
+    }
+  };
   // Split by lines that start with asterisk and process each line
   const mainDesc = data?.description.split("\n\nSpecifications\n\n*")[0];
   const specLines = data?.description
@@ -253,8 +297,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
               {product?.assets.map((image, index) => (
                 <div
                   key={index}
-                  className="aspect-square relative border rounded-md overflow-hidden"
-                >
+                  className="aspect-square relative border rounded-md overflow-hidden">
                   <Image
                     src={image.asset_url || "/placeholder.svg"}
                     alt={`${product?.name || "image"} view ${index + 1}`}
@@ -285,8 +328,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                         : "text-gray-300"
                     }`}
                     fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
+                    viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                 ))}
@@ -353,10 +395,11 @@ export default function ProductDetails({ slug }: { slug: string }) {
                           : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
                       }`}
                       onClick={() =>
-                        isAvailable && setSelectedSize(sizeObj.size) && setSelectedSizeId(sizeObj.id)
+                        isAvailable &&
+                        setSelectedSize(sizeObj.size) &&
+                        setSelectedSizeId(sizeObj.id)
                       }
-                      disabled={!isAvailable}
-                    >
+                      disabled={!isAvailable}>
                       {sizeObj.size.slice(5)}
                     </button>
                   );
@@ -374,15 +417,13 @@ export default function ProductDetails({ slug }: { slug: string }) {
               <div className="flex items-center border border-gray-300 rounded-md">
                 <button
                   className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
-                  onClick={decreaseQuantity}
-                >
+                  onClick={decreaseQuantity}>
                   <Minus className="h-4 w-4" />
                 </button>
                 <span className="w-8 text-center">{quantity}</span>
                 <button
                   className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
-                  onClick={increaseQuantity}
-                >
+                  onClick={increaseQuantity}>
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
@@ -390,16 +431,19 @@ export default function ProductDetails({ slug }: { slug: string }) {
               <Button
                 className="flex-1 bg-[#a08452] hover:bg-[#8c703d] text-white transition-colors h-auto py-2"
                 onClick={handleAddToCart}
-                disabled={!selectedSize || availableSizes.length === 0}
-              >
+                disabled={!selectedSize || availableSizes.length === 0}>
                 Add to Cart
               </Button>
 
               <Button
                 variant="outline"
                 className="border-gray-300 hover:bg-gray-50 transition-colors w-8 h-8 p-0 flex items-center justify-center"
-              >
-                <Heart className="h-4 w-4" />
+                onClick={handleWishlistToggle}>
+                <Heart
+                  className={`h-4 w-4 ${
+                    isProductInWishlist ? "fill-[#a08452] text-[#a08452]" : ""
+                  }`}
+                />
               </Button>
             </div>
           </div>
@@ -410,8 +454,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
-            className="w-full"
-          >
+            className="w-full">
             <TabsList className="border-b w-full justify-start rounded-none bg-transparent mb-6">
               <TabsTrigger
                 value="descriptions"
@@ -419,8 +462,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                   activeTab === "descriptions"
                     ? "border-b-2 border-[#a08452] text-[#a08452]"
                     : "text-gray-600"
-                }`}
-              >
+                }`}>
                 Descriptions
               </TabsTrigger>
               <TabsTrigger
@@ -429,8 +471,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                   activeTab === "additional"
                     ? "border-b-2 border-[#a08452] text-[#a08452]"
                     : "text-gray-600"
-                }`}
-              >
+                }`}>
                 Additional Information
               </TabsTrigger>
               <TabsTrigger
@@ -439,8 +480,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                   activeTab === "reviews"
                     ? "border-b-2 border-[#a08452] text-[#a08452]"
                     : "text-gray-600"
-                }`}
-              >
+                }`}>
                 Reviews
               </TabsTrigger>
             </TabsList>
@@ -467,12 +507,10 @@ export default function ProductDetails({ slug }: { slug: string }) {
                     {product?.colors.map((color) => (
                       <div
                         key={color.id}
-                        className="flex items-center space-x-2"
-                      >
+                        className="flex items-center space-x-2">
                         <div
                           className="w-4 h-4 rounded-sm border border-gray-300"
-                          style={{ backgroundColor: `${color.color}` }}
-                        ></div>
+                          style={{ backgroundColor: `${color.color}` }}></div>
                       </div>
                     ))}
                   </div>
@@ -516,8 +554,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                                 key={star}
                                 className="w-4 h-4 text-yellow-400"
                                 fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
+                                viewBox="0 0 20 20">
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                               </svg>
                             ))}
@@ -551,8 +588,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                               key={rating}
                               type="button"
                               className="p-1"
-                              onClick={() => setReviewRating(rating)}
-                            >
+                              onClick={() => setReviewRating(rating)}>
                               <Star
                                 className={`h-5 w-5 ${
                                   rating <= reviewRating
@@ -568,8 +604,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                       <div>
                         <label
                           htmlFor="review-name"
-                          className="block text-sm font-medium mb-1"
-                        >
+                          className="block text-sm font-medium mb-1">
                           Name
                         </label>
                         <input
@@ -586,8 +621,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                       <div>
                         <label
                           htmlFor="review-email"
-                          className="block text-sm font-medium mb-1"
-                        >
+                          className="block text-sm font-medium mb-1">
                           Email Address
                         </label>
                         <input
@@ -604,8 +638,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                       <div>
                         <label
                           htmlFor="review-text"
-                          className="block text-sm font-medium mb-1"
-                        >
+                          className="block text-sm font-medium mb-1">
                           Your Review
                         </label>
                         <textarea
@@ -623,8 +656,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                         <Button
                           type="submit"
                           className="bg-[#a08452] hover:bg-[#8c703d] text-white px-8"
-                          disabled={isSubmitting}
-                        >
+                          disabled={isSubmitting}>
                           {isSubmitting ? "Submitting..." : "Submit"}
                         </Button>
                       </div>

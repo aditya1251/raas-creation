@@ -294,8 +294,10 @@ export default function PaymentPage() {
 
                   <div className="space-y-6">
                     <div className="border-b pb-6">
-                      <div className="flex items-center mb-4">
-                        <div className="w-5 h-5 rounded-full border border-[#a08452] flex items-center justify-center mr-3">
+                      <div className="flex items-center">
+                        <div
+                          onClick={() => setPaymentMethod("card")}
+                          className="w-5 h-5 rounded-full border border-[#a08452] flex items-center justify-center hover:cursor-pointer mr-3">
                           {paymentMethod === "card" && (
                             <div className="w-3 h-3 rounded-full bg-[#a08452]"></div>
                           )}
@@ -303,8 +305,7 @@ export default function PaymentPage() {
                         <label
                           htmlFor="card-payment"
                           className="font-medium cursor-pointer"
-                          onClick={() => setPaymentMethod("card")}
-                        >
+                          onClick={() => setPaymentMethod("card")}>
                           Debit/Credit Card
                         </label>
                         <input
@@ -318,14 +319,13 @@ export default function PaymentPage() {
                         />
                       </div>
 
-                      {paymentMethod === "card" && (
+                      {false && paymentMethod === "card" && (
                         <div className="pl-8">
                           <div className="space-y-4">
                             <div>
                               <label
                                 htmlFor="card-number"
-                                className="block text-sm font-medium mb-1"
-                              >
+                                className="block text-sm font-medium mb-1">
                                 Card Number
                               </label>
                               <input
@@ -340,8 +340,7 @@ export default function PaymentPage() {
                             <div>
                               <label
                                 htmlFor="card-name"
-                                className="block text-sm font-medium mb-1"
-                              >
+                                className="block text-sm font-medium mb-1">
                                 Name On The Card
                               </label>
                               <input
@@ -357,8 +356,7 @@ export default function PaymentPage() {
                               <div>
                                 <label
                                   htmlFor="expiry-date"
-                                  className="block text-sm font-medium mb-1"
-                                >
+                                  className="block text-sm font-medium mb-1">
                                   Expiry Date
                                 </label>
                                 <input
@@ -376,8 +374,7 @@ export default function PaymentPage() {
                               <div>
                                 <label
                                   htmlFor="cvv"
-                                  className="block text-sm font-medium mb-1"
-                                >
+                                  className="block text-sm font-medium mb-1">
                                   CVV
                                 </label>
                                 <input
@@ -393,8 +390,7 @@ export default function PaymentPage() {
                             <div>
                               <Button
                                 type="button"
-                                className="w-full md:w-auto px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white"
-                              >
+                                className="w-full md:w-auto px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white">
                                 Add Card
                               </Button>
                             </div>
@@ -404,7 +400,9 @@ export default function PaymentPage() {
                     </div>
                     <div className="border-b pb-6">
                       <div className="flex items-center">
-                        <div className="w-5 h-5 rounded-full border border-[#a08452] flex items-center justify-center mr-3">
+                        <div
+                          className="w-5 h-5 rounded-full border border-[#a08452] flex items-center justify-center mr-3 cursor-pointer"
+                          onClick={() => setPaymentMethod("upi")}>
                           {paymentMethod === "upi" && (
                             <div className="w-3 h-3 rounded-full bg-[#a08452]"></div>
                           )}
@@ -412,8 +410,7 @@ export default function PaymentPage() {
                         <label
                           htmlFor="upi-payment"
                           className="font-medium cursor-pointer"
-                          onClick={() => setPaymentMethod("upi")}
-                        >
+                          onClick={() => setPaymentMethod("upi")}>
                           UPI (Google Pay, Paytm, Phonepe)
                         </label>
                         <input
@@ -429,7 +426,12 @@ export default function PaymentPage() {
                     </div>
                     <div>
                       <div className="flex items-center">
-                        <div className="w-5 h-5 rounded-full border border-[#a08452] flex items-center justify-center mr-3">
+                        <div
+                          className="w-5 h-5 rounded-full border border-[#a08452] flex items-center justify-center mr-3 cursor-pointer"
+                          onClick={() =>
+                            !(grandTotal > codLimit || codLimit === 0) &&
+                            setPaymentMethod("cod")
+                          }>
                           {paymentMethod === "cod" && (
                             <div className="w-3 h-3 rounded-full bg-[#a08452]"></div>
                           )}
@@ -445,8 +447,7 @@ export default function PaymentPage() {
                             onClick={() =>
                               !(grandTotal > codLimit || codLimit === 0) &&
                               setPaymentMethod("cod")
-                            }
-                          >
+                            }>
                             Cash On Delivery
                           </label>
                           {grandTotal > codLimit && codLimit !== 0 && (
@@ -471,7 +472,7 @@ export default function PaymentPage() {
                           disabled={grandTotal > codLimit || codLimit === 0}
                         />
                       </div>
-                    </div>{" "}
+                    </div>
                   </div>
                 </div>
 
@@ -480,8 +481,7 @@ export default function PaymentPage() {
                     type="submit"
                     className="w-full md:w-auto px-6 py-3 bg-[#a08452] hover:bg-[#8c703d] text-white"
                     onClick={handleSubmit}
-                    disabled={createOrderMutation.isPending}
-                  >
+                    disabled={createOrderMutation.isPending}>
                     {createOrderMutation.isPending
                       ? "Processing..."
                       : "Place Order"}
@@ -505,7 +505,7 @@ export default function PaymentPage() {
         </div>
       </main>
 
-      <div className="absolute w-full h-full lg:w-1/2 lg:h-1/2">
+      <div className="absolute pointer-events-none w-full h-full lg:w-1/2 lg:h-1/2">
         <Script
           id="razorpay-checkout-js"
           src="https://checkout.razorpay.com/v1/checkout.js"
