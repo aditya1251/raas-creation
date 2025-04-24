@@ -7,6 +7,7 @@ import {
   HeadphonesIcon,
   CreditCard,
   HeartOff,
+  Briefcase,
 } from "lucide-react";
 import Navbar from "@/components/navbar";
 import HeroBanner from "@/components/hero-banner";
@@ -21,6 +22,8 @@ import Link from "next/link";
 import { wishlistApi } from "@/lib/api/wishlist";
 import { JSX, useEffect, useState } from "react";
 import { customerApi } from "@/lib/api/customer";
+import { productApi } from "@/lib/api/productdetails";
+import { useCart } from "@/context/cart-context";
 
 export default function Home() {
   const { data: user } = useQuery({
@@ -152,14 +155,18 @@ function ProductCard({
   product: any;
   wishlistProducts: any[];
 }) {
+
+  console.log("Product",product)
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
   });
 
   const queryClient = useQueryClient();
+  const { addToCart } = useCart();
 
   const [isProductInWishlist, setIsProductInWishlist] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   useEffect(() => {
     console.log("wishlistProducts", wishlistProducts);
@@ -202,6 +209,46 @@ function ProductCard({
       addToWishlist.mutate();
     }
   };
+  const handleAddToCart = async () => {
+    if (!product?.id) return;
+
+    try {
+      setIsAddingToCart(true);
+      const productData = await productApi.getById(product.id);
+
+      const defaultColor = productData.colors?.[0]?.color || "";
+      const defaultSizeData = productData.colors?.[0]?.sizes?.find(
+        (size) => size.stock > 0
+      );
+      if (!defaultSizeData) {
+        toast.error("This product is out of stock.");
+        return;
+      }
+      const defaultSize = defaultSizeData?.size || "SIZE_DEFAULT";
+      const defaultVariantId = defaultSizeData?.id || "ID_NOT_FOUND";
+      const defaultImage = productData.assets?.[0]?.asset_url || "/placeholder.svg";
+
+      const cartItem = {
+        id: productData.id,
+        name: productData.name,
+        price: productData.discountPrice || productData.price,
+        originalPrice: productData.price,
+        quantity: 1,
+        color: defaultColor,
+        size: defaultSize,
+        productVariantId: defaultVariantId,
+        image: defaultImage,
+      };
+
+      addToCart(cartItem);
+      toast.success(`${product.name} has been added to your cart.`);
+    } catch (error) {
+      toast.error("Failed to fetch product details. Please try again.");
+      console.error("Add to cart error:", error);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
   return (
     <div className="group relative">
       <div className="aspect-[3/4] relative overflow-hidden rounded-xl bg-gray-100">
@@ -219,14 +266,37 @@ function ProductCard({
           onClick={handleWishlistToggle}
           className="absolute top-3 right-3 aspect-square w-8 lg:w-10 bg-[#a08452] hover:bg-[#8c703d] rounded-full flex items-center justify-center
             opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 
-            transform translate-x-0 lg:translate-x-[100%] lg:group-hover:translate-x-0"
-        >
+            transform translate-x-0 lg:translate-x-[100%] lg:group-hover:translate-x-0">
           {isProductInWishlist ? (
             <HeartOff className="aspect-square w-4 lg:w-6 text-white" />
           ) : (
             <Heart className="aspect-square w-4 lg:w-6 text-white" />
           )}
         </button>
+        <div
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
+                transform translate-y-full group-hover:translate-y-0 
+                transition-transform duration-300 ease-in-out">
+          <button
+            onClick={handleAddToCart}
+            disabled={isAddingToCart}
+            className="w-full flex justify-center gap-4 items-center rounded-lg bg-[#795D2A] text-white text-lg font-normal py-2 
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            {isAddingToCart ? (
+              <>
+                Adding...
+                <span className="animate-spin">
+                  <RefreshCw className="h-5 w-5" />
+                </span>
+              </>
+            ) : (
+              <>
+                Add to Cart
+                <Briefcase />
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Product Details */}

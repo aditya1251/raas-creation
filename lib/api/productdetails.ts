@@ -14,7 +14,7 @@ export const productApi = {
   getProducts: async (
     currentPage: number,
     itemsPerPage: number,
-    searchTerm: string,
+    searchTerm?: string,
     filters: {
       status?: string;
       min_price?: number;
