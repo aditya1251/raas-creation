@@ -2,6 +2,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Image from 'next/image';
+import { useQuery } from '@tanstack/react-query';
+import { categoryApi } from '@/lib/api/categories';
+import { LoadingProducts } from './ui/loader';
 
 export default function BrowseCategorySection() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -9,33 +12,13 @@ export default function BrowseCategorySection() {
   const [canScrollRight, setCanScrollRight] = useState(true);
 
   // Category data with images and names
-  const categories = [
-    {
-      name: "Anarkali",
-      image: "lot_0009__PUN0747.png"
+  const {data: categories,isLoading} = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const res = await categoryApi.getAll();
+      return res
     },
-    {
-      name: "Kurta Set",
-      image: "image 100.png"
-    },
-    {
-      name: "Suit Set",
-      image: "image 101.png"
-    },
-    {
-      name: "Lounge Wear",
-      image: "lot_0005__PUN0762.png"
-    },
-    {
-      name: "Kurtis & Dresses",
-      image: "image.png"
-    },
-    {
-      name: "Luxe Collection",
-      image: "image 19.png"
-    }
-  ];
-
+  })
   // Handle scrolling left
   const handleScrollLeft = () => {
     if (scrollContainerRef.current) {
@@ -45,7 +28,6 @@ export default function BrowseCategorySection() {
       });
     }
   };
-
   // Handle scrolling right
   const handleScrollRight = () => {
     if (scrollContainerRef.current) {
@@ -55,7 +37,6 @@ export default function BrowseCategorySection() {
       });
     }
   };
-
   // Check scroll position and update scroll button states
   const checkScrollPosition = () => {
     if (scrollContainerRef.current) {
@@ -64,7 +45,6 @@ export default function BrowseCategorySection() {
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth);
     }
   };
-
   // Add scroll event listener
   useEffect(() => {
     const currentRef = scrollContainerRef.current;
@@ -75,6 +55,38 @@ export default function BrowseCategorySection() {
       };
     }
   }, []);
+
+
+  if (isLoading) {
+    return(
+      <div className="py-12 bg-white">
+      <div className="max-w-7xl mx-auto px-3 md:px-6">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+              Browse The Category
+            </h2>
+            <p className="text-gray-600 text-sm md:text-base">
+              Explore our diverse range of ethnic wear categories
+            </p>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              className={`rounded-md border border-amber-700 bg-amber-50 w-8 lg:w-12 aspect-square flex items-center justify-center hover:bg-amber-100`}
+            >
+              <ArrowLeft className="h-4 w-4 lg:h-5 lg:w-5 text-amber-700" />
+            </button>
+            <button
+              className={`rounded-md bg-amber-700 hover:bg-amber-800 border-none w-8 lg:w-12 aspect-square flex items-center justify-center`}
+            >
+              <ArrowRight className="h-4 w-4 lg:h-5 lg:w-5 text-white" />
+            </button>
+          </div>
+        </div>
+      <LoadingProducts length={3} />
+      </div>
+    </div>
+    )}
 
   return (
     <div className="py-12 bg-white">
@@ -113,7 +125,7 @@ export default function BrowseCategorySection() {
           ref={scrollContainerRef}
           className="grid grid-flow-col auto-cols-[calc(100%-0rem)] md:auto-cols-[calc(33.333%-1.5rem)] gap-6 overflow-x-auto lg:overflow-x-hidden scroll-smooth pb-4"
         >
-          {categories.map((category) => (
+          {categories?.map((category) => (
             <div
               key={category.name}
               className="w-full"

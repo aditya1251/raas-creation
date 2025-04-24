@@ -74,7 +74,7 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <LoadingProducts length={4} />
+          <LoadingProducts length={3} />
         )}
       </section>
       {/* New Arrivals */}
