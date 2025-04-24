@@ -61,7 +61,7 @@ export default function ShopPage() {
   const itemsPerPage = 12;
 
   const [filterValues, setFilterValues] = useState({
-    priceRange: 6000,
+    priceRange: 10000,
     sortBy: "",
     selectedColors: [] as string[],
     selectedSizes: [] as string[],
@@ -80,7 +80,6 @@ export default function ShopPage() {
     ],
     queryFn: () =>
       productApi.getProducts(currentPage, itemsPerPage, "", {
-        min_price: 0,
         max_price: filterValues.priceRange,
         sort_by: filterValues.sortBy.includes("price") ? "price" : "createdAt",
         sort_order: filterValues.sortBy === "price-high-low" ? "desc" : "asc",
@@ -223,238 +222,248 @@ export default function ShopPage() {
 
   return (
     <main className="min-h-screen bg-white">
-    <Navbar />
+      <Navbar />
 
-    <div className="max-w-7xl mx-auto px-6 py-4">
-      <div className="flex items-center text-sm">
-        <Link href="/shop" className="text-gray-600 hover:text-[#795d2a]">
-          Shop
-        </Link>
-        <ChevronRight className="h-4 w-4 mx-1 text-gray-400" />
-        <span className="text-gray-900">All Products</span>
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center text-sm">
+          <Link href="/shop" className="text-gray-600 hover:text-[#795d2a]">
+            Shop
+          </Link>
+          <ChevronRight className="h-4 w-4 mx-1 text-gray-400" />
+          <span className="text-gray-900">All Products</span>
+        </div>
       </div>
-    </div>
 
-    <div className="md:hidden px-6 mb-4">
-      <Button
-        onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-        className="w-full flex items-center justify-center gap-2 bg-[#795d2a] text-white">
-        {isMobileFilterOpen ? (
-          <>
-            <X className="h-5 w-5" /> Close Filters
-          </>
-        ) : (
-          <>
-            <Filter className="h-5 w-5" /> Open Filters
-          </>
-        )}
-      </Button>
-    </div>
+      <div className="md:hidden px-6 mb-4">
+        <Button
+          onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+          className="w-full flex items-center justify-center gap-2 bg-[#795d2a] text-white">
+          {isMobileFilterOpen ? (
+            <>
+              <X className="h-5 w-5" /> Close Filters
+            </>
+          ) : (
+            <>
+              <Filter className="h-5 w-5" /> Open Filters
+            </>
+          )}
+        </Button>
+      </div>
 
-    <div className="max-w-7xl mx-auto px-6 pb-16">
-      <div className="flex flex-col md:flex-row gap-8">
-        <div
-          className={`
+      <div className="max-w-7xl mx-auto px-6 pb-16">
+        <div className="flex flex-col md:flex-row gap-8">
+          <div
+            className={`
           w-full md:w-64 shrink-0 
           ${isMobileFilterOpen ? "block" : "hidden md:block"}
           absolute md:static z-20 bg-white md:bg-transparent 
           left-0 right-0 px-6 md:px-0
         `}>
-          <Button
+            <Button
               onClick={applyFilters}
               className="w-full mb-4 bg-[#795d2a] text-white">
               Apply Filters
             </Button>
-          <div className="mb-6 bg-gray-50 rounded-lg p-4">
-            <div 
-              className="flex items-center justify-between mb-3 cursor-pointer"
-              onClick={() => setIsExpandedCategories(!isExpandedCategories)}
-            >
-              <h3 className="font-medium">Product Categories</h3>
-              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpandedCategories ? 'rotate-180' : ''}`} />
+            <div className="mb-6 bg-gray-50 rounded-lg p-4">
+              <div
+                className="flex items-center justify-between mb-3 cursor-pointer"
+                onClick={() => setIsExpandedCategories(!isExpandedCategories)}>
+                <h3 className="font-medium">Product Categories</h3>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform duration-200 ${
+                    isExpandedCategories ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+              <div
+                className={`space-y-2 overflow-hidden transition-all duration-300 ${
+                  isExpandedCategories ? "max-h-[400px]" : "max-h-48"
+                } overflow-y-auto scrollbar-thin scrollbar-thumb-[#795d2a] scrollbar-track-gray-100 pr-2`}>
+                {isLoading ? (
+                  <p className="text-sm text-gray-500">Loading categories...</p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-1">
+                    {categories?.map((category, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 hover:bg-white p-2 rounded-md transition-colors">
+                        <Checkbox
+                          id={category.id}
+                          checked={selectedCategories.includes(category.id)}
+                          onCheckedChange={() => handleCategorySelect(category)}
+                          className="text-[#795d2a] focus:ring-[#795d2a]"
+                        />
+                        <label
+                          htmlFor={category.id}
+                          className="text-sm cursor-pointer hover:text-[#795d2a] transition-colors flex-1">
+                          {category.name}
+                        </label>
+                        <span className="text-xs text-gray-500">
+                          ({category.productCount || 0})
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {categories && categories.length > 6 && (
+                <button
+                  onClick={() => setIsExpandedCategories(!isExpandedCategories)}
+                  className="text-sm text-[#795d2a] hover:text-[#5d4720] mt-2 w-full text-center">
+                  {isExpandedCategories ? "Show Less" : "Show More"}
+                </button>
+              )}
             </div>
-            <div className={`space-y-2 overflow-hidden transition-all duration-300 ${isExpandedCategories ? 'max-h-[400px]' : 'max-h-48'} overflow-y-auto scrollbar-thin scrollbar-thumb-[#795d2a] scrollbar-track-gray-100 pr-2`}>
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium">Filter By Price</h3>
+                <ChevronDown className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm mb-2">Price: ₹0 - ₹{priceRange}</p>
+                <input
+                  type="range"
+                  min="0"
+                  max={maxPriceValue}
+                  value={priceRange}
+                  onChange={handlePriceRangeChange}
+                  className="w-full h-1 bg-[#A08452] rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>₹0</span>
+                  <span>₹{maxPriceValue}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium">Size</h3>
+                <ChevronDown className="h-4 w-4" />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {fixedSizes.map((size, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleSizeSelect(size)}
+                    className={`w-10 h-10 flex items-center justify-center border rounded cursor-pointer ${
+                      selectedSizes.includes(size)
+                        ? "bg-[#795d2a] text-white border-[#795d2a]"
+                        : "border-gray-300 hover:border-[#795d2a]"
+                    }`}>
+                    {size.split("SIZE_")[1]}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Color Filter Section */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium">Filter By Color</h3>
+                <ChevronDown className="h-4 w-4" />
+              </div>
+              <div className="space-y-2">
+                {fixedColors.map((color, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`color-${color.toLowerCase()}`}
+                      checked={selectedColors.includes(color)}
+                      onCheckedChange={() => handleColorSelect(color)}
+                    />
+                    <label
+                      htmlFor={`color-${color.toLowerCase()}`}
+                      className="text-sm cursor-pointer flex items-center">
+                      <div
+                        className="w-4 h-4 rounded-sm mr-2"
+                        style={{
+                          backgroundColor: color.toLowerCase(),
+                          border: "1px solid #e2e8f0",
+                        }}></div>
+                      {color}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <Button
+                onClick={clearAllFilters}
+                variant="outline"
+                className="w-full border-[#795d2a] text-[#795d2a] hover:bg-[#795d2a] hover:text-white">
+                Clear All Filters
+              </Button>
+            </div>
+
+            <div className="md:hidden my-4">
+              <Button
+                onClick={() => {
+                  setIsMobileFilterOpen(false);
+                  applyFilters();
+                }}
+                className="w-full bg-[#795d2a] text-white">
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1">
+            <div className="flex justify-between items-center mb-6">
+              <div className="text-sm text-gray-500">
+                Showing {products.length} of {products?.length || 0} products
+              </div>
+
+              <div>
+                <div className="relative inline-block">
+                  <select
+                    className="appearance-none border rounded-md px-4 py-2 pr-8 focus:outline-none text-sm"
+                    value={sortBy}
+                    onChange={handleSortChange}>
+                    {sortOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {isLoading ? (
-                <p className="text-sm text-gray-500">Loading categories...</p>
+                <div className="col-span-3 text-center py-10">
+                  Loading products...
+                </div>
+              ) : products?.length ? (
+                products.map((product, index) => (
+                  <ProductCard
+                    key={product.id || index}
+                    product={product}
+                    wishlistProducts={wishlistProducts || []}
+                  />
+                ))
               ) : (
-                <div className="grid grid-cols-1 gap-1">
-                  {categories?.map((category, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-2 hover:bg-white p-2 rounded-md transition-colors">
-                      <Checkbox
-                        id={category.id}
-                        checked={selectedCategories.includes(category.id)}
-                        onCheckedChange={() => handleCategorySelect(category)}
-                        className="text-[#795d2a] focus:ring-[#795d2a]"
-                      />
-                      <label
-                        htmlFor={category.id}
-                        className="text-sm cursor-pointer hover:text-[#795d2a] transition-colors flex-1">
-                        {category.name}
-                      </label>
-                      <span className="text-xs text-gray-500">({category.productCount || 0})</span>
-                    </div>
-                  ))}
+                <div className="col-span-3 text-center py-10">
+                  No products found with the selected filters
                 </div>
               )}
             </div>
-            {categories && categories.length > 6 && (
-              <button
-                onClick={() => setIsExpandedCategories(!isExpandedCategories)}
-                className="text-sm text-[#795d2a] hover:text-[#5d4720] mt-2 w-full text-center"
-              >
-                {isExpandedCategories ? 'Show Less' : 'Show More'}
-              </button>
-            )}
-          </div>
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium">Filter By Price</h3>
-              <ChevronDown className="h-4 w-4" />
+            {/* Infinite Scroll Observer Trigger */}
+            <div
+              ref={lastProductRef}
+              className="mt-10 text-center text-sm text-gray-500">
+              {isLoading
+                ? "Loading more..."
+                : hasMore
+                ? "Scroll down to load more"
+                : "No more products"}
             </div>
-            <div>
-              <p className="text-sm mb-2">Price: ₹0 - ₹{priceRange}</p>
-              <input
-                type="range"
-                min="0"
-                max={maxPriceValue}
-                value={priceRange}
-                onChange={handlePriceRangeChange}
-                className="w-full h-1 bg-[#A08452] rounded-lg appearance-none cursor-pointer"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>₹0</span>
-                <span>₹{maxPriceValue}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium">Size</h3>
-              <ChevronDown className="h-4 w-4" />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {fixedSizes.map((size, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleSizeSelect(size)}
-                  className={`w-10 h-10 flex items-center justify-center border rounded cursor-pointer ${
-                    selectedSizes.includes(size)
-                      ? "bg-[#795d2a] text-white border-[#795d2a]"
-                      : "border-gray-300 hover:border-[#795d2a]"
-                  }`}>
-                  {size.split("SIZE_")[1]}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Color Filter Section */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium">Filter By Color</h3>
-              <ChevronDown className="h-4 w-4" />
-            </div>
-            <div className="space-y-2">
-              {fixedColors.map((color, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`color-${color.toLowerCase()}`}
-                    checked={selectedColors.includes(color)}
-                    onCheckedChange={() => handleColorSelect(color)}
-                  />
-                  <label
-                    htmlFor={`color-${color.toLowerCase()}`}
-                    className="text-sm cursor-pointer flex items-center">
-                    <div
-                      className="w-4 h-4 rounded-sm mr-2"
-                      style={{
-                        backgroundColor: color.toLowerCase(),
-                        border: "1px solid #e2e8f0",
-                      }}></div>
-                    {color}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <Button
-              onClick={clearAllFilters}
-              variant="outline"
-              className="w-full border-[#795d2a] text-[#795d2a] hover:bg-[#795d2a] hover:text-white">
-              Clear All Filters
-            </Button>
-          </div>
-
-          <div className="md:hidden my-4">
-            <Button
-              onClick={() => {setIsMobileFilterOpen(false); applyFilters()}}
-              className="w-full bg-[#795d2a] text-white">
-              Apply Filters
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex-1">
-          <div className="flex justify-between items-center mb-6">
-            <div className="text-sm text-gray-500">
-              Showing {products.length} of {products?.length || 0} products
-            </div>
-
-            <div>
-              <div className="relative inline-block">
-                <select
-                  className="appearance-none border rounded-md px-4 py-2 pr-8 focus:outline-none text-sm"
-                  value={sortBy}
-                  onChange={handleSortChange}>
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {isLoading ? (
-              <div className="col-span-3 text-center py-10">
-                Loading products...
-              </div>
-            ) : products?.length ? (
-              products.map((product, index) => (
-                <ProductCard
-                  key={product.id || index}
-                  product={product}
-                  wishlistProducts={wishlistProducts || []}
-                />
-              ))
-            ) : (
-              <div className="col-span-3 text-center py-10">
-                No products found with the selected filters
-              </div>
-            )}
-          </div>
-          {/* Infinite Scroll Observer Trigger */}
-          <div
-            ref={lastProductRef}
-            className="mt-10 text-center text-sm text-gray-500">
-            {isLoading
-              ? "Loading more..."
-              : hasMore
-              ? "Scroll down to load more"
-              : "No more products"}
           </div>
         </div>
       </div>
-    </div>
-    <ProductLastSection />
-    <SiteFooter />
-  </main>
+      <ProductLastSection />
+      <SiteFooter />
+    </main>
   );
 }
 export function ProductLastSection() {
@@ -512,6 +521,7 @@ function ProductCard({
   });
 
   const [isProductInWishlist, setIsProductInWishlist] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   useEffect(() => {
     console.log("wishlistProducts", wishlistProducts);
@@ -555,30 +565,46 @@ function ProductCard({
     }
   };
 
-  const handleAddToCart = () => {
-    const cartItem = {
-      id: product.id,
-      name: product.name,
-      price: product.discountPrice || product.price,
-      originalPrice: product.price,
-      quantity: 1,
-      color: product.colors.length > 0 ? product.colors[0].color : "",
-      size:
-        product.colors[0]?.sizes?.length > 0
-          ? product.colors[0].sizes[0].size
-          : "SIZE_DEFAULT",
-      productVariantId: product.colors[0]?.sizes?.length > 0
-      ? product.colors[0].sizes[0].id
-      : "ID_NOT_FOUND",
-      image:
-        product.assets && product.assets.length > 0
-          ? product.assets[0].asset_url
-          : "/placeholder.svg",
-    };
+  
+  const handleAddToCart = async () => {
+    if (!product?.id) return;
 
-    addToCart(cartItem);
+    try {
+      setIsAddingToCart(true);
+      const productData = await productApi.getById(product.id);
 
-    toast.success(`${product.name} has been added to your cart.`);
+      const defaultColor = productData.colors?.[0]?.color || "";
+      const defaultSizeData = productData.colors?.[0]?.sizes?.find(
+        (size) => size.stock > 0
+      );
+      if (!defaultSizeData) {
+        toast.error("This product is out of stock.");
+        return;
+      }
+      const defaultSize = defaultSizeData?.size || "SIZE_DEFAULT";
+      const defaultVariantId = defaultSizeData?.id || "ID_NOT_FOUND";
+      const defaultImage = product.assets?.[0]?.asset_url || "/placeholder.svg";
+
+      const cartItem = {
+        id: product.id,
+        name: product.name,
+        price: product.discountPrice || product.price,
+        originalPrice: product.price,
+        quantity: 1,
+        color: defaultColor,
+        size: defaultSize,
+        productVariantId: defaultVariantId,
+        image: defaultImage,
+      };
+
+      addToCart(cartItem);
+      toast.success(`${product.name} has been added to your cart.`);
+    } catch (error) {
+      toast.error("Failed to fetch product details. Please try again.");
+      console.error("Add to cart error:", error);
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   return (
@@ -609,10 +635,22 @@ function ProductCard({
           transition-transform duration-300 ease-in-out">
           <button
             onClick={handleAddToCart}
+            disabled={isAddingToCart}
             className="w-full flex justify-center gap-4 items-center rounded-lg bg-[#795D2A] text-white text-lg font-normal py-2 
             opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            Add to Cart
-            <Briefcase />
+            {isAddingToCart ? (
+              <>
+                Adding...
+                <span className="animate-spin">
+                  <RefreshCw className="h-5 w-5" />
+                </span>
+              </>
+            ) : (
+              <>
+                Add to Cart
+                <Briefcase />
+              </>
+            )}
           </button>
         </div>
       </div>
