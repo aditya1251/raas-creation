@@ -112,15 +112,15 @@ export default function OrderSummary({
         {showDiscountInput && (
           <div>
             <p className="mb-2 text-sm">Enter Discount Code</p>
-            <div className="flex">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
               <input
                 type="text"
                 value={discountCodeValue}
                 onChange={(e) => setDiscountCodeValue(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-l-md px-3 py-2 focus:outline-none text-sm"
+                className="w-full sm:flex-1 border border-gray-300 rounded-md sm:rounded-l-md sm:rounded-r-none px-3 py-2 focus:outline-none text-sm"
               />
               <Button
-                className="rounded-l-none bg-[#a08452] hover:bg-[#8c703d] py-2 px-4 h-auto"
+                className="w-full sm:w-auto rounded-md sm:rounded-l-none bg-[#a08452] hover:bg-[#8c703d] py-2 px-4 h-auto"
                 onClick={handleApplyDiscount}
               >
                 Apply

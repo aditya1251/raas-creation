@@ -53,6 +53,7 @@ export function ProductsTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [loadingStates, setLoadingStates] = useState<{ [key: string]: boolean }>({});
   
   // Debounce search term to avoid excessive API calls
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -68,14 +69,20 @@ export function ProductsTable() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => productApi.deleteProduct(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+    mutationFn: (id: string) => {
+      setLoadingStates(prev => ({ ...prev, [`delete_${id}`]: true }));
+      return productApi.deleteProduct(id);
+    },
+    onSettled: (_, __, id: string) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] }).then(() => {
+        setLoadingStates(prev => ({ ...prev, [`delete_${id}`]: false }));
+      });
     },
   });
 
   const copyMutation = useMutation({
     mutationFn: async (product: Products) => {
+      setLoadingStates(prev => ({ ...prev, [`copy_${product.id}`]: true }));
       const newProduct = {
         ...product,
         id: cuid(),
@@ -90,21 +97,74 @@ export function ProductsTable() {
       };
       await productApi.addProduct(newProduct);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+    onSettled: (_, __, product: Products) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] }).then(() => {
+        setLoadingStates(prev => ({ ...prev, [`copy_${product.id}`]: false }));
+      });
     },
   });
 
   const toggleStatusMutation = useMutation({
-    mutationFn: ({ id, newStatus }: { id: string; newStatus: string }) =>
-      productApi.updateStatus(id, newStatus),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+    mutationFn: ({ id, newStatus }: { id: string; newStatus: string }) => {
+      setLoadingStates(prev => ({ ...prev, [`status_${id}`]: true }));
+      return productApi.updateStatus(id, newStatus);
+    },
+    onSettled: (_, __, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] }).then(() => {
+        setLoadingStates(prev => ({ ...prev, [`status_${variables.id}`]: false }));
+      });
     },
   });
 
   const products = data?.products || [];
   const { totalPages } = data?.pagination || { totalPages: 1 };
+
+  const renderActionButtons = (product: Products, isMobile = false) => (
+    <div className={`flex ${isMobile ? 'space-x-3' : 'space-x-2'}`}>
+      <Link
+        href={`/admin/products/edit/${product.id}`}
+        className="text-indigo-600 hover:text-indigo-900 transition-colors">
+        <Edit size={18} />
+      </Link>
+      <button
+        onClick={() => deleteMutation.mutate(product.id)}
+        disabled={loadingStates[`delete_${product.id}`]}
+        className="text-red-600 hover:text-red-900 transition-colors disabled:opacity-50">
+        {loadingStates[`delete_${product.id}`] ? (
+          <div className="animate-spin h-4 w-4 border-2 border-red-600 rounded-full border-t-transparent" />
+        ) : (
+          <Trash2 size={18} />
+        )}
+      </button>
+      <button
+        onClick={() => copyMutation.mutate(product)}
+        disabled={loadingStates[`copy_${product.id}`]}
+        className="text-blue-600 hover:text-blue-900 transition-colors disabled:opacity-50">
+        {loadingStates[`copy_${product.id}`] ? (
+          <div className="animate-spin h-4 w-4 border-2 border-blue-600 rounded-full border-t-transparent" />
+        ) : (
+          <Copy size={18} />
+        )}
+      </button>
+      <button
+        onClick={() =>
+          toggleStatusMutation.mutate({
+            id: product.id,
+            newStatus: product.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED",
+          })
+        }
+        disabled={loadingStates[`status_${product.id}`]}
+        className="text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50">
+        {loadingStates[`status_${product.id}`] ? (
+          <div className="animate-spin h-4 w-4 border-2 border-gray-600 rounded-full border-t-transparent" />
+        ) : product.status === "PUBLISHED" ? (
+          <Eye size={18} />
+        ) : (
+          <EyeOff size={18} />
+        )}
+      </button>
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -176,40 +236,7 @@ export function ProductsTable() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <Link
-                      href={`/admin/products/edit/${product.id}`}
-                      className="text-indigo-600 hover:text-indigo-900 transition-colors">
-                      <Edit size={18} />
-                    </Link>
-                    <button
-                      onClick={() => deleteMutation.mutate(product.id)}
-                      className="text-red-600 hover:text-red-900 transition-colors">
-                      <Trash2 size={18} />
-                    </button>
-                    <button
-                      onClick={() => copyMutation.mutate(product)}
-                      className="text-blue-600 hover:text-blue-900 transition-colors">
-                      <Copy size={18} />
-                    </button>
-                    <button
-                      onClick={() =>
-                        toggleStatusMutation.mutate({
-                          id: product.id,
-                          newStatus:
-                            product.status === "PUBLISHED"
-                              ? "DRAFT"
-                              : "PUBLISHED",
-                        })
-                      }
-                      className="text-gray-600 hover:text-gray-900 transition-colors">
-                      {product.status === "PUBLISHED" ? (
-                        <Eye size={18} />
-                      ) : (
-                        <EyeOff size={18} />
-                      )}
-                    </button>
-                  </div>
+                  {renderActionButtons(product)}
                 </td>
               </tr>
             ))}
@@ -247,40 +274,7 @@ export function ProductsTable() {
                 
                 {/* Action buttons at the bottom of card */}
                 <div className="mt-3 flex justify-between items-center">
-                  <div className="flex space-x-3">
-                    <Link
-                      href={`/admin/products/edit/${product.id}`}
-                      className="text-indigo-600 hover:text-indigo-900 transition-colors p-1.5">
-                      <Edit size={18} />
-                    </Link>
-                    <button
-                      onClick={() => deleteMutation.mutate(product.id)}
-                      className="text-red-600 hover:text-red-900 transition-colors p-1.5">
-                      <Trash2 size={18} />
-                    </button>
-                    <button
-                      onClick={() => copyMutation.mutate(product)}
-                      className="text-blue-600 hover:text-blue-900 transition-colors p-1.5">
-                      <Copy size={18} />
-                    </button>
-                    <button
-                      onClick={() =>
-                        toggleStatusMutation.mutate({
-                          id: product.id,
-                          newStatus:
-                            product.status === "PUBLISHED"
-                              ? "DRAFT"
-                              : "PUBLISHED",
-                        })
-                      }
-                      className="text-gray-600 hover:text-gray-900 transition-colors p-1.5">
-                      {product.status === "PUBLISHED" ? (
-                        <Eye size={18} />
-                      ) : (
-                        <EyeOff size={18} />
-                      )}
-                    </button>
-                  </div>
+                  {renderActionButtons(product, true)}
                 </div>
               </div>
             </div>
@@ -346,7 +340,6 @@ export function ProductsTable() {
               })}
             </div>
             
-            {/* Mobile page indicator */}
             <span className="mx-2 text-sm sm:hidden">
               Page {currentPage} of {totalPages}
             </span>
