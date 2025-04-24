@@ -15,10 +15,12 @@ export default function BrowseCategorySection() {
   const {data: categories,isLoading} = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      const res = await categoryApi.getAll();
+      const res = await categoryApi.getAllInDetail();
       return res
     },
   })
+
+  console.log(categories)
   // Handle scrolling left
   const handleScrollLeft = () => {
     if (scrollContainerRef.current) {
@@ -132,8 +134,9 @@ export default function BrowseCategorySection() {
             >
               <div className="bg-white rounded-xl overflow-hidden shadow-lg">
                 <div className="aspect-[3/4] relative rounded-xl overflow-hidden">
+                
                   <Image
-                    src={category.image}
+                    src={category.Product[0].assets[0].asset_url}
                     alt={category.name}
                     fill
                     className="object-cover"
