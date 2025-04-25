@@ -28,6 +28,7 @@ interface Asset {
 interface Color {
   id: string
   color: string
+  colorHex: string
   productId: string
   assets: Asset[]
   sizes: Size[]

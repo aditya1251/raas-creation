@@ -109,6 +109,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
       }
     },
   });
+
   // Fetching Product Reviews
   const { data: customerReviews, isLoading: loadingReview } = useQuery({
     queryKey: ["productReview", data?.id],

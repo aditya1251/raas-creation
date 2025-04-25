@@ -74,5 +74,18 @@ export const productApi = {
   }> => {
     const response = await apiClient.get("/api/products/overview");
     return response.data;
+  },
+  getColors: async (): Promise<
+    [{
+      id: string;
+      color: string;
+      colorHex: string;
+      assets: {
+        url: string;
+        type: string;
+      }[];
+    }]> => {
+    const response = await apiClient.get("/api/products/colors");
+    return response.data;
   }
 };

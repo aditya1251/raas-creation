@@ -35,6 +35,7 @@ export const varient = z.object({
   id: z.string().cuid("Invalid variant ID").optional(),
   productId: z.string().cuid("Invalid product ID"),
   color: z.string().min(1, "Color is required"),
+  colorHex: z.string().min(1, "Color hex is required"),
   assets: z.array(
     z.object({
       url: z.string().url("Invalid asset URL"),

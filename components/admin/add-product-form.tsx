@@ -12,6 +12,15 @@ import { varientApi } from "@/lib/api/varients";
 import { productApi } from "@/lib/api/productdetails";
 import MultiUploadPopup from "../MultiUploadPopup";
 
+
+const colorswithHex = {
+  "red": "#FF0000",
+  "blue": "#0000FF",
+  "green": "#00FF00",
+  "white": "#FFFFFF",
+  "black": "#000000",
+}
+
 export function AddProductForm() {
   const [isUploadPopupOpen, setIsUploadPopupOpen] = useState(false);
   const [varientId, setVarientId] = useState<string>("");
@@ -34,6 +43,7 @@ export function AddProductForm() {
     isOpen: boolean;
     id: string;
     color: string;
+    colorHex: string;
     customColor: boolean;
     images: {
       url: string;
@@ -154,7 +164,8 @@ export function AddProductForm() {
       ...variants,
       {
         id: cuid(),
-        color: "",
+        color: "red",
+        colorHex: colorswithHex["red"],
         customColor: false,
         images: [],
         sizes: [
@@ -292,6 +303,7 @@ export function AddProductForm() {
     mutationFn: (variant: {
       productId: string;
       color: string;
+      colorHex: string;
       assets: {
         url: string;
         type: "IMAGE" | "VIDEO";
@@ -318,6 +330,7 @@ export function AddProductForm() {
           variantMutation.mutate({
             productId,
             color: variant.color,
+            colorHex: variant.colorHex,
             assets: variant.images,
             sizes: variant.sizes.map((size) => ({
               size: size.name as
@@ -545,22 +558,39 @@ export function AddProductForm() {
                       </label>
                       {variant.customColor ? (
                         <div className="flex flex-col sm:flex-row gap-2">
-                          <input
-                            type="text"
-                            className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
-                            value={variant.color}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => {
-                              setVariants(
-                                variants.map((v) =>
-                                  v.id === variant.id
-                                    ? { ...v, color: e.target.value }
-                                    : v
-                                )
-                              );
-                            }}
-                            placeholder="Enter custom color"
-                          />
+                          <div className="flex gap-2 w-full">
+                            <input
+                              type="text"
+                              className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
+                              value={variant.color}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => {
+                                setVariants(
+                                  variants.map((v) =>
+                                    v.id === variant.id
+                                      ? { ...v, color: e.target.value }
+                                      : v
+                                  )
+                                );
+                              }}
+                              placeholder="Enter custom color"
+                            />
+                            <input
+                              type="color"
+                              className="w-12 h-9 px-0.5 py-0.5 border rounded-lg cursor-pointer"
+                              value={variant.colorHex}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => {
+                                setVariants(
+                                  variants.map((v) =>
+                                    v.id === variant.id
+                                      ? { ...v, colorHex: e.target.value }
+                                      : v
+                                  )
+                                );
+                              }}
+                            />
+                          </div>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -577,6 +607,7 @@ export function AddProductForm() {
                           </button>
                         </div>
                       ) : (
+                        <div  className="flex gap-2 w-full">
                         <select
                           className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
                           value={variant.color}
@@ -586,7 +617,7 @@ export function AddProductForm() {
                               setVariants(
                                 variants.map((v) =>
                                   v.id === variant.id
-                                    ? { ...v, customColor: true, color: "" }
+                                    ? { ...v, customColor: true, color: "red", colorHex: colorswithHex["red"] }
                                     : v
                                 )
                               );
@@ -594,20 +625,27 @@ export function AddProductForm() {
                               setVariants(
                                 variants.map((v) =>
                                   v.id === variant.id
-                                    ? { ...v, color: e.target.value }
-                                    : v
-                                )
+                                    ? { ...v, color: e.target.value, colorHex: colorswithHex[e.target.value as keyof typeof colorswithHex] }
+                                    : v                                )
                               );
                             }
                           }}>
                           <option value="">Select Color</option>
-                          <option value="Red">Red</option>
-                          <option value="Blue">Blue</option>
-                          <option value="Green">Green</option>
-                          <option value="Black">Black</option>
-                          <option value="White">White</option>
+                          <option value="red">Red</option>
+                          <option value="blue">Blue</option>
+                          <option value="green">Green</option>
+                          <option value="black">Black</option>
+                          <option value="white">White</option>
                           <option value="custom">Custom Color...</option>
                         </select>
+                        <input
+                        type="color"
+                        className="w-12 h-9 px-0.5 py-0.5 border rounded-lg cursor-pointer"
+                        value={variant.colorHex}
+                        readOnly
+                        disabled
+                      />
+                      </div>
                       )}
                     </div>
                   </div>
