@@ -148,7 +148,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
     },
   ];
 
-  const handleReviewSubmit = async (e) => {
+  const handleReviewSubmit = async (e: any) => {
     e.preventDefault();
     // Validate form
     if (reviewRating === 0) {
@@ -386,22 +386,31 @@ export default function ProductDetails({ slug }: { slug: string }) {
 
                   return (
                     <button
-                      key={sizeObj.size}
-                      className={`w-10 h-10 flex items-center justify-center border rounded-md transition-colors ${
-                        isSelected
-                          ? "bg-[#a08452] text-white border-[#a08452]"
-                          : isAvailable
-                          ? "border-gray-300 text-gray-700 hover:border-[#a08452]"
-                          : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                      }`}
-                      onClick={() =>
-                        isAvailable &&
-                        setSelectedSize(sizeObj.size) &&
-                        setSelectedSizeId(sizeObj.id)
-                      }
-                      disabled={!isAvailable}>
-                      {sizeObj.size.slice(5)}
-                    </button>
+                    key={sizeObj.size}
+                    className={`w-12 h-12 flex items-center justify-center rounded-md border transition-all relative overflow-hidden
+                      ${isSelected
+                        ? "bg-[#a08452] text-white border-[#a08452]"
+                        : isAvailable
+                        ? "border-gray-400 text-gray-800 hover:border-[#a08452]"
+                        : "border-gray-300 text-gray-400 bg-gray-50 cursor-not-allowed"}
+                    `}
+                    onClick={() =>
+                      isAvailable &&
+                      setSelectedSize(sizeObj.size) &&
+                      setSelectedSizeId(sizeObj.id)
+                    }
+                    disabled={!isAvailable}
+                  >
+                    {sizeObj.size.slice(5)}
+                    
+                    {/* Diagonal Line if not available */}
+                    {!isAvailable && (
+                      <div className="absolute w-[150%] h-full top-0 left-[-25%] flex items-center justify-center pointer-events-none">
+                        <div className="w-[100%] h-[2px] bg-gray-400 -rotate-45" />
+                      </div>
+                    )}
+                  </button>
+                  
                   );
                 })}
               </div>

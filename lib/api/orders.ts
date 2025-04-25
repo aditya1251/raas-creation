@@ -16,6 +16,7 @@ export interface Order {
   id?: string;
   addressId: string;
   awb?: string;
+  orderId?: number;
   paid?: boolean;
   userId: string;
   items: OrderItems[];

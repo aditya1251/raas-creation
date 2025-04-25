@@ -437,7 +437,7 @@ export function AddProductForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Base Price
+                MRP Price
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
@@ -470,7 +470,7 @@ export function AddProductForm() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Discounted Price
+                Selling Price
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">

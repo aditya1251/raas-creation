@@ -90,16 +90,16 @@ export default function OrderDetailsPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl font-medium mb-1">
-              Order #{orderDetails?.id}
+              Order #{orderDetails?.orderId}
             </h1>
             <p className="text-gray-600">Placed on {orderDetails?.createdAt}</p>
           </div>
           <div
             className={`px-4 py-2 rounded-full ${getStatusColor(
-              orderDetails?.status
+              orderDetails?.fulfillment as string
             )} font-medium text-sm`}
           >
-            {orderDetails?.status}
+            {orderDetails?.fulfillment}
           </div>
         </div>
       </div>

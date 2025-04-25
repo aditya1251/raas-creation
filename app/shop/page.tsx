@@ -80,6 +80,7 @@ export default function ShopPage() {
     ],
     queryFn: () =>
       productApi.getProducts(currentPage, itemsPerPage, "", {
+        status: "PUBLISHED",
         max_price: filterValues.priceRange,
         sort_by: filterValues.sortBy.includes("price") ? "price" : "createdAt",
         sort_order: filterValues.sortBy === "price-high-low" ? "desc" : "asc",
