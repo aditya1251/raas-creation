@@ -10,7 +10,7 @@ import { productApi } from "@/lib/api/productdetails";
 import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 
-interface Size {
+export interface Size {
   id: string
   size: string
   stock: number

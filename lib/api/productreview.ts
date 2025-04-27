@@ -10,12 +10,6 @@ export const productReviewApi = {
     return response.data.reviews;
   },
 
-  // fetch review by product id
-  getById: async (productId: string): Promise<{ reviews: Review[] }> => {
-    const response = await apiClient.get(`/api/reviews/${productId}`);
-    return response.data;
-  },
-
   // create a new review by product id
   create: async (
     id: string,
