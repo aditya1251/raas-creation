@@ -35,6 +35,7 @@ export const varient = z.object({
   id: z.string().cuid("Invalid variant ID").optional(),
   productId: z.string().cuid("Invalid product ID"),
   color: z.string().min(1, "Color is required"),
+  colorHex: z.string().min(1, "Color hex is required"),
   assets: z.array(
     z.object({
       url: z.string().url("Invalid asset URL"),
@@ -54,6 +55,9 @@ export const varient = z.object({
 })
 
 export const review = z.object({
+  id: z.string().cuid("Invalid review ID").optional(),
+  image: z.string().url("Invalid image URL").optional(),
+  updatedAt: z.string().optional(),
   rating: z.number().min(1, "Rating must be a positive number"),
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),

@@ -13,6 +13,14 @@ import MultiUploadPopup from "../MultiUploadPopup";
 import cuid from "cuid";
 import { inventoryApi } from "@/lib/api/inventory";
 
+const colorswithHex = {
+  "red": "#FF0000",
+  "blue": "#0000FF",
+  "green": "#00FF00",
+  "white": "#FFFFFF",
+  "black": "#000000",
+}
+
 export function EditProductForm({ productId }: { productId: string }) {
   const [isUploadPopupOpen, setIsUploadPopupOpen] = useState(false);
   const [varientId, setVarientId] = useState<string>("");
@@ -40,6 +48,7 @@ export function EditProductForm({ productId }: { productId: string }) {
     id: string;
     color: string;
     customColor: boolean;
+    colorHex: string;
     images: {
       url: string;
       type: "IMAGE" | "VIDEO";
@@ -183,11 +192,13 @@ export function EditProductForm({ productId }: { productId: string }) {
         (color: {
           id: string;
           color: string;
+          colorHex: string;
           assets: { asset_url: string }[];
           sizes: { id: string; size: string; stock: number }[];
         }) => ({
           id: color.id,
           color: color.color,
+          colorHex: color.colorHex,
           isNew: false,
           isDeleted: false,
           isOpen: false,
@@ -218,7 +229,8 @@ export function EditProductForm({ productId }: { productId: string }) {
       ...variants,
       {
         id: crypto.randomUUID(),
-        color: "",
+        color: "red",
+        colorHex: "#ff0000",
         customColor: false,
         images: [],
         sizes: [
@@ -392,8 +404,8 @@ export function EditProductForm({ productId }: { productId: string }) {
     });
   };
   const variantMutation = useMutation({
-    mutationFn: async (data: { variantId: string; name: string, assets: { url: string; type: string }[] }) => {
-      await varientApi.updateVarient(data.variantId, data.name, data.assets);
+    mutationFn: async (data: { variantId: string; name: string, colorHex: string, assets: { url: string; type: string }[] }) => {
+      await varientApi.updateVarient(data.variantId, data.name,  data.colorHex,data.assets,);
     },
   });
 
@@ -443,6 +455,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             addVariantMu.mutate({
               productId,
               color: variant.color,
+              colorHex: variant.colorHex,
               assets: variant.images,
               sizes: variant.sizes
                 .filter((size) => !size.isDeleted)
@@ -465,6 +478,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             variantMutation.mutate({
               variantId: variant.id,
               name: variant.color,
+              colorHex: variant.colorHex,
               assets: variant.images,
             });
 
@@ -626,7 +640,7 @@ export function EditProductForm({ productId }: { productId: string }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Base Price
+                MRP Price
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
@@ -661,7 +675,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Discounted Price
+                Selling Price
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
@@ -738,22 +752,39 @@ export function EditProductForm({ productId }: { productId: string }) {
                       </label>
                       {variant.customColor ? (
                         <div className="flex flex-col sm:flex-row gap-2">
-                          <input
-                            type="text"
-                            className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
-                            value={variant.color}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => {
-                              setVariants(
-                                variants.map((v) =>
-                                  v.id === variant.id
-                                    ? { ...v, color: e.target.value }
-                                    : v
-                                )
-                              );
-                            }}
-                            placeholder="Enter custom color"
-                          />
+                          <div className="flex gap-2 w-full">
+                            <input
+                              type="text"
+                              className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
+                              value={variant.color}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => {
+                                setVariants(
+                                  variants.map((v) =>
+                                    v.id === variant.id
+                                      ? { ...v, color: e.target.value }
+                                      : v
+                                  )
+                                );
+                              }}
+                              placeholder="Enter custom color"
+                            />
+                            <input
+                              type="color"
+                              className="w-12 h-9 px-0.5 py-0.5 border rounded-lg cursor-pointer"
+                              value={variant.colorHex}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => {
+                                setVariants(
+                                  variants.map((v) =>
+                                    v.id === variant.id
+                                      ? { ...v, colorHex: e.target.value }
+                                      : v
+                                  )
+                                );
+                              }}
+                            />
+                          </div>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -770,6 +801,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                           </button>
                         </div>
                       ) : (
+                        <div  className="flex gap-2 w-full">
                         <select
                           className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
                           value={variant.color}
@@ -779,7 +811,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                               setVariants(
                                 variants.map((v) =>
                                   v.id === variant.id
-                                    ? { ...v, customColor: true, color: "" }
+                                    ? { ...v, customColor: true, color: "red", colorHex: colorswithHex["red"] }
                                     : v
                                 )
                               );
@@ -787,20 +819,27 @@ export function EditProductForm({ productId }: { productId: string }) {
                               setVariants(
                                 variants.map((v) =>
                                   v.id === variant.id
-                                    ? { ...v, color: e.target.value }
-                                    : v
-                                )
+                                    ? { ...v, color: e.target.value, colorHex: colorswithHex[e.target.value as keyof typeof colorswithHex] }
+                                    : v                                )
                               );
                             }
                           }}>
                           <option value="">Select Color</option>
-                          <option value="Red">Red</option>
-                          <option value="Blue">Blue</option>
-                          <option value="Green">Green</option>
-                          <option value="Black">Black</option>
-                          <option value="White">White</option>
+                          <option value="red">Red</option>
+                          <option value="blue">Blue</option>
+                          <option value="green">Green</option>
+                          <option value="black">Black</option>
+                          <option value="white">White</option>
                           <option value="custom">Custom Color...</option>
                         </select>
+                        <input
+                        type="color"
+                        className="w-12 h-9 px-0.5 py-0.5 border rounded-lg cursor-pointer"
+                        value={variant.colorHex}
+                        readOnly
+                        disabled
+                      />
+                      </div>
                       )}
                     </div>
                   </div>

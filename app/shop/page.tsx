@@ -58,6 +58,7 @@ export default function ShopPage() {
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [isExpandedCategories, setIsExpandedCategories] = useState(false);
+  const [showAllColors, setShowAllColors] = useState(false);
   const itemsPerPage = 12;
 
   const [filterValues, setFilterValues] = useState({
@@ -68,6 +69,29 @@ export default function ShopPage() {
     selectedCategories: [] as string[],
   });
 
+  const [colors, setColors] = useState<
+    { id: string; name: string; hex: string }[]
+  >([]);
+
+  const { data: ColorsData } = useQuery({
+    queryKey: ["colors"],
+    queryFn: async () => {
+      const res = await productApi.getColors();
+      return res;
+    },
+  });
+
+  useEffect(() => {
+    if (ColorsData) {
+      setColors(
+        ColorsData.map((color) => ({
+          name: color.color,
+          hex: color.colorHex,
+          id: color.id,
+        }))
+      );
+    }
+  }, [ColorsData]);
   const { data: productResponse, isLoading } = useQuery({
     queryKey: [
       "filteredProducts",
@@ -80,6 +104,7 @@ export default function ShopPage() {
     ],
     queryFn: () =>
       productApi.getProducts(currentPage, itemsPerPage, "", {
+        status: "PUBLISHED",
         max_price: filterValues.priceRange,
         sort_by: filterValues.sortBy.includes("price") ? "price" : "createdAt",
         sort_order: filterValues.sortBy === "price-high-low" ? "desc" : "asc",
@@ -364,26 +389,49 @@ export default function ShopPage() {
                 <ChevronDown className="h-4 w-4" />
               </div>
               <div className="space-y-2">
-                {fixedColors.map((color, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`color-${color.toLowerCase()}`}
-                      checked={selectedColors.includes(color)}
-                      onCheckedChange={() => handleColorSelect(color)}
-                    />
-                    <label
-                      htmlFor={`color-${color.toLowerCase()}`}
-                      className="text-sm cursor-pointer flex items-center">
-                      <div
-                        className="w-4 h-4 rounded-sm mr-2"
-                        style={{
-                          backgroundColor: color.toLowerCase(),
-                          border: "1px solid #e2e8f0",
-                        }}></div>
-                      {color}
-                    </label>
+                {!colors ? (
+                  <div className="text-sm text-gray-500">Loading colors...</div>
+                ) : colors.length === 0 ? (
+                  <div className="text-sm text-gray-500">
+                    No colors available
                   </div>
-                ))}
+                ) : (
+                  <>
+                    {colors
+                      .slice(0, showAllColors ? colors.length : 6)
+                      .map((color, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`color-${color.id}`}
+                            checked={selectedColors.includes(color.name)}
+                            onCheckedChange={() =>
+                              handleColorSelect(color.name)
+                            }
+                          />
+                          <label
+                            htmlFor={`color-${color.id}`}
+                            className="text-sm cursor-pointer flex items-center">
+                            <div
+                              className="w-4 h-4 rounded-sm mr-2"
+                              style={{
+                                backgroundColor: color.hex,
+                                border: "1px solid #e2e8f0",
+                              }}></div>
+                            {color.name}
+                          </label>
+                        </div>
+                      ))}
+                    {colors.length > 6 && (
+                      <button
+                        onClick={() => setShowAllColors(!showAllColors)}
+                        className="text-sm text-[#795d2a] hover:underline">
+                        {showAllColors ? "Show Less" : "Show More"}
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 
@@ -565,7 +613,6 @@ function ProductCard({
     }
   };
 
-  
   const handleAddToCart = async () => {
     if (!product?.id) return;
 

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type React from "react";
-import { LoadingProductDetails } from "@/components/ui/loader";
+import { LoadingProductDetails, LoadingProducts } from "@/components/ui/loader";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -23,11 +23,13 @@ import SiteFooter from "@/components/site-footer";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { productApi } from "@/lib/api/productdetails";
-import { Products } from "./admin/products-table";
+import { Products, Size } from "./admin/products-table";
 import { productReviewApi } from "@/lib/api/productreview";
 import { wishlistApi } from "@/lib/api/wishlist";
 import { customerApi } from "@/lib/api/customer";
 import toast from "react-hot-toast";
+import { ProductCard } from "@/app/page";
+import { analyticApi } from "@/lib/api/analytic";
 
 export default function ProductDetails({ slug }: { slug: string }) {
   const { addToCart } = useCart();
@@ -36,17 +38,18 @@ export default function ProductDetails({ slug }: { slug: string }) {
   const [selectedSizeId, setSelectedSizeId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("descriptions");
+  const [reviewTitle, setReviewTitle] = useState("");
+  const [reviewImage, setReviewImage] = useState<File | null>(null);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewName, setReviewName] = useState("");
   const [reviewEmail, setReviewEmail] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [product, setProduct] = useState<Products | null>(null);
-  const [availableSizes, setAvailableSizes] = useState<
-    { id: string; size: string; stock: number; available: boolean }[]
-  >([]);
+  const [availableSizes, setAvailableSizes] = useState<Size[]>([]);
   const [isProductInWishlist, setIsProductInWishlist] = useState(false);
   const queryClient = useQueryClient();
+  const [avgRating, setAvgRating] = useState(5);
 
   const decreaseQuantity = () => {
     if (quantity > 1) {
@@ -109,18 +112,33 @@ export default function ProductDetails({ slug }: { slug: string }) {
       }
     },
   });
+
   // Fetching Product Reviews
   const { data: customerReviews, isLoading: loadingReview } = useQuery({
     queryKey: ["productReview", data?.id],
     queryFn: async () => {
       try {
-        const res = await productReviewApi.getById(data?.id);
-        return res.reviews;
+        const res = await productReviewApi.getAll(data?.id as string);
+        return res;
       } catch (err) {
         throw new Error("Failed to fetch product reviews");
       }
     },
+    enabled: !!data?.id,
   });
+
+  useEffect(() => {
+    if (customerReviews) {
+      setAvgRating(
+        Number(
+          (
+            customerReviews.reduce((acc, review) => acc + review.rating, 0) /
+            customerReviews.length
+          ).toFixed(1)
+        )
+      );
+    }
+  }, [customerReviews]);
   const relatedProducts = [
     {
       id: "1",
@@ -148,7 +166,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
     },
   ];
 
-  const handleReviewSubmit = async (e) => {
+  const handleReviewSubmit = async (e: any) => {
     e.preventDefault();
     // Validate form
     if (reviewRating === 0) {
@@ -158,15 +176,15 @@ export default function ProductDetails({ slug }: { slug: string }) {
     try {
       setIsSubmitting(true);
       const reviewData = {
-        title: reviewName,
+        title: reviewTitle,
         rating: reviewRating,
         description: reviewText,
       };
-      await productReviewApi.create(data.id, reviewData);
+      await productReviewApi.create(data?.id as string, reviewData);
+      queryClient.invalidateQueries({ queryKey: ["productReview", data?.id] });
       toast.success("Review submitted successfully!");
       setReviewRating(0);
-      setReviewName("");
-      setReviewEmail("");
+      setReviewTitle("");
       setReviewText("");
     } catch (error) {
       console.error("Error submitting review:", error);
@@ -229,6 +247,17 @@ export default function ProductDetails({ slug }: { slug: string }) {
       toast.error("Failed to remove product from wishlist");
     },
   });
+
+    const { data: newArrivals, isLoading: newArrivalsLoad } = useQuery({
+      queryKey: ["newArrivals"],
+      queryFn: analyticApi.getNewArrivals,
+    });
+
+    const { data:wishlist } = useQuery({
+      queryKey: ["wishlistProducts"],
+      queryFn: wishlistApi.getProductList,
+      enabled: !!user?.id,
+    });
 
   // Add this effect to check if product is in wishlist
   useEffect(() => {
@@ -312,31 +341,51 @@ export default function ProductDetails({ slug }: { slug: string }) {
           {/* Product Info */}
           <div>
             <h1 className="text-2xl font-medium mb-2">{product?.name}</h1>
-            <p className="text-gray-600 mb-4">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            </p>
+            {/* <p className="text-gray-600 mb-4">
+              {product?.description}
+            </p> */}
 
             {/* Rating */}
-            <div className="flex items-center mb-4">
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <svg
-                    key={star}
-                    className={`w-8 aspect-square ${
-                      star <= Math.floor(product?.rating)
-                        ? "text-yellow-400"
-                        : "text-gray-300"
-                    }`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
+            {customerReviews && customerReviews?.length > 0 ? (
+              <div className="flex items-center mb-4">
+                <div className="flex">
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const difference = avgRating - star + 1;
+                    return (
+                      <div key={star} className="relative">
+                        <svg
+                          className="w-8 aspect-square text-gray-300"
+                          fill="currentColor"
+                          viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <div
+                          className="absolute top-0 left-0 overflow-hidden"
+                          style={{
+                            width: `${
+                              Math.max(0, Math.min(1, difference)) * 100
+                            }%`,
+                          }}>
+                          <svg
+                            className="w-8 aspect-square text-yellow-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <span className="ml-2 text-sm text-gray-600">
+                  {avgRating.toFixed(1)} ({customerReviews.length} Reviews)
+                </span>
               </div>
-              <span className="ml-2 text-sm text-gray-600">
-                {product?.rating} ({product?.reviews} Reviews)
-              </span>
-            </div>
+            ) : (
+              <div className="flex items-center mb-4">
+                <div className="flex">No customer reviews yet</div>
+              </div>
+            )}
 
             {/* Price */}
             <div className="flex items-center mb-6">
@@ -387,13 +436,15 @@ export default function ProductDetails({ slug }: { slug: string }) {
                   return (
                     <button
                       key={sizeObj.size}
-                      className={`w-10 h-10 flex items-center justify-center border rounded-md transition-colors ${
+                      className={`w-12 h-12 flex items-center justify-center rounded-md border transition-all relative overflow-hidden
+                      ${
                         isSelected
                           ? "bg-[#a08452] text-white border-[#a08452]"
                           : isAvailable
-                          ? "border-gray-300 text-gray-700 hover:border-[#a08452]"
-                          : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                      }`}
+                          ? "border-gray-400 text-gray-800 hover:border-[#a08452]"
+                          : "border-gray-300 text-gray-400 bg-gray-50 cursor-not-allowed"
+                      }
+                    `}
                       onClick={() =>
                         isAvailable &&
                         setSelectedSize(sizeObj.size) &&
@@ -401,6 +452,13 @@ export default function ProductDetails({ slug }: { slug: string }) {
                       }
                       disabled={!isAvailable}>
                       {sizeObj.size.slice(5)}
+
+                      {/* Diagonal Line if not available */}
+                      {!isAvailable && (
+                        <div className="absolute w-[150%] h-full top-0 left-[-25%] flex items-center justify-center pointer-events-none">
+                          <div className="w-[100%] h-[2px] bg-gray-400 -rotate-45" />
+                        </div>
+                      )}
                     </button>
                   );
                 })}
@@ -539,7 +597,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                           <div className="w-12 h-12 rounded-full overflow-hidden">
                             <Image
                               src={review.image || "/placeholder.svg"}
-                              alt={review.name}
+                              alt={review.title}
                               width={48}
                               height={48}
                               className="object-cover"
@@ -552,22 +610,22 @@ export default function ProductDetails({ slug }: { slug: string }) {
                             {[1, 2, 3, 4, 5].map((star) => (
                               <svg
                                 key={star}
-                                className="w-4 h-4 text-yellow-400"
+                                className={`w-4 h-4 ${
+                                  star <= review.rating
+                                    ? "text-yellow-400"
+                                    : "text-gray-300"
+                                }`}
                                 fill="currentColor"
                                 viewBox="0 0 20 20">
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                               </svg>
                             ))}
                           </div>
-                          <p className="font-medium mb-2">title</p>
-                          {/* <p className="font-medium mb-2">{review.title}</p> */}
                           <p className="text-gray-600 text-sm mb-2">
                             {review.description}
                           </p>
                           <p className="text-xs text-gray-500">
-                            Verified by{" "}
-                            <span className="font-medium">Raas</span> (verified
-                            purchase) on {review.updatedAt}
+                            Posted on {review.updatedAt?.slice(0, 10)}
                           </p>
                         </div>
                       </div>
@@ -603,33 +661,16 @@ export default function ProductDetails({ slug }: { slug: string }) {
 
                       <div>
                         <label
-                          htmlFor="review-name"
+                          htmlFor="review-title"
                           className="block text-sm font-medium mb-1">
-                          Name
+                          Title
                         </label>
                         <input
-                          id="review-name"
+                          id="review-title"
                           type="text"
-                          value={reviewName}
-                          onChange={(e) => setReviewName(e.target.value)}
-                          placeholder="Enter Your Name"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452]"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="review-email"
-                          className="block text-sm font-medium mb-1">
-                          Email Address
-                        </label>
-                        <input
-                          id="review-email"
-                          type="email"
-                          value={reviewEmail}
-                          onChange={(e) => setReviewEmail(e.target.value)}
-                          placeholder="Enter Your Email"
+                          value={reviewTitle}
+                          onChange={(e) => setReviewTitle(e.target.value)}
+                          placeholder="Enter Review Title"
                           className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#a08452]"
                           required
                         />
@@ -651,7 +692,6 @@ export default function ProductDetails({ slug }: { slug: string }) {
                           required
                         />
                       </div>
-
                       <div>
                         <Button
                           type="submit"
@@ -669,7 +709,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
         </div>
 
         {/* Related Products */}
-        <div className="mb-16">
+        {/* <div className="mb-16">
           <h2 className="text-2xl font-medium mb-8">Related Products</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
@@ -692,7 +732,24 @@ export default function ProductDetails({ slug }: { slug: string }) {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
+
+        <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 w-full">
+        <h2 className="text-2xl font-medium mb-8">New Arrivals</h2>
+          {!newArrivalsLoad ? (
+            <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {newArrivals?.map((product, index) => (
+                <ProductCard
+                  key={index}
+                  product={product}
+                  wishlistProducts={wishlist || []}
+                />
+              ))}
+            </div>
+          ) : (
+            <LoadingProducts length={4} />
+          )}
+        </section>
 
         {/* Features */}
         <div className="py-10 border-t border-b">

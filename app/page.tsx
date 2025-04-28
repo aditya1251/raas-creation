@@ -148,7 +148,7 @@ function Feature({
 }
 
 // Product Card Component
-function ProductCard({
+export function ProductCard({
   product,
   wishlistProducts,
 }: {
