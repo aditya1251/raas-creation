@@ -3,11 +3,13 @@ import Navbar from "@/components/navbar";
 import SiteFooter from "@/components/site-footer";
 import Image from "next/image";
 import Link from "next/link";
-import { User, Package, Heart, MapPin, PenSquare } from "lucide-react";
+import { User, Package, Heart, MapPin, PenSquare, LogOutIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { customerApi } from "@/lib/api/customer";
 import { usePathname } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { signOut } from "next-auth/react";
 
 export default function AccountLayout({
   children,
@@ -96,6 +98,11 @@ export default function AccountLayout({
                 <MapPin className="h-5 w-5" />
                 <span>Manage Addresses</span>
               </Link>
+
+              <button className={`flex items-center space-x-3 px-4 py-3` } onClick={() => signOut()} >
+                <LogOutIcon className="h-5 w-5" />
+                <span>Log Out</span>
+              </button>
             </nav>
           </div>
 
