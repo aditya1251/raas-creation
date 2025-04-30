@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { LoginSchema } from "@/types/types";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -25,8 +24,7 @@ import "react-phone-input-2/lib/style.css";
 import { loginFunction } from "./actions/sign-in-action";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { customerApi } from "@/lib/api/customer";
+import { useSession } from "next-auth/react";
 
 type FormValues = {
   mobileNumber: string;
@@ -37,13 +35,10 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { data: user, isLoading: waiting } = useQuery({
-    queryKey: ["user"],
-    queryFn: customerApi.getCustomer,
-  });
+  const { data:session, status } = useSession();
 
 
-  if (user) {
+  if (session?.user) {
     router.push("/account/orders");
   }
 
@@ -55,7 +50,7 @@ export default function LoginPage() {
     },
   });
 
-  if (waiting) {
+  if (status === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-lg font-semibold text-gray-700">Checking authentication...</div>

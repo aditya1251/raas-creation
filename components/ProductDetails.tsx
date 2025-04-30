@@ -39,10 +39,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("descriptions");
   const [reviewTitle, setReviewTitle] = useState("");
-  const [reviewImage, setReviewImage] = useState<File | null>(null);
   const [reviewRating, setReviewRating] = useState(0);
-  const [reviewName, setReviewName] = useState("");
-  const [reviewEmail, setReviewEmail] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [product, setProduct] = useState<Products | null>(null);
@@ -50,6 +47,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
   const [isProductInWishlist, setIsProductInWishlist] = useState(false);
   const queryClient = useQueryClient();
   const [avgRating, setAvgRating] = useState(5);
+  const [stockStatus, setStockStatus] = useState<string>("in_stock");
+  const [stockCount, setStockCount] = useState<number>(0);
 
   const decreaseQuantity = () => {
     if (quantity > 1) {
@@ -214,6 +213,30 @@ export default function ProductDetails({ slug }: { slug: string }) {
       }
     }
   }, [data]);
+
+  useEffect(() => {
+    if (selectedSize && selectedSizeId && availableSizes) {
+      
+      const selectedSizeData = availableSizes.find(
+        (s) => s.size === selectedSize
+      );
+      if (selectedSizeData) {
+        const stockCount = selectedSizeData.stock;
+
+        if (stockCount === 0) {
+          setStockStatus("out_of_stock");
+        } else if (stockCount <= 3) {
+          setStockStatus("low_stock");
+          setStockCount(stockCount);
+        } else if (stockCount <= 10) {
+          setStockStatus("limited_stock");
+          setStockCount(stockCount);
+        } else {
+          setStockStatus("in_stock");
+        }
+      }
+    }
+  }, [selectedSize, selectedSizeId, availableSizes]);
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
@@ -248,16 +271,16 @@ export default function ProductDetails({ slug }: { slug: string }) {
     },
   });
 
-    const { data: newArrivals, isLoading: newArrivalsLoad } = useQuery({
-      queryKey: ["newArrivals"],
-      queryFn: analyticApi.getNewArrivals,
-    });
+  const { data: newArrivals, isLoading: newArrivalsLoad } = useQuery({
+    queryKey: ["newArrivals"],
+    queryFn: analyticApi.getNewArrivals,
+  });
 
-    const { data:wishlist } = useQuery({
-      queryKey: ["wishlistProducts"],
-      queryFn: wishlistApi.getProductList,
-      enabled: !!user?.id,
-    });
+  const { data: wishlist } = useQuery({
+    queryKey: ["wishlistProducts"],
+    queryFn: wishlistApi.getProductList,
+    enabled: !!user?.id,
+  });
 
   // Add this effect to check if product is in wishlist
   useEffect(() => {
@@ -400,9 +423,26 @@ export default function ProductDetails({ slug }: { slug: string }) {
             <p className="text-gray-700 mb-6">{mainDesc}</p>
             {/* Stock Status */}
             <div className="mb-6">
-              <span className="inline-block px-4 py-1.5 border rounded-md border-green-500 text-green-700 text-sm font-medium">
-                In Stock
-              </span>
+              {stockStatus === "in_stock" && (
+                <span className="inline-block px-4 py-1.5 border rounded-md border-green-500 text-green-700 text-sm font-medium">
+                  In Stock
+                </span>
+              )}
+              {stockStatus === "limited_stock" && (
+                <span className="inline-block px-4 py-1.5 border rounded-md border-orange-500 text-orange-700 text-sm font-medium">
+                  Limited Stock ({stockCount} left)
+                </span>
+              )}
+              {stockStatus === "low_stock" && (
+                <span className="inline-block px-4 py-1.5 border rounded-md border-red-400 text-red-700 text-sm font-medium">
+                  Only {stockCount} left!
+                </span>
+              )}
+              {stockStatus === "out_of_stock" && (
+                <span className="inline-block px-4 py-1.5 border rounded-md border-gray-500 text-gray-700 text-sm font-medium">
+                  Out of Stock
+                </span>
+              )}
             </div>
             {/* Color Selection - Added as small square boxes */}
             <div className="mb-6">
@@ -489,10 +529,13 @@ export default function ProductDetails({ slug }: { slug: string }) {
               <Button
                 className="flex-1 bg-[#a08452] hover:bg-[#8c703d] text-white transition-colors h-auto py-2"
                 onClick={handleAddToCart}
-                disabled={!selectedSize || availableSizes.length === 0}>
+                disabled={
+                  !selectedSize ||
+                  availableSizes.length === 0 ||
+                  stockStatus === "out_of_stock"
+                }>
                 Add to Cart
               </Button>
-
               <Button
                 variant="outline"
                 className="border-gray-300 hover:bg-gray-50 transition-colors w-8 h-8 p-0 flex items-center justify-center"
@@ -735,7 +778,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
         </div> */}
 
         <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 w-full">
-        <h2 className="text-2xl font-medium mb-8">New Arrivals</h2>
+          <h2 className="text-2xl font-medium mb-8">New Arrivals</h2>
           {!newArrivalsLoad ? (
             <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
               {newArrivals?.map((product, index) => (

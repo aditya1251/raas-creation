@@ -7,7 +7,6 @@ import {
   Truck,
   CheckCircle,
   FileText,
-  Download,
   HelpCircle,
   Clock,
   X,
@@ -20,39 +19,9 @@ import { orderApi } from "@/lib/api/orders";
 import toast from "react-hot-toast";
 
 export default function OrderDetailsPage() {
-  // In a real app, you would fetch order details based on the ID
-
   const router = useRouter();
-
   const orderId = useParams().id;
-  // const orderDetails = {
-  //   id: "ORD-2023-1234",
-  //   date: "March 15, 2024",
-  //   status: "Delivered",
-  //   items: [
-  //     {
-  //       id: 1,
-  //       name: "Voilet Crape Digital Print Co-ord Set",
-  //       size: "38",
-  //       color: "Purple",
-  //       quantity: 1,
-  //       price: 2599,
-  //       image: "/placeholder.svg?height=96&width=80",
-  //     },
-  //   ],
-  //   shipping: {
-  //     address: "204/2-c & d, basement, jeewan nagar, ashram, New Delhi-110014",
-  //     method: "Standard Delivery",
-  //     tracking: "IND123456789",
-  //   },
-  //   payment: {
-  //     method: "Credit Card",
-  //     subtotal: 2599,
-  //     shipping: 70,
-  //     tax: 130,
-  //     total: 2799,
-  //   },
-  // };
+
   const { data: orderDetails } = useQuery({
     queryKey: ["orderDetails", orderId],
     queryFn: async () => {
@@ -60,16 +29,17 @@ export default function OrderDetailsPage() {
       return res;
     },
   });
+
   const handleCancelOrder = async () => {
     try {
-      const res = await orderApi.cancelOrder(orderId as string);
+      await orderApi.cancelOrder(orderId as string);
       toast.success("Order cancelled successfully");
       router.push("/account/orders");
     } catch (error) {
       toast.error("Failed to cancel order");
     }
   };
-  // Helper function to get status color
+
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "delivered":
@@ -84,9 +54,9 @@ export default function OrderDetailsPage() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12">
-      {/* Back button */}
       <div className="mb-6">
         <Link
           href="/account/orders"
@@ -103,9 +73,16 @@ export default function OrderDetailsPage() {
             <h1 className="text-2xl font-medium mb-1">
               Order #{orderDetails?.orderId}
             </h1>
-            {/* @ts-ignore */}
-            <p className="text-gray-600">Placed on {new Date(orderDetails?.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-          </div>          <div
+            <p className="text-gray-600">
+              Placed on{" "}
+              {orderDetails?.createdAt && new Date(orderDetails.createdAt).toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+          </div>
+          <div
             className={`px-4 py-2 rounded-full ${getStatusColor(
               orderDetails?.fulfillment as string
             )} font-medium text-sm`}>
@@ -122,11 +99,28 @@ export default function OrderDetailsPage() {
         </h2>
 
         <div className="relative">
-          {/* Progress Bar */}
-          <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200">
-            <div 
+          <div className="absolute md:top-5 md:left-0 md:right-0 md:h-1 left-5 top-0 bottom-0 w-1 bg-gray-200">
+            <div
+              className={`md:h-full h-full ${
+                orderDetails?.fulfillment === "CANCELLED" ||
+                orderDetails?.fulfillment === "RETURNED"
+                  ? "md:w-1/3 h-1/3"
+                  : orderDetails?.fulfillment === "PENDING"
+                  ? "md:w-1/4 h-1/4"
+                  : orderDetails?.fulfillment === "SHIPPED"
+                  ? "md:w-3/4 h-3/4"
+                  : orderDetails?.fulfillment === "DELIVERED"
+                  ? "md:w-full h-full"
+                  : "md:w-0 h-0"
+              } bg-[#a08452]`}
+            ></div>
+
+          </div>
+          <div className="absolute hidden md:block top-5 left-0 right-0 h-1 bg-gray-200">
+            <div
               className={`h-full ${
-                orderDetails?.fulfillment === "CANCELLED" || orderDetails?.fulfillment === "RETURNED"
+                orderDetails?.fulfillment === "CANCELLED" ||
+                orderDetails?.fulfillment === "RETURNED"
                   ? "w-1/3 bg-red-500"
                   : orderDetails?.fulfillment === "PENDING"
                   ? "w-1/4 bg-[#a08452]"
@@ -139,57 +133,100 @@ export default function OrderDetailsPage() {
             ></div>
           </div>
 
-          {/* Progress Steps */}
-          <div className="flex justify-between relative">
-            <div className="flex flex-col items-center z-10">
-              <div className="w-10 h-10 rounded-full bg-[#a08452] text-white flex items-center justify-center mb-2 shadow-md">
+          <div className="flex md:flex-row flex-col md:justify-between md:min-w-[500px] sm:min-w-0 relative z-10 md:space-x-4 space-y-8 md:space-y-0">
+            <div className="flex md:flex-col flex-row items-center md:text-center text-left">
+              <div className="w-10 h-10 rounded-full bg-[#a08452] text-white flex items-center justify-center md:mb-2 mr-4 md:mr-0 shadow-md">
                 <Package className="h-5 w-5" />
               </div>
-              <p className="font-medium text-sm">Order Placed</p>
+              <div>
+                <p className="font-medium text-sm">Order Placed</p>
+              </div>
             </div>
 
-            {orderDetails?.fulfillment !== "CANCELLED" && orderDetails?.fulfillment !== "RETURNED" ? (
+            {orderDetails?.fulfillment !== "CANCELLED" &&
+            orderDetails?.fulfillment !== "RETURNED" ? (
               <>
-                <div className="flex flex-col items-center z-10">
-                  <div className={`w-10 h-10 rounded-full ${orderDetails?.fulfillment !== "PENDING" ? "bg-[#a08452]" : "bg-gray-200"} text-white flex items-center justify-center mb-2 shadow-md`}>
+                <div className="flex md:flex-col flex-row items-center md:text-center text-left">
+                  <div
+                    className={`w-10 h-10 rounded-full ${
+                      orderDetails?.fulfillment !== "PENDING"
+                        ? "bg-[#a08452]"
+                        : "bg-gray-200"
+                    } text-white flex items-center justify-center md:mb-2 mr-4 md:mr-0 shadow-md`}>
                     <Package className="h-5 w-5" />
                   </div>
-                  <p className="font-medium text-sm">Processing</p>
-                  <p className="text-xs text-gray-500">{orderDetails?.fulfillment === "PENDING" ? "Pending" : "Completed"}</p>
+                  <div>
+                    <p className="font-medium text-sm">Processing</p>
+                    <p className="text-xs text-gray-500">
+                      {orderDetails?.fulfillment === "PENDING"
+                        ? "Pending"
+                        : "Completed"}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex flex-col items-center z-10">
-                  <div className={`w-10 h-10 rounded-full ${orderDetails?.fulfillment === "SHIPPED" || orderDetails?.fulfillment === "DELIVERED" ? "bg-[#a08452]" : "bg-gray-200"} text-white flex items-center justify-center mb-2 shadow-md`}>
+                <div className="flex md:flex-col flex-row items-center md:text-center text-left">
+                  <div
+                    className={`w-10 h-10 rounded-full ${
+                      orderDetails?.fulfillment === "SHIPPED" ||
+                      orderDetails?.fulfillment === "DELIVERED"
+                        ? "bg-[#a08452]"
+                        : "bg-gray-200"
+                    } text-white flex items-center justify-center md:mb-2 mr-4 md:mr-0 shadow-md`}>
                     <Truck className="h-5 w-5" />
                   </div>
-                  <p className="font-medium text-sm">Shipped</p>
-                  <p className="text-xs text-gray-500">{orderDetails?.fulfillment === "SHIPPED" || orderDetails?.fulfillment === "DELIVERED" ? orderDetails?.updatedAt : "Pending"}</p>
+                  <div>
+                    <p className="font-medium text-sm">Shipped</p>
+                    <p className="text-xs text-gray-500">
+                      {orderDetails?.fulfillment === "SHIPPED" ||
+                      orderDetails?.fulfillment === "DELIVERED"
+                        ? orderDetails?.updatedAt
+                        : "Pending"}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex flex-col items-center z-10">
-                  <div className={`w-10 h-10 rounded-full ${orderDetails?.fulfillment === "DELIVERED" ? "bg-[#a08452]" : "bg-gray-200"} text-white flex items-center justify-center mb-2 shadow-md`}>
+                <div className="flex md:flex-col flex-row items-center md:text-center text-left">
+                  <div
+                    className={`w-10 h-10 rounded-full ${
+                      orderDetails?.fulfillment === "DELIVERED"
+                        ? "bg-[#a08452]"
+                        : "bg-gray-200"
+                    } text-white flex items-center justify-center md:mb-2 mr-4 md:mr-0 shadow-md`}>
                     <CheckCircle className="h-5 w-5" />
                   </div>
-                  <p className="font-medium text-sm">Delivered</p>
-                  <p className="text-xs text-gray-500">{orderDetails?.fulfillment === "DELIVERED" ? orderDetails?.updatedAt : "Pending"}</p>
+                  <div>
+                    <p className="font-medium text-sm">Delivered</p>
+                    <p className="text-xs text-gray-500">
+                      {orderDetails?.fulfillment === "DELIVERED"
+                        ? orderDetails?.updatedAt
+                        : "Pending"}
+                    </p>
+                  </div>
                 </div>
               </>
             ) : (
-              <div className="flex flex-col items-center z-10">
-                <div className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center mb-2 shadow-md">
+              <div className="flex md:flex-col flex-row items-center md:text-center text-left">
+                <div className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center md:mb-2 mr-4 md:mr-0 shadow-md">
                   <X className="h-5 w-5" />
                 </div>
-                <p className="font-medium text-sm">{orderDetails?.fulfillment}</p>
-                <p className="text-xs text-gray-500">{orderDetails?.updatedAt}</p>
+                <div>
+                  <p className="font-medium text-sm">
+                    {orderDetails?.fulfillment}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {orderDetails?.updatedAt}
+                  </p>
+                </div>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Order Items */}
-        <div className="lg:col-span-2">
+      {/* Order Details + Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="md:col-span-2">
           <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-8">
             <div className="p-6 border-b">
               <h2 className="text-lg font-medium flex items-center">
@@ -198,53 +235,21 @@ export default function OrderDetailsPage() {
               </h2>
             </div>
 
-            <div className="hidden md:grid md:grid-cols-[3fr,1fr,1fr,1fr] bg-gray-50 p-4 border-b">
-              <div className="font-medium text-gray-600">Product</div>
-              <div className="font-medium text-gray-600">Price</div>
-              <div className="font-medium text-gray-600">Quantity</div>
-              <div className="font-medium text-gray-600 text-right">Total</div>
-            </div>
+            <div className="overflow-x-auto">
+              <div className="hidden md:grid md:grid-cols-[3fr,1fr,1fr,1fr] bg-gray-50 p-4 border-b">
+                <div className="font-medium text-gray-600">Product</div>
+                <div className="font-medium text-gray-600">Price</div>
+                <div className="font-medium text-gray-600">Quantity</div>
+                <div className="font-medium text-gray-600 text-right">Total</div>
+              </div>
 
-            {orderDetails?.items.map((item) => (
-              <div
-                key={item.id}
-                className="p-6 border-b last:border-b-0 hover:bg-gray-50 transition-colors">
-                {/* Mobile View */}
-                <div className="md:hidden grid grid-cols-[80px,1fr] gap-4">
-                  <div className="aspect-square relative rounded-md overflow-hidden border">
-                    <Image
-                      src={item.productImage || "/placeholder.svg"}
-                      alt={item.productName}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-medium mb-1 truncate">
-                      {item.productName}
-                    </h3>
-                    <div className="text-sm text-gray-600 mb-3">
-                      <p>Size: {item.size}</p>
-                      <p>Color: {item.color}</p>
-                    </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="font-medium">
-                        ₹{item.priceAtOrder.toFixed(2)}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="text-gray-600">Qty: {item.quantity}</div>
-                      <div className="font-medium text-[#a08452]">
-                        ₹{(item.priceAtOrder * item.quantity).toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Desktop View */}
-                <div className="hidden md:grid md:grid-cols-[3fr,1fr,1fr,1fr] items-center">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-20 relative rounded-md overflow-hidden border">
+              {orderDetails?.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-6 border-b last:border-b-0 hover:bg-gray-50 transition-colors">
+                  {/* Mobile */}
+                  <div className="md:hidden grid grid-cols-[80px,1fr] gap-4">
+                    <div className="aspect-square relative rounded-md overflow-hidden border">
                       <Image
                         src={item.productImage || "/placeholder.svg"}
                         alt={item.productName}
@@ -253,170 +258,120 @@ export default function OrderDetailsPage() {
                       />
                     </div>
                     <div>
-                      <div className="font-medium truncate">
-                        {item.productName}
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        <span>Size: {item.size}</span>
-                        <span className="ml-3">Color: {item.color}</span>
+                      <h3 className="font-medium mb-1">{item.productName}</h3>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Size: {item.size}, Color: {item.color}
+                      </p>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          Qty: {item.quantity}
+                        </span>
+                        <span className="font-medium text-[#a08452]">
+                          ₹{(item.priceAtOrder * item.quantity).toFixed(2)}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div className="font-medium">
-                    ₹{item.priceAtOrder.toFixed(2)}
-                  </div>
-                  <div className="text-gray-600">{item.quantity}</div>
-                  <div className="text-right font-medium text-[#a08452]">
-                    ₹{(item.priceAtOrder * item.quantity).toFixed(2)}
+
+                  {/* Desktop */}
+                  <div className="hidden md:grid md:grid-cols-[3fr,1fr,1fr,1fr] items-center">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-20 relative rounded-md overflow-hidden border">
+                        <Image
+                          src={item.productImage || "/placeholder.svg"}
+                          alt={item.productName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="font-medium">{item.productName}</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Size: {item.size} | Color: {item.color}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="font-medium">
+                      ₹{item.priceAtOrder.toFixed(2)}
+                    </div>
+                    <div>{item.quantity}</div>
+                    <div className="text-right font-medium text-[#a08452]">
+                      ₹{(item.priceAtOrder * item.quantity).toFixed(2)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="lg:col-span-1">
-          {/* Order Summary */}
-          <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-8">
+        {/* Summary & Shipping */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg border shadow-sm">
             <div className="p-6 border-b">
               <h2 className="text-lg font-medium">Order Summary</h2>
             </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                  <div className="mb-4">
-                    <h3 className="text-sm font-medium text-gray-600 mb-1">
-                      Payment Method
-                    </h3>
-                    <p className="text-gray-800">
-                      {orderDetails?.razorpayOrderId ? "Razorpay" : "COD"}
-                    </p>
-                </div>
-
-                <div className="flex justify-between pt-4 border-t font-medium">
-                  <span>Total</span>
-                  <span className="text-lg text-[#a08452]">
-                    ₹{orderDetails?.total?.toFixed(2)}
-                  </span>
-                </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <h3 className="text-sm text-gray-600">Payment Method</h3>
+                <p className="text-gray-800">
+                  {orderDetails?.razorpayOrderId ? "Razorpay" : "COD"}
+                </p>
+              </div>
+              <div className="flex justify-between pt-4 border-t font-medium">
+                <span>Total</span>
+                <span className="text-lg text-[#a08452]">
+                  ₹{orderDetails?.total?.toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
-          {/* Shipping Information */}
-          <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-8">
+
+          <div className="bg-white rounded-lg border shadow-sm">
             <div className="p-6 border-b">
               <h2 className="text-lg font-medium">Shipping Information</h2>
             </div>
-            <div className="p-6">
-              <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-600 mb-1">
-                  Address Type
-                </h3>
-                <p className="text-gray-800">
-                  {orderDetails?.address?.addressName}
-                </p>
-              </div>
-              <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-600 mb-1">
-                  Shipping Address
-                </h3>
-                <p className="text-gray-800">
-                  {orderDetails?.address?.firstName +
-                    " " +
-                    orderDetails?.address?.lastName +
-                    ", " +
-                    orderDetails?.address?.street +
-                    ", " +
-                    orderDetails?.address?.city +
-                    ", " +
-                    orderDetails?.address?.state +
-                    ", " +
-                    orderDetails?.address?.zipCode}
-                </p>
-              </div>
-              <div>
-                {orderDetails?.awb && (
-                  <div className="mb-4">
-                    <h3 className="text-sm font-medium text-gray-600 mb-1">
-                      Tracking awb Number
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-[#a08452] font-medium">
-                        {orderDetails?.awb}
-                      </p>
-                      <button
-                        onClick={async () => {
-                          await navigator.clipboard.writeText(
-                            orderDetails?.awb || ""
-                          );
-                          toast.success("AWB copied to clipboard");
-                        }}
-                        className="p-1 hover:bg-gray-100 rounded">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round">
-                          <rect
-                            x="9"
-                            y="9"
-                            width="13"
-                            height="13"
-                            rx="2"
-                            ry="2"></rect>
-                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                        </svg>
-                      </button>
-                      <a
-                        href="https://nimbuspost.com/tracking"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1 hover:bg-gray-100 rounded">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round">
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                          <polyline points="15 3 21 3 21 9"></polyline>
-                          <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className="p-6 space-y-4 text-sm text-gray-800">
+              <p>
+                <strong>Address:</strong> {orderDetails?.address?.firstName}{" "}
+                {orderDetails?.address?.lastName},{" "}
+                {orderDetails?.address?.street}, {orderDetails?.address?.city},{" "}
+                {orderDetails?.address?.state} - {orderDetails?.address?.zipCode}
+              </p>
+              {orderDetails?.awb && (
+                <div>
+                  <strong>Tracking AWB:</strong>{" "}
+                  <span className="text-[#a08452]">{orderDetails.awb}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(orderDetails.awb as string);
+                      toast.success("AWB copied");
+                    }}
+                    className="ml-2 text-sm">
+                    Copy
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-4">
         {orderDetails?.status === "PENDING" && (
-          <>
-            <Button
-              onClick={handleCancelOrder}
-              className="border-gray-300 hover:bg-gray-50 flex items-center gap-2">
-              <Trash2 className="h-4 w-4" />
-              Cancel Order
-            </Button>
-          </>
+          <Button
+            onClick={handleCancelOrder}
+            className="border-gray-300 hover:bg-gray-50 flex items-center gap-2">
+            <Trash2 className="h-4 w-4" />
+            Cancel Order
+          </Button>
         )}
         <Button
           variant="outline"
-          onClick={() => {
-            router.push("/contact");
-          }}
+          onClick={() => router.push("/contact")}
           className="border-gray-300 hover:bg-gray-50 flex items-center gap-2">
           <HelpCircle className="h-4 w-4" />
           Need Help?

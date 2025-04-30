@@ -155,8 +155,6 @@ export function ProductCard({
   product: any;
   wishlistProducts: any[];
 }) {
-
-  console.log("Product",product)
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
@@ -169,7 +167,6 @@ export function ProductCard({
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   useEffect(() => {
-    console.log("wishlistProducts", wishlistProducts);
     if (wishlistProducts) {
       setIsProductInWishlist(wishlistProducts.includes(product.id));
     }
