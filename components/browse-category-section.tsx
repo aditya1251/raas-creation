@@ -136,7 +136,7 @@ export default function BrowseCategorySection() {
                 <div className="aspect-[3/4] relative rounded-xl overflow-hidden">
                   <Image
                     // @ts-ignore
-                    src={category.Product[0].assets[0].asset_url}
+                    src={category?.Product[0].assets[0].asset_url}
                     
                     alt={category.name}
                     fill
