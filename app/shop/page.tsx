@@ -131,20 +131,19 @@ export default function ShopPage() {
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
   });
-
   const { data: wishlistProducts } = useQuery({
     queryKey: ["wishlistProducts"],
     queryFn: wishlistApi.getProductList,
     enabled: !!user?.id,
   });
-
+  
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: categoryApi.getAll,
   });
-
+  
   const [products, setProducts] = useState<Products[]>([]);
-
+  
   useEffect(() => {
     if (productResponse) {
       setProducts(productResponse.products);
@@ -155,7 +154,6 @@ export default function ShopPage() {
 
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect();
-
     observerRef.current = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && hasMore && !isLoading) {
         setCurrentPage((prev) => prev + 1);
@@ -188,11 +186,33 @@ export default function ShopPage() {
   };
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value);
-  };
-
-  const handlePriceRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPriceRange(Number(e.target.value));
+    const newSortValue = e.target.value;
+    setSortBy(newSortValue);
+    switch(newSortValue) {
+      case "latest":
+        setProducts([...products].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ));
+        break;
+      case "price-low-high":
+        setProducts([...products].sort((a, b) => {
+          const priceA = a.discountPrice || a.price;
+          const priceB = b.discountPrice || b.price;
+          return priceA - priceB;
+        }));
+        break;
+      case "price-high-low":
+        setProducts([...products].sort((a, b) => {
+          const priceA = a.discountPrice || a.price;
+          const priceB = b.discountPrice || b.price;
+          return priceB - priceA;
+        }));
+        break;
+        
+      default:
+        break;
+    }
+    setCurrentPage(1);
   };
 
   const clearAllFilters = () => {
@@ -351,7 +371,7 @@ export default function ShopPage() {
                   min="0"
                   max={maxPriceValue}
                   value={priceRange}
-                  onChange={handlePriceRangeChange}
+                  onChange={(e)=>setPriceRange(Number(e.target.value))}
                   className="w-full h-1 bg-[#A08452] rounded-lg appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -572,7 +592,6 @@ function ProductCard({
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   useEffect(() => {
-    console.log("wishlistProducts", wishlistProducts);
     if (wishlistProducts) {
       setIsProductInWishlist(wishlistProducts.includes(product.id));
     }
