@@ -15,11 +15,13 @@ const OTPVerification = ({ id }: { id: string }) => {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const verifyOtp = useVerifyOtp();
   const resendOtp = useResendOtp();
-  console.log(otp);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const router = useRouter();
 
   const handleResendOtp = async () => {
+    setIsResending(true);
     console.log(id);
     await resendOtp.mutate(
       { jwt: id },
@@ -27,11 +29,15 @@ const OTPVerification = ({ id }: { id: string }) => {
         onSuccess: (data) => {
           router.push(`/otp/${data.jwt}`);
         },
+        onSettled: () => {
+          setIsResending(false);
+        },
       }
     );
   };
 
   const handleOTPSubmit = async () => {
+    setIsSubmitting(true);
     console.log("handleOTPSubmit");
     const parsedOtp = otpschema.safeParse(otp);
 
@@ -42,22 +48,27 @@ const OTPVerification = ({ id }: { id: string }) => {
       const data = { otp: otpString, jwt: id };
 
       verifyOtp.mutate(data, {
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
           console.log(data);
           toast.success("OTP verified successfully");
           if (data?.jwt) {
             router.push(`/new-password/${data.jwt}`);
           } else {
-            router.push("/signin");
-          }
+            
+              router.push("/signIn");
+            }
         },
         onError: (error) => {
           console.log(error);
           toast.error("Invalid OTP");
         },
+        onSettled: () => {
+          setIsSubmitting(false);
+        },
       });
     } else {
       toast.error("Invalid OTP");
+      setIsSubmitting(false);
     }
   };
   return (
@@ -116,13 +127,20 @@ const OTPVerification = ({ id }: { id: string }) => {
             </div>
             <OTPInput otp={otp} onChangeOtp={setOtp} />
             <p className="relative text-end mt-3 mb-6 text-sm text-[#a08452]">
-              <button onClick={handleResendOtp}>Resend SMS</button>
+              <button 
+                onClick={handleResendOtp} 
+                disabled={isResending}
+                className="disabled:opacity-50"
+              >
+                {isResending ? 'Resending...' : 'Resend SMS'}
+              </button>
             </p>
             <button
-              className="w-full p-3 text-white  text-lg rounded-xl bg-[#a08452]    shadow-lg disabled:opacity-50"
+              className="w-full p-3 text-white text-lg rounded-xl bg-[#a08452] shadow-lg disabled:opacity-50"
               onClick={handleOTPSubmit}
+              disabled={isSubmitting}
             >
-              Continue
+              {isSubmitting ? 'Verifying...' : 'Continue'}
             </button>
           </div>
         </div>
