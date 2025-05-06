@@ -1,51 +1,40 @@
-"use client"
-import Image from "next/image"
-import Link from "next/link"
-import { CheckCircle, Package, Truck, ShoppingBag } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Navbar from "@/components/navbar"
-import SiteFooter from "@/components/site-footer"
-import { Order, orderApi } from "@/lib/api/orders"
-import { useRouter } from "next/navigation"
-import { useQuery } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { CheckCircle, Package, Truck, ShoppingBag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Navbar from "@/components/navbar";
+import SiteFooter from "@/components/site-footer";
+import { Order, orderApi } from "@/lib/api/orders";
+import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 export default function OrderConfirmationPage() {
-
   const [lastOrderId, setLastOrderId] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const lastOrderId = localStorage.getItem("lastOrderId");
-    if (lastOrderId) {
-      setLastOrderId(lastOrderId);
+    const storedOrderId = localStorage.getItem("lastOrderId");
+    if (storedOrderId) {
+      setLastOrderId(storedOrderId);
+    } else {
+      router.push("/shop");
     }
-  }, []);
+  }, [router]);
 
-  const [order, setOrder] = useState<Order | null>(null);
-  if (!lastOrderId) {
-    router.push("/shop");
-  }
-  const {data , isLoading, isError} = useQuery({
+  const { data: order, isLoading, isError } = useQuery({
     queryKey: ["order", lastOrderId],
-    queryFn: () => {
-      return orderApi.getOrderById(lastOrderId ?? "abc");
-    }
+    queryFn: () => orderApi.getOrderById(lastOrderId ?? ""),
+    enabled: !!lastOrderId, // avoid running query before ID is available
   });
 
-  useEffect(()=> {
-    if(data) {
-      console.log(data);
-      setOrder(data);
-    }
-  },[data])
-
-  if (isError) {
-    return <div>Error loading order</div>;
+  if (!lastOrderId || (isLoading && !order)) {
+    return <div className="text-center py-10">Loading...</div>;
   }
 
-  if (isLoading && !order) {
-    return <div>Loading...</div>;
+  if (isError) {
+    return <div className="text-center py-10 text-red-500">Error loading order</div>;
   }
   return (
     <div className="min-h-screen flex flex-col">
@@ -67,7 +56,7 @@ export default function OrderConfirmationPage() {
             <div className="flex flex-col md:flex-row justify-between mb-4">
               <div>
                 <h2 className="font-medium text-sm sm:text-base">Order ID</h2>
-                <p className="text-[#795d2a] text-sm sm:text-base">{order?.id}</p>
+                <p className="text-[#795d2a] text-sm sm:text-base"> # {order?.orderId}</p>
               </div>
             </div>
 
