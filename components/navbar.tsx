@@ -89,7 +89,7 @@ export default function Navbar() {
   const { data: searchResults, isLoading } = useQuery({
     queryKey: ["products", currentPage, itemsPerPage, debouncedSearchTerm],
     queryFn: () =>
-      productApi.getProducts(currentPage, itemsPerPage, debouncedSearchTerm),
+      productApi.getProducts(currentPage, itemsPerPage, debouncedSearchTerm, { status: "PUBLISHED" }),
     enabled: !!debouncedSearchTerm && debouncedSearchTerm.length >= 2,
   });
   // Save search to history when user clicks on a product
@@ -113,6 +113,7 @@ export default function Navbar() {
     e.preventDefault();
     if (searchTerm) {
       saveSearchToHistory(searchTerm);
+      router.push(`/shop?q=${encodeURIComponent(searchTerm)}`);
       setIsSearchOpen(false);
     }
   };
@@ -296,7 +297,7 @@ export default function Navbar() {
                                           search
                                         );
                                         router.push(
-                                          `/search?q=${encodeURIComponent(
+                                          `/shop?q=${encodeURIComponent(
                                             search
                                           )}`
                                         );

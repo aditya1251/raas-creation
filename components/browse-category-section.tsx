@@ -5,11 +5,14 @@ import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { categoryApi } from '@/lib/api/categories';
 import { LoadingProducts } from './ui/loader';
+import { useRouter } from 'next/navigation';
 
 export default function BrowseCategorySection() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const router = useRouter();
 
   // Category data with images and names
   const {data: categories,isLoading} = useQuery({
@@ -47,6 +50,11 @@ export default function BrowseCategorySection() {
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth);
     }
   };
+
+  const handleCategoryClick = (categoryId: string) => {
+    router.push(`/shop?c=${categoryId}`);
+  };
+
   // Add scroll event listener
   useEffect(() => {
     const currentRef = scrollContainerRef.current;
@@ -145,6 +153,7 @@ export default function BrowseCategorySection() {
                   <div className="absolute bottom-5 w-11/12 lg:w-4/6 left-1/2 transform -translate-x-1/2">
                     <button
                       className="rounded-lg bg-white text-gray-800 border-none px-6 md:px-8 py-2 md:py-3 text-base lg:text-xl font-medium lg:font-bold w-full shadow-md hover:bg-gray-100"
+                      onClick={() => handleCategoryClick(category.id)}
                     >
                       {category.name}
                     </button>

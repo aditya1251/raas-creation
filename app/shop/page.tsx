@@ -29,6 +29,7 @@ import toast from "react-hot-toast";
 import { customerApi } from "@/lib/api/customer";
 import { categoryApi } from "@/lib/api/categories";
 import { Category } from "@/types/types";
+import { useSearchParams } from "next/navigation";
 
 const sortOptions = [
   { value: "latest", label: "Sort by latest" },
@@ -60,7 +61,7 @@ export default function ShopPage() {
   const [isExpandedCategories, setIsExpandedCategories] = useState(false);
   const [showAllColors, setShowAllColors] = useState(false);
   const itemsPerPage = 12;
-
+  const [searchQuery, setSearchQuery] = useState("");
   const [filterValues, setFilterValues] = useState({
     priceRange: 10000,
     sortBy: "",
@@ -68,6 +69,25 @@ export default function ShopPage() {
     selectedSizes: [] as string[],
     selectedCategories: [] as string[],
   });
+  const searchParams = useSearchParams();
+
+  // setSearchQuery(searchParams.get("q") || "");
+
+  useEffect(() => {
+    if (searchParams.get("q")) {
+      setSearchQuery(searchParams.get("q") || "");
+    }
+
+    if(searchParams.get("c")) {
+      setSelectedCategories([searchParams.get("c") || ""]);
+      setFilterValues((prev) => ({
+        ...prev,
+        selectedCategories,
+      }));
+    }
+  }, [searchParams]);
+
+ 
 
   const [colors, setColors] = useState<
     { id: string; name: string; hex: string }[]
@@ -95,22 +115,23 @@ export default function ShopPage() {
   const { data: productResponse, isLoading } = useQuery({
     queryKey: [
       "filteredProducts",
+      searchQuery,
       currentPage,
+      selectedCategories,
       filterValues.priceRange,
       filterValues.sortBy,
       filterValues.selectedColors,
       filterValues.selectedSizes,
-      filterValues.selectedCategories,
     ],
     queryFn: () =>
-      productApi.getProducts(currentPage, itemsPerPage, "", {
+      productApi.getProducts(currentPage, itemsPerPage, searchQuery, {
         status: "PUBLISHED",
         max_price: filterValues.priceRange,
         sort_by: filterValues.sortBy.includes("price") ? "price" : "createdAt",
         sort_order: filterValues.sortBy === "price-high-low" ? "desc" : "asc",
         color: filterValues.selectedColors.join(",") || undefined,
         size: filterValues.selectedSizes.join(",") || undefined,
-        category: filterValues.selectedCategories.join(",") || undefined,
+        category: selectedCategories.join(",") || undefined,
       }),
   });
 
