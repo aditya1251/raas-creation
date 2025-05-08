@@ -49,6 +49,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
   const [avgRating, setAvgRating] = useState(5);
   const [stockStatus, setStockStatus] = useState<string>("in_stock");
   const [stockCount, setStockCount] = useState<number>(0);
+  // New state to track the currently selected image
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
 
   const decreaseQuantity = () => {
     if (quantity > 1) {
@@ -57,7 +59,12 @@ export default function ProductDetails({ slug }: { slug: string }) {
   };
 
   const increaseQuantity = () => {
-    setQuantity(quantity + 1);
+    // Added check to prevent quantity exceeding available stock
+    if (stockCount > 0 && quantity < stockCount) {
+      setQuantity(quantity + 1);
+    } else {
+      toast.error(`Sorry, only ${stockCount} items available in stock.`);
+    }
   };
 
   const handleAddToCart = () => {
@@ -72,7 +79,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
       quantity: quantity,
       color: selectedColor,
       size: selectedSize,
-      image: product?.assets[0].asset_url,
+      image: product?.assets[selectedImageIndex].asset_url,
       productVariantId: selectedSizeId,
     });
     toast.success("Product added to cart");
@@ -99,6 +106,12 @@ export default function ProductDetails({ slug }: { slug: string }) {
       }
     }
   };
+
+  // New function to handle thumbnail image click
+  const handleImageClick = (index: number) => {
+    setSelectedImageIndex(index);
+  };
+
   // Fetching Product Details
   const { data, isLoading, error } = useQuery({
     queryKey: ["product", slug],
@@ -196,6 +209,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
   useEffect(() => {
     if (data) {
       setProduct(data);
+      // Set default image index to 0
+      setSelectedImageIndex(0);
       // Set default color and sizes when product loads
       if (data.colors && data.colors.length > 0) {
         const defaultColor = data.colors[0].color;
@@ -233,10 +248,18 @@ export default function ProductDetails({ slug }: { slug: string }) {
           setStockCount(stockCount);
         } else {
           setStockStatus("in_stock");
+          // Set stock count even for "in_stock" status for quantity validation
+          setStockCount(stockCount);
+        }
+        
+        // Reset quantity if it exceeds new stock count
+        if (quantity > stockCount) {
+          setQuantity(stockCount > 0 ? 1 : 0);
         }
       }
     }
   }, [selectedSize, selectedSizeId, availableSizes]);
+  
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
@@ -339,7 +362,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
           <div>
             <div className="mb-4 aspect-square relative">
               <Image
-                src={product?.assets[0].asset_url || "/placeholder.svg"}
+                src={product?.assets[selectedImageIndex].asset_url || "/placeholder.svg"}
                 alt={product?.name || "image"}
                 fill
                 className="object-cover object-top rounded-md w-full h-full"
@@ -349,7 +372,10 @@ export default function ProductDetails({ slug }: { slug: string }) {
               {product?.assets.map((image, index) => (
                 <div
                   key={index}
-                  className="aspect-square relative border rounded-md overflow-hidden">
+                  className={`aspect-square relative border rounded-md overflow-hidden cursor-pointer ${
+                    selectedImageIndex === index ? 'ring-2 ring-[#a08452]' : ''
+                  }`}
+                  onClick={() => handleImageClick(index)}>
                   <Image
                     src={image.asset_url || "/placeholder.svg"}
                     alt={`${product?.name || "image"} view ${index + 1}`}
@@ -485,11 +511,12 @@ export default function ProductDetails({ slug }: { slug: string }) {
                           : "border-gray-300 text-gray-400 bg-gray-50 cursor-not-allowed"
                       }
                     `}
-                      onClick={() =>
-                        isAvailable &&
-                        setSelectedSize(sizeObj.size) &&
-                        setSelectedSizeId(sizeObj.id)
-                      }
+                      onClick={() => {
+                        if (isAvailable) {
+                          setSelectedSize(sizeObj.size);
+                          setSelectedSizeId(sizeObj.id);
+                        }
+                      }}
                       disabled={!isAvailable}>
                       {sizeObj.size.slice(5)}
 
@@ -521,8 +548,9 @@ export default function ProductDetails({ slug }: { slug: string }) {
                 <span className="w-8 text-center">{quantity}</span>
                 <button
                   className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
-                  onClick={increaseQuantity}>
-                  <Plus className="h-4 w-4" />
+                  onClick={increaseQuantity}
+                  disabled={stockStatus === "out_of_stock" || quantity >= stockCount}>
+                  <Plus className={`h-4 w-4 ${stockStatus === "out_of_stock" || quantity >= stockCount ? "text-gray-300" : ""}`} />
                 </button>
               </div>
 
@@ -750,32 +778,6 @@ export default function ProductDetails({ slug }: { slug: string }) {
             </TabsContent>
           </Tabs>
         </div>
-
-        {/* Related Products */}
-        {/* <div className="mb-16">
-          <h2 className="text-2xl font-medium mb-8">Related Products</h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {relatedProducts.map((product) => (
-              <div key={product.id} className="group">
-                <Link href={`/shop/product/${product.id}`}>
-                  <div className="aspect-[3/4] relative overflow-hidden bg-gray-100 rounded-md mb-3">
-                    <Image
-                      src={product?.image || "/placeholder.svg"}
-                      alt={product?.name || "image"}
-                      fill
-                      className="object-cover transition-transform group-hover:scale-105"
-                    />
-                  </div>
-                  <h3 className="text-sm font-medium">{product.name}</h3>
-                  <p className="text-[#a08452] text-sm font-medium mt-1">
-                    ₹{product.price.toFixed(2)}
-                  </p>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div> */}
 
         <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 w-full">
           <h2 className="text-2xl font-medium mb-8">New Arrivals</h2>
