@@ -168,6 +168,7 @@ export default function ShopPage() {
   useEffect(() => {
     if (productResponse) {
       setProducts(productResponse.products);
+      console.log("Products:", productResponse.products);
     }
   }, [productResponse]);
 
@@ -745,6 +746,7 @@ function ProductCard({
         <Link href={`/product/${product.slug}`} className="block">
           <h3 className="text-sm font-medium">{product.name}</h3>
         </Link>
+          <h3 className="text-sm font-medium">{product.sku}</h3>
         <div className="flex items-center mt-1">
           <span className="text-sm font-medium">
             ₹{product.discountPrice || product.price}

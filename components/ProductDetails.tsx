@@ -390,6 +390,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
           {/* Product Info */}
           <div>
             <h1 className="text-2xl font-medium mb-2">{product?.name}</h1>
+            <h1 className="font-medium mb-2">{product?.sku}</h1>
             {/* <p className="text-gray-600 mb-4">
               {product?.description}
             </p> */}

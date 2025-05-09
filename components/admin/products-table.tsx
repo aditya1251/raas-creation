@@ -66,7 +66,7 @@ export function ProductsTable() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["products", currentPage, itemsPerPage, debouncedSearchTerm],
-    queryFn: () => productApi.getProducts(currentPage, itemsPerPage, debouncedSearchTerm,{sort_by: "createdAt",sort_order: "desc"}),
+    queryFn: () => productApi.getProducts(currentPage, itemsPerPage, debouncedSearchTerm),
   });
 
   const deleteMutation = useMutation({
@@ -198,6 +198,9 @@ export function ProductsTable() {
                 Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                SKU
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Price
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -223,6 +226,7 @@ export function ProductsTable() {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-wrap whitespace-nowrap">{product.name}</td>
+                <td className="px-6 py-4 text-wrap whitespace-nowrap">{product.sku}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   ₹{product.price.toFixed(2)}
                 </td>
