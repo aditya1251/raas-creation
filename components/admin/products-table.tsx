@@ -66,7 +66,7 @@ export function ProductsTable() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["products", currentPage, itemsPerPage, debouncedSearchTerm],
-    queryFn: () => productApi.getProducts(currentPage, itemsPerPage, debouncedSearchTerm),
+    queryFn: () => productApi.getProducts(currentPage, itemsPerPage, debouncedSearchTerm,{sort_by: "createdAt",sort_order: "desc"}),
   });
 
   const deleteMutation = useMutation({
@@ -125,7 +125,7 @@ export function ProductsTable() {
       <Link
         href={`/admin/products/edit/${product.id}`}
         className="text-indigo-600 hover:text-indigo-900 transition-colors">
-        <Edit size={18} />
+        <Edit size={20} />
       </Link>
       <button
         onClick={() => deleteMutation.mutate(product.id)}
@@ -134,7 +134,7 @@ export function ProductsTable() {
         {loadingStates[`delete_${product.id}`] ? (
           <div className="animate-spin h-4 w-4 border-2 border-red-600 rounded-full border-t-transparent" />
         ) : (
-          <Trash2 size={18} />
+          <Trash2 size={20} />
         )}
       </button>
       <button
@@ -144,7 +144,7 @@ export function ProductsTable() {
         {loadingStates[`copy_${product.id}`] ? (
           <div className="animate-spin h-4 w-4 border-2 border-blue-600 rounded-full border-t-transparent" />
         ) : (
-          <Copy size={18} />
+          <Copy size={20} />
         )}
       </button>
       <button
@@ -159,9 +159,9 @@ export function ProductsTable() {
         {loadingStates[`status_${product.id}`] ? (
           <div className="animate-spin h-4 w-4 border-2 border-gray-600 rounded-full border-t-transparent" />
         ) : product.status === "PUBLISHED" ? (
-          <Eye size={18} />
+          <Eye size={20} />
         ) : (
-          <EyeOff size={18} />
+          <EyeOff size={20} />
         )}
       </button>
     </div>
