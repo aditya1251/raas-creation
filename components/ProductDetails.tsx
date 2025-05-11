@@ -231,7 +231,6 @@ export default function ProductDetails({ slug }: { slug: string }) {
 
   useEffect(() => {
     if (selectedSize && selectedSizeId && availableSizes) {
-      
       const selectedSizeData = availableSizes.find(
         (s) => s.size === selectedSize
       );
@@ -251,7 +250,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
           // Set stock count even for "in_stock" status for quantity validation
           setStockCount(stockCount);
         }
-        
+
         // Reset quantity if it exceeds new stock count
         if (quantity > stockCount) {
           setQuantity(stockCount > 0 ? 1 : 0);
@@ -259,7 +258,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
       }
     }
   }, [selectedSize, selectedSizeId, availableSizes]);
-  
+
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
@@ -328,9 +327,9 @@ export default function ProductDetails({ slug }: { slug: string }) {
   // Split by lines that start with asterisk and process each line
   const mainDesc = data?.description.split("\n\nSpecifications\n\n*")[0];
   const specLines = data?.description
-    .split("\n\nSpecifications\n\n*")[1]
-    .split(/\n\*/)
-    .map((line) => line.trim());
+    ?.split("\n\nSpecifications\n\n*")[1]
+    ?.split(/\n\*/)
+    ?.map((line) => line.trim());
 
   if (error) {
     return <div>Error loading product</div>;
@@ -362,7 +361,10 @@ export default function ProductDetails({ slug }: { slug: string }) {
           <div>
             <div className="mb-4 aspect-square relative">
               <Image
-                src={product?.assets[selectedImageIndex].asset_url || "/placeholder.svg"}
+                src={
+                  product?.assets[selectedImageIndex].asset_url ||
+                  "/placeholder.svg"
+                }
                 alt={product?.name || "image"}
                 fill
                 className="object-cover object-top rounded-md w-full h-full"
@@ -373,9 +375,10 @@ export default function ProductDetails({ slug }: { slug: string }) {
                 <div
                   key={index}
                   className={`aspect-square relative border rounded-md overflow-hidden cursor-pointer ${
-                    selectedImageIndex === index ? 'ring-2 ring-[#a08452]' : ''
+                    selectedImageIndex === index ? "ring-2 ring-[#a08452]" : ""
                   }`}
-                  onClick={() => handleImageClick(index)}>
+                  onClick={() => handleImageClick(index)}
+                >
                   <Image
                     src={image.asset_url || "/placeholder.svg"}
                     alt={`${product?.name || "image"} view ${index + 1}`}
@@ -406,7 +409,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
                         <svg
                           className="w-8 aspect-square text-gray-300"
                           fill="currentColor"
-                          viewBox="0 0 20 20">
+                          viewBox="0 0 20 20"
+                        >
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                         <div
@@ -415,11 +419,13 @@ export default function ProductDetails({ slug }: { slug: string }) {
                             width: `${
                               Math.max(0, Math.min(1, difference)) * 100
                             }%`,
-                          }}>
+                          }}
+                        >
                           <svg
                             className="w-8 aspect-square text-yellow-400"
                             fill="currentColor"
-                            viewBox="0 0 20 20">
+                            viewBox="0 0 20 20"
+                          >
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                           </svg>
                         </div>
@@ -518,7 +524,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
                           setSelectedSizeId(sizeObj.id);
                         }
                       }}
-                      disabled={!isAvailable}>
+                      disabled={!isAvailable}
+                    >
                       {sizeObj.size.slice(5)}
 
                       {/* Diagonal Line if not available */}
@@ -543,15 +550,25 @@ export default function ProductDetails({ slug }: { slug: string }) {
               <div className="flex items-center border border-gray-300 rounded-md">
                 <button
                   className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
-                  onClick={decreaseQuantity}>
+                  onClick={decreaseQuantity}
+                >
                   <Minus className="h-4 w-4" />
                 </button>
                 <span className="w-8 text-center">{quantity}</span>
                 <button
                   className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
                   onClick={increaseQuantity}
-                  disabled={stockStatus === "out_of_stock" || quantity >= stockCount}>
-                  <Plus className={`h-4 w-4 ${stockStatus === "out_of_stock" || quantity >= stockCount ? "text-gray-300" : ""}`} />
+                  disabled={
+                    stockStatus === "out_of_stock" || quantity >= stockCount
+                  }
+                >
+                  <Plus
+                    className={`h-4 w-4 ${
+                      stockStatus === "out_of_stock" || quantity >= stockCount
+                        ? "text-gray-300"
+                        : ""
+                    }`}
+                  />
                 </button>
               </div>
 
@@ -562,13 +579,15 @@ export default function ProductDetails({ slug }: { slug: string }) {
                   !selectedSize ||
                   availableSizes.length === 0 ||
                   stockStatus === "out_of_stock"
-                }>
+                }
+              >
                 Add to Cart
               </Button>
               <Button
                 variant="outline"
                 className="border-gray-300 hover:bg-gray-50 transition-colors w-8 h-8 p-0 flex items-center justify-center"
-                onClick={handleWishlistToggle}>
+                onClick={handleWishlistToggle}
+              >
                 <Heart
                   className={`h-4 w-4 ${
                     isProductInWishlist ? "fill-[#a08452] text-[#a08452]" : ""
@@ -584,7 +603,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
-            className="w-full">
+            className="w-full"
+          >
             <TabsList className="border-b w-full justify-start rounded-none bg-transparent mb-6">
               <TabsTrigger
                 value="descriptions"
@@ -592,7 +612,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
                   activeTab === "descriptions"
                     ? "border-b-2 border-[#a08452] text-[#a08452]"
                     : "text-gray-600"
-                }`}>
+                }`}
+              >
                 Descriptions
               </TabsTrigger>
               <TabsTrigger
@@ -601,7 +622,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
                   activeTab === "additional"
                     ? "border-b-2 border-[#a08452] text-[#a08452]"
                     : "text-gray-600"
-                }`}>
+                }`}
+              >
                 Additional Information
               </TabsTrigger>
               <TabsTrigger
@@ -610,7 +632,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
                   activeTab === "reviews"
                     ? "border-b-2 border-[#a08452] text-[#a08452]"
                     : "text-gray-600"
-                }`}>
+                }`}
+              >
                 Reviews
               </TabsTrigger>
             </TabsList>
@@ -637,10 +660,12 @@ export default function ProductDetails({ slug }: { slug: string }) {
                     {product?.colors.map((color) => (
                       <div
                         key={color.id}
-                        className="flex items-center space-x-2">
+                        className="flex items-center space-x-2"
+                      >
                         <div
                           className="w-4 h-4 rounded-sm border border-gray-300"
-                          style={{ backgroundColor: `${color.color}` }}></div>
+                          style={{ backgroundColor: `${color.color}` }}
+                        ></div>
                       </div>
                     ))}
                   </div>
@@ -688,7 +713,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
                                     : "text-gray-300"
                                 }`}
                                 fill="currentColor"
-                                viewBox="0 0 20 20">
+                                viewBox="0 0 20 20"
+                              >
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                               </svg>
                             ))}
@@ -718,7 +744,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
                               key={rating}
                               type="button"
                               className="p-1"
-                              onClick={() => setReviewRating(rating)}>
+                              onClick={() => setReviewRating(rating)}
+                            >
                               <Star
                                 className={`h-5 w-5 ${
                                   rating <= reviewRating
@@ -734,7 +761,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
                       <div>
                         <label
                           htmlFor="review-title"
-                          className="block text-sm font-medium mb-1">
+                          className="block text-sm font-medium mb-1"
+                        >
                           Title
                         </label>
                         <input
@@ -751,7 +779,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
                       <div>
                         <label
                           htmlFor="review-text"
-                          className="block text-sm font-medium mb-1">
+                          className="block text-sm font-medium mb-1"
+                        >
                           Your Review
                         </label>
                         <textarea
@@ -768,7 +797,8 @@ export default function ProductDetails({ slug }: { slug: string }) {
                         <Button
                           type="submit"
                           className="bg-[#a08452] hover:bg-[#8c703d] text-white px-8"
-                          disabled={isSubmitting}>
+                          disabled={isSubmitting}
+                        >
                           {isSubmitting ? "Submitting..." : "Submit"}
                         </Button>
                       </div>

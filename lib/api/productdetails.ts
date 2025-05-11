@@ -19,8 +19,8 @@ export const productApi = {
       status?: string;
       min_price?: number;
       max_price?: number;
-      sort_by?: string;
-      sort_order?: 'asc' | 'desc';
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
       color?: string;
       size?: string;
       category?: string;

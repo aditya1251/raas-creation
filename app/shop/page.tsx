@@ -127,8 +127,8 @@ export default function ShopPage() {
       productApi.getProducts(currentPage, itemsPerPage, searchQuery, {
         status: "PUBLISHED",
         max_price: filterValues.priceRange,
-        sort_by: filterValues.sortBy.includes("price") ? "price" : "createdAt",
-        sort_order: filterValues.sortBy === "price-high-low" ? "desc" : "asc",
+        // sortBy: filterValues.sortBy.includes("price") ? "price" : "createdAt",
+        // sortOrder: filterValues.sortBy === "price-high-low" ? "desc" : "asc",
         color: filterValues.selectedColors.join(",") || undefined,
         size: filterValues.selectedSizes.join(",") || undefined,
         category: selectedCategories.join(",") || undefined,
