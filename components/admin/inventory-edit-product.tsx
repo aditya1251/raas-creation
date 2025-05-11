@@ -28,18 +28,34 @@ const availableSizes = [
   "SIZE_46",
 ];
 
+const colorswithHex = {
+  "red": "#FF0000",
+  "blue": "#0000FF",
+  "green": "#00FF00",
+  "white": "#FFFFFF",
+  "black": "#000000",
+  "yellow": "#FFFF00",
+  "orange": "#FFA500",
+  "purple": "#800080",
+  "pink": "#FFC0CB",
+  "brown": "#A52A2A",
+  "grey": "#808080",
+}
+
 export function ProductInventoryEditor({ productId }: { productId: string }) {
   const [product, setProduct] = useState<Products | null>(null);
   const [saving, setSaving] = useState(false);
   const [stockUpdates, setStockUpdates] = useState<Record<string, number>>({});
   const [successMessage, setSuccessMessage] = useState("");
   const [showAddColorForm, setShowAddColorForm] = useState(false);
-  const [newColor, setNewColor] = useState<{ name: string; imageUrl: string[] }>({ name: "", imageUrl: [] });
+  const [isCustomColor, setIsCustomColor] = useState(false);
+  const [newColor, setNewColor] = useState<{ name: string; imageUrl: string[]; hex: string }>({ name: "", imageUrl: [], hex: "#000000" });
   const [newColors, setNewColors] = useState<
     Array<{
       name: string;
       imageUrl: string[];
       sizes: Array<{ size: string; stock: number }>;
+      hex: string;
     }>
   >([]);
   const [showAddSizeForm, setShowAddSizeForm] = useState<string | null>(null);
@@ -76,6 +92,7 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
     });
   };
 
+
   const getStockValue = (size: Size) => {
     return stockUpdates[size.id] !== undefined
       ? stockUpdates[size.id]
@@ -88,8 +105,17 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
       return;
     }
 
-    setNewColors([...newColors, { ...newColor, sizes: [] }]);
-    setNewColor({ name: "", imageUrl: [] });
+    if (!newColor.imageUrl.length) {
+      alert("Please upload an image");
+      return;
+    }
+    if (!newColor.hex) {
+      alert("Please select a color hex");
+      return;
+    }
+
+    setNewColors([...newColors, { ...newColor, sizes: availableSizes.map((size) => ({ size, stock: 0 })) }]);
+    setNewColor({ name: "", imageUrl: [], hex: "" });
     setShowAddColorForm(false);
   };
 
@@ -195,6 +221,7 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
       newColors: Array<{
         name: string;
         imageUrl: string[];
+        hex: string;
         sizes: Array<{ size: string; stock: number }>;
       }>
     ) => {
@@ -380,15 +407,71 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Color Name
                 </label>
-                <input
-                  type="text"
-                  value={newColor.name}
-                  onChange={(e) =>
-                    setNewColor({ ...newColor, name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-sm"
-                  placeholder="e.g., Red, Blue, Green"
-                />
+                {isCustomColor ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newColor.name}
+                      onChange={(e) =>
+                        setNewColor({ ...newColor, name: e.target.value })
+                      }
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-sm"
+                      placeholder="Enter custom color name"
+                    />
+                    <button
+                      onClick={() => {
+                        setIsCustomColor(false)
+                        setNewColor({ ...newColor, name: "" })
+                      }}
+                      className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 text-sm"
+                    >
+                      Back
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    value={newColor.name}
+                    onChange={(e) => {
+                      const selectedColor = e.target.value
+                      if (selectedColor === "custom") {
+                        setIsCustomColor(true)
+                        setNewColor({ ...newColor, name: "", hex: "#000000" })
+                      } else {
+                        setNewColor({ 
+                          ...newColor, 
+                          name: selectedColor, 
+                          hex: colorswithHex[selectedColor as keyof typeof colorswithHex] 
+                        })
+                      }
+                    }}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-sm"
+                  >
+                    <option value="">Select a color</option>
+                    {Object.keys(colorswithHex).map((color) => (
+                      <option key={color} value={color}>
+                        {color.charAt(0).toUpperCase() + color.slice(1)}
+                      </option>
+                    ))}
+                    <option value="custom">Custom Color</option>
+                  </select>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                  Color
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={newColor.hex || "#000000"}
+                    onChange={(e) =>
+                      setNewColor({ ...newColor, hex: e.target.value })
+                    }
+                    className="w-12 h-8 p-0 border border-gray-300 rounded"
+                    disabled={!isCustomColor && newColor.name !== ""}
+                  />
+                  
+                </div>
               </div>
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
@@ -436,6 +519,7 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
             </div>
           </div>
         )}
+       
 
         {/* New Colors */}
         {newColors.length > 0 && (
