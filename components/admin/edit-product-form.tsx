@@ -12,6 +12,7 @@ import { categoryApi } from "@/lib/api/categories";
 import MultiUploadPopup from "../MultiUploadPopup";
 import cuid from "cuid";
 import { inventoryApi } from "@/lib/api/inventory";
+import toast from "react-hot-toast";
 
 const colorswithHex = {
   "red": "#FF0000",
@@ -29,6 +30,7 @@ export function EditProductForm({ productId }: { productId: string }) {
   const [derror, setderror] = useState<string>("");
   const [price, setPrice] = useState<number>(0);
   const [discountPrice, setDiscountPrice] = useState<number>(0);
+  const [ saving, setSaving ] = useState<boolean>(false);
 
   const router = useRouter();
 
@@ -70,6 +72,7 @@ export function EditProductForm({ productId }: { productId: string }) {
     variants: "",
     images: "",
     category: "",
+    sku: ""
   });
 
   const [product, setProduct] = useState<Product>({
@@ -83,53 +86,57 @@ export function EditProductForm({ productId }: { productId: string }) {
     sku: "",
     tags: [],
   });
-
-  const validateProduct = () => {
-    const newErrors = {
-      name: "",
-      description: "",
-      price: "",
-      variants: "",
-      images: "",
-      category: "",
-    };
-    if (!product.name.trim()) {
-      newErrors.name = "Product name is required";
-    }
-
-    if (!product.description.trim()) {
-      newErrors.description = "Product description is required";
-    }
-
-    if (product.price <= 0) {
-      newErrors.price = "Price must be greater than 0";
-    }
-
-    if (product.assets?.length === 0) {
-      newErrors.images = "At least one product image is required";
-    }
-
-    if (!product.category_id.trim()) {
-      newErrors.category = "Please select a category";
-    }
-
-
-    if (variants.length > 0) {
-      const hasInvalidVariant = variants.some(
-        (variant) =>
-          !variant.color ||
-          variant.images.length === 0 ||
-          variant.sizes.length === 0
-      );
-      if (hasInvalidVariant) {
-        newErrors.variants = "All variants must have color, images and sizes";
+    const validateProduct = () => {
+      const newErrors = {
+        name: "",
+        description: "",
+        price: "",
+        variants: "",
+        images: "",
+        category: "",
+        sku: ""
+      };
+      if (!product.name.trim()) {
+        newErrors.name = "Product name is required";
       }
-    }
 
-    setErrors(newErrors);
-    return Object.values(newErrors).every((error) => !error);
-  };
+      if (!product.description.trim()) {
+        newErrors.description = "Product description is required";
+      }
 
+      if (product.price <= 0) {
+        newErrors.price = "Price must be greater than 0";
+      }
+
+      if (product.assets?.length === 0) {
+        newErrors.images = "At least one product image is required";
+      }
+
+      if (!product.category_id.trim()) {
+        newErrors.category = "Please select a category";
+      }
+
+      if (product.sku && !product.sku.trim()) {
+        newErrors.sku = "Please enter a SKU";
+      }
+
+
+      if (variants.length > 0) {
+        const hasInvalidVariant = variants.some(
+          (variant) =>
+            !variant.color ||
+            variant.images.length === 0 ||
+            variant.sizes.length === 0
+        );
+        if (hasInvalidVariant) {
+          newErrors.variants = "All variants must have color, images and sizes";
+        }
+      }
+
+      setErrors(newErrors);
+      setErrors(newErrors);
+      return Object.values(newErrors).every((error) => !error);
+    };
   const {
     data,
     isLoading,
@@ -286,6 +293,11 @@ export function EditProductForm({ productId }: { productId: string }) {
   };
 
   const addSize = (variantId: string) => {
+    const availableSizes = getAvailableSizesForOption(variantId, "abc");
+    if (availableSizes.length === 0) {
+      toast.error("No available sizes for this option");
+      return;
+    }
     setVariants(
       variants.map((variant) => {
         if (variant.id === variantId) {
@@ -293,7 +305,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             ...variant,
             sizes: [
               ...variant.sizes,
-              { id: cuid(), name: "SIZE_36", quantity: 0, isNew: true, isDeleted: false },
+              { id: cuid(), name: availableSizes[0], quantity: 0, isNew: true, isDeleted: false },
             ],
           };
         }
@@ -360,6 +372,9 @@ export function EditProductForm({ productId }: { productId: string }) {
     setVarientImgPopUp(false);
   };
 
+  const getAvailableSizesForOption = (variantId: string, sizeName: string) => {
+    return Sizes.filter((size) => !variants.find((v) => v.id === variantId && v.sizes.find((s) => s.name === size && s.isDeleted === false && s.name !== sizeName)));
+  };
   const handleRemoveVariantImage = (variantId: string, imageIndex: number) => {
     setVariants(
       variants.map((variant) => {
@@ -534,7 +549,12 @@ export function EditProductForm({ productId }: { productId: string }) {
   });
 
   const saveProduct = async () => {
-    if (!validateProduct()) return;
+    setSaving(true);
+    if (!validateProduct()) {
+      setSaving(false);
+      toast.error("You are missing a field")
+      return;
+    };
     productMutation.mutate(product as Product);
   };
 
@@ -725,6 +745,9 @@ export function EditProductForm({ productId }: { productId: string }) {
             Add different color variants and their corresponding sizes and
             quantities for your product.
           </p>
+          {errors.variants && (
+            <p className="text-red-500 text-xs mt-2">{errors.variants}</p>
+          )}
           <div className="grid gap-4 md:gap-6">
             {variants.map((variant) => (
               <div
@@ -898,6 +921,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                       </label>
                       <div className="grid gap-3 sm:gap-4">
                         {variant.sizes.map((size) => (
+                          size.isDeleted? null:
                           <div
                             key={size.id}
                             className="flex flex-col sm:flex-row gap-3 sm:gap-6 sm:items-center bg-gray-50 p-3 sm:p-4 rounded-lg">
@@ -925,7 +949,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                                     })
                                   );
                                 }}>
-                                {Sizes.map((size) => (
+                                {getAvailableSizesForOption(variant.id , size.name).map((size) => (
                                   <option key={size} value={size}>
                                     {size.replace(/[^0-9]/g, "")}
                                   </option>
@@ -1039,6 +1063,23 @@ export function EditProductForm({ productId }: { productId: string }) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                SKU
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-sm"
+                placeholder="Enter SKU"
+                value={product.sku}
+                onChange={(e) =>
+                  setProduct({ ...product, sku: e.target.value })
+                }
+              />
+              {errors.sku && (
+                <p className="text-red-500 text-xs mt-1">{errors.sku}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Tags (Optional)
               </label>
               <div
@@ -1108,10 +1149,11 @@ export function EditProductForm({ productId }: { productId: string }) {
             type="submit"
             className="flex-1 bg-[#4f507f] text-white py-2 px-3 sm:px-4 rounded-md hover:bg-[#3e3f63] transition-colors text-sm sm:text-base"
             onClick={saveProduct}>
-            Save Product
+            {saving ? "Saving..." : "Save Product"}
           </button>
           <button
             type="button"
+            onClick={(() => router.push("/admin/products"))}
             className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-3 sm:px-4 rounded-md hover:bg-gray-50 transition-colors text-sm sm:text-base">
             Cancel
           </button>
