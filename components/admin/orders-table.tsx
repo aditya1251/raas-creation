@@ -8,9 +8,9 @@ import { useDebounce } from "@/hooks/useDebounce"
 import Image from "next/image"
 
 interface OrderWithCustomer extends Order {
-  customer?: {
+  user : {
     name: string;
-  };
+  }
   
   date?: string;
   fulfillment: string;
@@ -98,6 +98,7 @@ export function OrdersTable() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fulfillment</th>
@@ -109,6 +110,7 @@ export function OrdersTable() {
             {orders.map((order: OrderWithCustomer) => (
               <tr key={order.orderId} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderId}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.user.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(order.createdAt).toLocaleDateString()}
                 </td>
@@ -209,6 +211,7 @@ export function OrdersTable() {
               <h3 className="text-lg leading-6 font-medium text-gray-900 text-center">Order Details</h3>
               <div className="mt-2 px-7 py-3">
                 <p className="text-sm text-gray-500">Order ID: {selectedOrder.id}</p>
+                <p className="text-sm text-gray-500">Customer: {selectedOrder.user.name}</p>
                 <p className="text-sm text-gray-500">Created: {new Date(selectedOrder.createdAt).toLocaleString()}</p>
                 <p className="text-sm text-gray-500">Updated: {new Date(selectedOrder.updatedAt).toLocaleString()}</p>
                 <p className="text-sm text-gray-500">Address ID: {selectedOrder.addressId}</p>
