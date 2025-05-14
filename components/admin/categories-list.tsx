@@ -39,6 +39,14 @@ export function CategoriesList() {
     },
   });
 
+  const updatePriorityMutation = useMutation({
+    mutationFn: ({ id, priority }: { id: string; priority: number }) =>
+      categoryApi.updatePriorities(id, priority),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
+
   const handleAddCategory = () => {
     if (!newCategory.trim()) return;
     addCategoryMutation.mutate(newCategory);

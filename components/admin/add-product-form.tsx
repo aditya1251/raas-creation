@@ -19,6 +19,7 @@ import cuid from "cuid";
 import { varientApi } from "@/lib/api/varients";
 import { productApi } from "@/lib/api/productdetails";
 import MultiUploadPopup from "../MultiUploadPopup";
+import toast from "react-hot-toast";
 
 const colorswithHex = {
   red: "#FF0000",
@@ -41,6 +42,7 @@ export function AddProductForm() {
   const [error, setError] = useState<string>("");
   const [derror, setderror] = useState<string>("");
   const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
+  const [saving, setSaving] = useState<boolean>(false);
 
   const router = useRouter();
 
@@ -217,23 +219,31 @@ export function AddProductForm() {
       },
     ]);
   };
+  const getAvailableSizesForOption = (variantId: string, sizeName: string) => {
+    return Sizes.filter((size) => !variants.find((v) => v.id === variantId && v.sizes.find((s) => s.name === size && s.name !== sizeName)));
+  };
 
   const addSize = (variantId: string) => {
-    setVariants(
-      variants.map((variant) => {
-        if (variant.id === variantId) {
-          return {
-            ...variant,
-            sizes: [
-              ...variant.sizes,
-              { id: cuid(), name: "SIZE_36", quantity: 0 },
-            ],
-          };
-        }
-        return variant;
-      })
-    );
-  };
+      const availableSizes = getAvailableSizesForOption(variantId, "abc");
+      if (availableSizes.length === 0) {
+        toast.error("No available sizes for this option");
+        return;
+      }
+      setVariants(
+        variants.map((variant) => {
+          if (variant.id === variantId) {
+            return {
+              ...variant,
+              sizes: [
+                ...variant.sizes,
+                { id: cuid(), name: availableSizes[0], quantity: 0, isNew: true, isDeleted: false },
+              ],
+            };
+          }
+          return variant;
+        })
+      );
+    };
 
   const removeVariant = (variantId: string) => {
     setVariants(variants.filter((v) => v.id !== variantId));
@@ -374,7 +384,12 @@ export function AddProductForm() {
   });
 
   const saveProduct = async () => {
-    if (!validateProduct()) return;
+    setSaving(true);
+    if (!validateProduct()) {
+      setSaving(false);
+      toast.error("You are missing a field")
+      return;
+    };
     productMutation.mutate(product as Product);
   };
 
@@ -567,6 +582,9 @@ export function AddProductForm() {
             Add different color variants and their corresponding sizes and
             quantities for your product.
           </p>
+          { errors.variants && (
+            <p className="text-red-500 text-xs mt-2">{errors.variants}</p>
+          )}
           <div className="grid gap-4 md:gap-6">
             {variants.map((variant) => (
               <div
@@ -867,9 +885,8 @@ export function AddProductForm() {
                                       return v;
                                     })
                                   );
-                                }}
-                              >
-                                {Sizes.map((size) => (
+                                }}>
+                                {getAvailableSizesForOption(variant.id , size.name).map((size) => (
                                   <option key={size} value={size}>
                                     {size.replace(/[^0-9]/g, "")}
                                   </option>
@@ -1078,9 +1095,8 @@ export function AddProductForm() {
             type="submit"
             className="flex-1 bg-[#4f507f] text-white py-2 px-3 sm:px-4 rounded-md hover:bg-[#3e3f63] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             onClick={saveProduct}
-            disabled={productMutation.isPending}
-          >
-            {productMutation.isPending ? "Saving..." : "Save Product"}
+            disabled={saving || productMutation.isPending}>
+            {saving ? "Saving..." : "Save Product"}
           </button>
           <button
             type="button"

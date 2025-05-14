@@ -73,6 +73,7 @@ export type Discount = z.infer<typeof discount>;
 export const category = z.object({
   id: z.string().cuid("Invalid category ID"),
   name: z.string().min(1, "Category name is required"),
+  priority: z.number().int().positive("Priority must be a positive integer"),
   productCount: z.number().positive("Product count must be a positive number").optional(),
   description: z.string().min(1, "Category description is required").optional(),
 });

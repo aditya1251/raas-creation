@@ -28,5 +28,8 @@ export const categoryApi = {
   updateCategory: async (id: string, category: string): Promise<Category> => {
     const response = await apiClient.put(`/api/category/${id}`, {name:category});
     return response.data;
+  },
+  updatePriorities: async (id: string, priority: number): Promise<void> => {
+    await apiClient.post("/api/category/priority", {id,priority});
   }
 };
