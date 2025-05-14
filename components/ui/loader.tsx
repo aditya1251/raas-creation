@@ -66,6 +66,17 @@ export const LoadingProducts: React.FC<{ length: number }> = ({ length }) => {
     </div>
   );
 };
+export const LoadingTestimonials: React.FC = () => {
+  return (
+    <div
+      className={`grid lg:grid-cols-2 grid-cols-1 gap-6 w-full`}
+    >
+      {[...Array(2)].map((_, i) => (
+        <Skeleton key={i} className="w-full h-32" />
+      ))}
+    </div>
+  );
+};
 export const LoadingAddress: React.FC = () => {
   return (
     <div className="flex-1">
