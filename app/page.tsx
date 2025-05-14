@@ -8,6 +8,8 @@ import {
   CreditCard,
   HeartOff,
   Briefcase,
+  Trash2,
+  Edit,
 } from "lucide-react";
 import Navbar from "@/components/navbar";
 import HeroBanner from "@/components/hero-banner";
@@ -16,7 +18,7 @@ import BrowseCategorySection from "@/components/browse-category-section";
 import SiteFooter from "@/components/site-footer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { analyticApi } from "@/lib/api/analyticApi";
-import { LoadingProducts } from "@/components/ui/loader";
+import { LoadingProducts, LoadingTestimonials } from "@/components/ui/loader";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { wishlistApi } from "@/lib/api/wishlist";
@@ -24,6 +26,7 @@ import { JSX, useEffect, useState } from "react";
 import { customerApi } from "@/lib/api/customer";
 import { productApi } from "@/lib/api/productdetails";
 import { useCart } from "@/context/cart-context";
+import { testimonialApi } from "@/lib/api/testimonials";
 
 export default function Home() {
   const { data: user } = useQuery({
@@ -54,6 +57,11 @@ export default function Home() {
       setWishlist(wishlistProducts);
     }
   }, [wishlistProducts]);
+  // Fetch testimonials
+  const { data: testimonials, isLoading: testimonialsLoad } = useQuery({
+    queryKey: ["testimonials"],
+    queryFn: testimonialApi.getAll,
+  });
 
   return (
     <main className="min-h-screen bg-white flex flex-col">
@@ -124,6 +132,72 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <div className="py-12 space-y-6 max-w-7xl mx-auto px-4 sm:px-6 w-full">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-[#4f507f]">Testimonials</h1>
+        </div>
+        {!testimonialsLoad ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="">
+              {testimonials?.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">
+                  No testimonials found. Add your first testimonial!
+                </div>
+              ) : (
+                testimonials?.map((testimonial) => (
+                  <div
+                    key={testimonial.id}
+                    className="bg-white mb-4 p-4 rounded-lg shadow-md"
+                  >
+                    <div className="flex justify-between">
+                      <div className="flex items-center gap-3">
+                        {testimonial.image && (
+                          <Image
+                            width={400}
+                            height={400}
+                            src={testimonial.image}
+                            alt={testimonial.username}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        )}
+                        <div>
+                          <h3 className="font-medium">
+                            {testimonial.username}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {testimonial.role}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <div className="flex items-center mb-2">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <span
+                            key={i}
+                            className={
+                              i < testimonial.ratings
+                                ? "text-yellow-400"
+                                : "text-gray-300"
+                            }
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-gray-700 text-sm">
+                        {testimonial.description}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        ) : (
+          <LoadingTestimonials />
+        )}
+      </div>
       <SiteFooter />
     </main>
   );
@@ -223,7 +297,8 @@ export function ProductCard({
       }
       const defaultSize = defaultSizeData?.size || "SIZE_DEFAULT";
       const defaultVariantId = defaultSizeData?.id || "ID_NOT_FOUND";
-      const defaultImage = productData.assets?.[0]?.asset_url || "/placeholder.svg";
+      const defaultImage =
+        productData.assets?.[0]?.asset_url || "/placeholder.svg";
 
       const cartItem = {
         id: productData.id,
@@ -263,7 +338,8 @@ export function ProductCard({
           onClick={handleWishlistToggle}
           className="absolute top-3 right-3 aspect-square w-8 lg:w-10 bg-[#a08452] hover:bg-[#8c703d] rounded-full flex items-center justify-center
             opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 
-            transform translate-x-0 lg:translate-x-[100%] lg:group-hover:translate-x-0">
+            transform translate-x-0 lg:translate-x-[100%] lg:group-hover:translate-x-0"
+        >
           {isProductInWishlist ? (
             <HeartOff className="aspect-square w-4 lg:w-6 text-white" />
           ) : (
@@ -273,12 +349,14 @@ export function ProductCard({
         <div
           className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
                 transform translate-y-full group-hover:translate-y-0 
-                transition-transform duration-300 ease-in-out">
+                transition-transform duration-300 ease-in-out"
+        >
           <button
             onClick={handleAddToCart}
             disabled={isAddingToCart}
             className="w-full flex justify-center gap-4 items-center rounded-lg bg-[#795D2A] text-white text-lg font-normal py-2 
-                  opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          >
             {isAddingToCart ? (
               <>
                 Adding...
