@@ -14,12 +14,12 @@ import cuid from "cuid";
 import { inventoryApi } from "@/lib/api/inventory";
 
 const colorswithHex = {
-  "red": "#FF0000",
-  "blue": "#0000FF",
-  "green": "#00FF00",
-  "white": "#FFFFFF",
-  "black": "#000000",
-}
+  red: "#FF0000",
+  blue: "#0000FF",
+  green: "#00FF00",
+  white: "#FFFFFF",
+  black: "#000000",
+};
 
 export function EditProductForm({ productId }: { productId: string }) {
   const [isUploadPopupOpen, setIsUploadPopupOpen] = useState(false);
@@ -69,6 +69,7 @@ export function EditProductForm({ productId }: { productId: string }) {
     price: "",
     variants: "",
     images: "",
+    sku: "",
     category: "",
   });
 
@@ -91,6 +92,7 @@ export function EditProductForm({ productId }: { productId: string }) {
       price: "",
       variants: "",
       images: "",
+      sku: "",
       category: "",
     };
     if (!product.name.trim()) {
@@ -112,7 +114,9 @@ export function EditProductForm({ productId }: { productId: string }) {
     if (!product.category_id.trim()) {
       newErrors.category = "Please select a category";
     }
-
+    if (!product?.sku.trim()) {
+      newErrors.sku = "SKU is required";
+    }
 
     if (variants.length > 0) {
       const hasInvalidVariant = variants.some(
@@ -142,27 +146,26 @@ export function EditProductForm({ productId }: { productId: string }) {
     },
   });
 
-
   const [inputValue, setInputValue] = useState("");
-  
-    const handleKeyDown = (e: { key: string; preventDefault: () => void; }) => {
-      if (["Enter", ","].includes(e.key)) {
-        e.preventDefault();
-        const newTag = inputValue.trim();
-        if (newTag && !product.tags?.includes(newTag)) {
-          setProduct({ ...product, tags: [...(product.tags || []), newTag] });
-        }
-        setInputValue("");
-      } else if (e.key === "Backspace" && inputValue === "") {
-        setProduct({ ...product, tags: product.tags?.slice(0, -1) });
+
+  const handleKeyDown = (e: { key: string; preventDefault: () => void }) => {
+    if (["Enter", ","].includes(e.key)) {
+      e.preventDefault();
+      const newTag = inputValue.trim();
+      if (newTag && !product.tags?.includes(newTag)) {
+        setProduct({ ...product, tags: [...(product.tags || []), newTag] });
       }
-    };
-    const removeTag = (indexToRemove : number) => {
-      setProduct({
-        ...product,
-        tags: product.tags?.filter((_, i) => i !== indexToRemove),
-      });
-    };
+      setInputValue("");
+    } else if (e.key === "Backspace" && inputValue === "") {
+      setProduct({ ...product, tags: product.tags?.slice(0, -1) });
+    }
+  };
+  const removeTag = (indexToRemove: number) => {
+    setProduct({
+      ...product,
+      tags: product.tags?.filter((_, i) => i !== indexToRemove),
+    });
+  };
 
   useEffect(() => {
     if (data) {
@@ -181,7 +184,7 @@ export function EditProductForm({ productId }: { productId: string }) {
           })
         ),
         sku: data.sku,
-        tags: data.tags
+        tags: data.tags,
       };
 
       setProduct(product);
@@ -247,7 +250,6 @@ export function EditProductForm({ productId }: { productId: string }) {
             quantity: 0,
             isNew: true,
             isDeleted: false,
-
           },
           {
             id: cuid(),
@@ -293,7 +295,13 @@ export function EditProductForm({ productId }: { productId: string }) {
             ...variant,
             sizes: [
               ...variant.sizes,
-              { id: cuid(), name: "SIZE_36", quantity: 0, isNew: true, isDeleted: false },
+              {
+                id: cuid(),
+                name: "SIZE_36",
+                quantity: 0,
+                isNew: true,
+                isDeleted: false,
+              },
             ],
           };
         }
@@ -322,22 +330,13 @@ export function EditProductForm({ productId }: { productId: string }) {
         if (variant.id === variantId) {
           return {
             ...variant,
-            sizes: variant.sizes.map((size) => {
-              if (size.id === sizeId) {
-                return {
-                  ...size,
-                  isDeleted: true,
-                };
-              }
-              return size;
-            }),
+            sizes: variant.sizes.filter((size) => size.id !== sizeId),
           };
         }
         return variant;
       })
     );
   };
-
   const handleAddVarientImage = (Urls: string[]) => {
     setVariants(
       variants.map((variant) => {
@@ -404,8 +403,18 @@ export function EditProductForm({ productId }: { productId: string }) {
     });
   };
   const variantMutation = useMutation({
-    mutationFn: async (data: { variantId: string; name: string, colorHex: string, assets: { url: string; type: string }[] }) => {
-      await varientApi.updateVarient(data.variantId, data.name,  data.colorHex,data.assets,);
+    mutationFn: async (data: {
+      variantId: string;
+      name: string;
+      colorHex: string;
+      assets: { url: string; type: string }[];
+    }) => {
+      await varientApi.updateVarient(
+        data.variantId,
+        data.name,
+        data.colorHex,
+        data.assets
+      );
     },
   });
 
@@ -425,12 +434,10 @@ export function EditProductForm({ productId }: { productId: string }) {
   });
 
   const updateSizeMutation = useMutation({
-    mutationFn: async (data : {varientId: string, stock:number}) => {
-      await inventoryApi.updateStock(
-        data.varientId,data.stock
-      );
-    }
-  })
+    mutationFn: async (data: { varientId: string; stock: number }) => {
+      await inventoryApi.updateStock(data.varientId, data.stock);
+    },
+  });
 
   const deleteVariantMutation = useMutation({
     mutationFn: async (data: { variantId: string }) => {
@@ -460,13 +467,13 @@ export function EditProductForm({ productId }: { productId: string }) {
               sizes: variant.sizes
                 .filter((size) => !size.isDeleted)
                 .map((size) => ({
-                  size: size.name  as
-                  "SIZE_36"
-                  | "SIZE_38"
-                  | "SIZE_40"
-                  | "SIZE_42"
-                  | "SIZE_44"
-                  | "SIZE_46",
+                  size: size.name as
+                    | "SIZE_36"
+                    | "SIZE_38"
+                    | "SIZE_40"
+                    | "SIZE_42"
+                    | "SIZE_44"
+                    | "SIZE_46",
                   stock: size.quantity,
                 })),
             });
@@ -487,13 +494,13 @@ export function EditProductForm({ productId }: { productId: string }) {
             variant.sizes.forEach((size) => {
               if (size.isNew && !size.isDeleted) {
                 newSizes.push({
-                  size: size.name  as
-                  "SIZE_36"
-                  | "SIZE_38"
-                  | "SIZE_40"
-                  | "SIZE_42"
-                  | "SIZE_44"
-                  | "SIZE_46",
+                  size: size.name as
+                    | "SIZE_36"
+                    | "SIZE_38"
+                    | "SIZE_40"
+                    | "SIZE_42"
+                    | "SIZE_44"
+                    | "SIZE_46",
                   stock: size.quantity,
                 });
               } else if (size.isDeleted && !size.isNew) {
@@ -613,7 +620,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                 />
                 <button
                   onClick={() => handleRemoveImage(index)}
-                  className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                >
                   <X size={14} />
                 </button>
               </div>
@@ -621,7 +629,8 @@ export function EditProductForm({ productId }: { productId: string }) {
 
             <button
               onClick={() => setIsUploadPopupOpen(true)}
-              className="w-full h-24 sm:h-28 md:h-32 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors">
+              className="w-full h-24 sm:h-28 md:h-32 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors"
+            >
               <Upload size={20} className="mb-1" />
               <span className="text-xs sm:text-sm">Add Image</span>
             </button>
@@ -716,7 +725,8 @@ export function EditProductForm({ productId }: { productId: string }) {
             </h2>
             <button
               onClick={addVariant}
-              className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] transition-colors duration-200 flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center">
+              className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] transition-colors duration-200 flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center"
+            >
               <Plus size={16} />
               Add Color Variant
             </button>
@@ -729,7 +739,8 @@ export function EditProductForm({ productId }: { productId: string }) {
             {variants.map((variant) => (
               <div
                 key={variant.id}
-                className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm hover:border-[#4f507f] transition-colors duration-200">
+                className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm hover:border-[#4f507f] transition-colors duration-200"
+              >
                 <div
                   className="flex justify-between items-center mb-4 sm:mb-6 cursor-pointer"
                   onClick={() => {
@@ -738,12 +749,14 @@ export function EditProductForm({ productId }: { productId: string }) {
                         v.id === variant.id ? { ...v, isOpen: !v.isOpen } : v
                       )
                     );
-                  }}>
+                  }}
+                >
                   <div className="flex items-center gap-2 sm:gap-4">
                     <div
                       className={`transform transition-transform ${
                         variant.isOpen ? "rotate-90" : ""
-                      }`}>
+                      }`}
+                    >
                       <ChevronRight size={18} />
                     </div>
                     <div className="w-full max-w-[14rem]">
@@ -796,50 +809,66 @@ export function EditProductForm({ productId }: { productId: string }) {
                                 )
                               );
                             }}
-                            className="px-3 py-1.5 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 mt-1 sm:mt-0">
+                            className="px-3 py-1.5 text-xs sm:text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 mt-1 sm:mt-0"
+                          >
                             Back
                           </button>
                         </div>
                       ) : (
-                        <div  className="flex gap-2 w-full">
-                        <select
-                          className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
-                          value={variant.color}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => {
-                            if (e.target.value === "custom") {
-                              setVariants(
-                                variants.map((v) =>
-                                  v.id === variant.id
-                                    ? { ...v, customColor: true, color: "red", colorHex: colorswithHex["red"] }
-                                    : v
-                                )
-                              );
-                            } else {
-                              setVariants(
-                                variants.map((v) =>
-                                  v.id === variant.id
-                                    ? { ...v, color: e.target.value, colorHex: colorswithHex[e.target.value as keyof typeof colorswithHex] }
-                                    : v                                )
-                              );
-                            }
-                          }}>
-                          <option value="">Select Color</option>
-                          <option value="red">Red</option>
-                          <option value="blue">Blue</option>
-                          <option value="green">Green</option>
-                          <option value="black">Black</option>
-                          <option value="white">White</option>
-                          <option value="custom">Custom Color...</option>
-                        </select>
-                        <input
-                        type="color"
-                        className="w-12 h-9 px-0.5 py-0.5 border rounded-lg cursor-pointer"
-                        value={variant.colorHex}
-                        readOnly
-                        disabled
-                      />
-                      </div>
+                        <div className="flex gap-2 w-full">
+                          <select
+                            className="w-full px-2 sm:px-4 py-1.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
+                            value={variant.color}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => {
+                              if (e.target.value === "custom") {
+                                setVariants(
+                                  variants.map((v) =>
+                                    v.id === variant.id
+                                      ? {
+                                          ...v,
+                                          customColor: true,
+                                          color: "red",
+                                          colorHex: colorswithHex["red"],
+                                        }
+                                      : v
+                                  )
+                                );
+                              } else {
+                                setVariants(
+                                  variants.map((v) =>
+                                    v.id === variant.id
+                                      ? {
+                                          ...v,
+                                          color: e.target.value,
+                                          colorHex:
+                                            colorswithHex[
+                                              e.target
+                                                .value as keyof typeof colorswithHex
+                                            ],
+                                        }
+                                      : v
+                                  )
+                                );
+                              }
+                            }}
+                          >
+                            <option value="">Select Color</option>
+                            <option value="red">Red</option>
+                            <option value="blue">Blue</option>
+                            <option value="green">Green</option>
+                            <option value="black">Black</option>
+                            <option value="white">White</option>
+                            <option value="custom">Custom Color...</option>
+                          </select>
+                          <input
+                            type="color"
+                            className="w-12 h-9 px-0.5 py-0.5 border rounded-lg cursor-pointer"
+                            value={variant.colorHex}
+                            readOnly
+                            disabled
+                          />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -849,7 +878,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                       removeVariant(variant.id);
                     }}
                     className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-red-50"
-                    title="Remove Color Variant">
+                    title="Remove Color Variant"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -875,7 +905,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                               onClick={() =>
                                 handleRemoveVariantImage(variant.id, index)
                               }
-                              className="absolute top-1 right-1 bg-white rounded-full p-1 sm:p-1.5 shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                              className="absolute top-1 right-1 bg-white rounded-full p-1 sm:p-1.5 shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                            >
                               <X size={12} />
                             </button>
                           </div>
@@ -886,7 +917,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                             setVarientId(variant.id);
                             setVarientImgPopUp(true);
                           }}
-                          className="w-full h-20 sm:h-24 md:h-28 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors">
+                          className="w-full h-20 sm:h-24 md:h-28 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center text-gray-500 hover:text-[#4f507f] hover:border-[#4f507f] transition-colors"
+                        >
                           <Upload size={16} className="mb-1" />
                           <span className="text-xs">Add Image</span>
                         </button>
@@ -900,7 +932,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                         {variant.sizes.map((size) => (
                           <div
                             key={size.id}
-                            className="flex flex-col sm:flex-row gap-3 sm:gap-6 sm:items-center bg-gray-50 p-3 sm:p-4 rounded-lg">
+                            className="flex flex-col sm:flex-row gap-3 sm:gap-6 sm:items-center bg-gray-50 p-3 sm:p-4 rounded-lg"
+                          >
                             <div className="w-full sm:w-48">
                               <label className="block text-xs text-gray-500 mb-1">
                                 Size
@@ -924,7 +957,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                                       return v;
                                     })
                                   );
-                                }}>
+                                }}
+                              >
                                 {Sizes.map((size) => (
                                   <option key={size} value={size}>
                                     {size.replace(/[^0-9]/g, "")}
@@ -968,7 +1002,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                             <button
                               onClick={() => removeSize(variant.id, size.id)}
                               className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-red-50 mx-auto sm:mt-6"
-                              title="Remove Size Option">
+                              title="Remove Size Option"
+                            >
                               <X size={16} />
                             </button>
                           </div>
@@ -976,7 +1011,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                       </div>
                       <button
                         onClick={() => addSize(variant.id)}
-                        className="mt-3 sm:mt-4 text-xs sm:text-sm text-[#4f507f] hover:text-[#3e3f63] flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-[#edeefc] transition-colors duration-200">
+                        className="mt-3 sm:mt-4 text-xs sm:text-sm text-[#4f507f] hover:text-[#3e3f63] flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-[#edeefc] transition-colors duration-200"
+                      >
                         <Plus size={14} />
                         Add Size Option
                       </button>
@@ -999,73 +1035,84 @@ export function EditProductForm({ productId }: { productId: string }) {
           <div className="space-y-3 md:space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Categories
+          Categories
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1 sm:gap-2">
-                {categoryQuery.isLoading ? (
-                  <div className="flex items-center flex-1 justify-start py-2">
-                    Loading...
-                  </div>
-                ) : (
-                  categoryQuery.data?.map((category: Category) => (
-                    <div
-                      key={category.id}
-                      onClick={() =>
-                        setProduct({ ...product, category_id: category.id })
-                      }
-                      className={`flex items-center gap-2 p-2 rounded-md cursor-pointer ${
-                        product.category_id === category.id
-                          ? "bg-[#edeefc] text-[#4f507f]"
-                          : "hover:bg-gray-100"
-                      }`}>
-                      <div
-                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded-md flex items-center justify-center ${
-                          product.category_id === category.id
-                            ? "bg-[#4f507f] text-white"
-                            : "border border-gray-300"
-                        }`}>
-                        {product.category_id === category.id && (
-                          <Check size={12} />
-                        )}
-                      </div>
-                      <span className="text-sm">{category.name}</span>
-                    </div>
-                  ))
-                )}
+              <div className="relative">
+          {categoryQuery.isLoading ? (
+            <div className="flex items-center flex-1 justify-start py-2">
+              Loading...
+            </div>
+          ) : (
+            <select 
+              value={product.category_id}
+              onChange={(e) => setProduct({ ...product, category_id: e.target.value })}
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] appearance-none text-sm"
+            >
+              <option value="">Select a category</option>
+              {categoryQuery.data?.map((category: Category) => (
+                <option key={category.id} value={category.id}>
+            {category.name}
+                </option>
+              ))}
+            </select>
+          )}
+          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+            <ChevronRight className="h-4 w-4 transform rotate-90 text-gray-500" />
+          </div>
               </div>
               {errors.category && (
-                <p className="text-red-500 text-xs mt-1">{errors.category}</p>
+          <p className="text-red-500 text-xs mt-1">{errors.category}</p>
               )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tags (Optional)
+          SKU
+              </label>
+              <input
+          type="text"
+          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-sm"
+          placeholder="Enter SKU"
+          value={product.sku}
+          onChange={(e) =>
+            setProduct({ ...product, sku: e.target.value })
+          }
+              />
+              {errors.sku && (
+          <p className="text-red-500 text-xs mt-1">{errors.sku}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+          Tags (Optional)
               </label>
               <div
-                className="flex flex-wrap items-center gap-1 px-2 py-1 border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-[#4f507f] bg-white min-h-[40px]"
-                onClick={() => document.getElementById("tag-input")?.focus()}>
-                {product.tags?.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-[#edeefc] text-[#4f507f]">
-                    {tag}
-                    <button
-                      type="button"
-                      className="text-[#4f507f] hover:text-[#2f3060] text-xs"
-                      onClick={() => removeTag(index)}>
-                      ×
-                    </button>
-                  </span>
-                ))}
-                <input
-                  id="tag-input"
-                  type="text"
-                  className="flex-grow border-none outline-none text-sm py-1 px-1 min-w-[100px] focus:border-none focus:ring-0"
-                  placeholder="Type and press enter"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
+          className="flex flex-wrap items-center gap-1 px-2 py-1 border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-[#4f507f] bg-white min-h-[40px]"
+          onClick={() => document.getElementById("tag-input")?.focus()}
+              >
+          {product.tags?.map((tag, index) => (
+            <span
+              key={index}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-[#edeefc] text-[#4f507f]"
+            >
+              {tag}
+              <button
+                type="button"
+                className="text-[#4f507f] hover:text-[#2f3060] text-xs"
+                onClick={() => removeTag(index)}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+          <input
+            id="tag-input"
+            type="text"
+            className="flex-grow border-none outline-none text-sm py-1 px-1 min-w-[100px] focus:border-none focus:ring-0"
+            placeholder="Type and press enter"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
               </div>
             </div>
           </div>
@@ -1086,7 +1133,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                   product.status === "DRAFT"
                     ? "bg-yellow-100 text-yellow-800"
                     : "bg-gray-100 text-gray-800"
-                }`}>
+                }`}
+              >
                 Draft
               </button>
               <button
@@ -1095,7 +1143,8 @@ export function EditProductForm({ productId }: { productId: string }) {
                   product.status === "PUBLISHED"
                     ? "bg-green-100 text-green-800"
                     : "bg-gray-100 text-gray-800"
-                }`}>
+                }`}
+              >
                 Published
               </button>
             </div>
@@ -1107,12 +1156,15 @@ export function EditProductForm({ productId }: { productId: string }) {
           <button
             type="submit"
             className="flex-1 bg-[#4f507f] text-white py-2 px-3 sm:px-4 rounded-md hover:bg-[#3e3f63] transition-colors text-sm sm:text-base"
-            onClick={saveProduct}>
-            Save Product
+            onClick={saveProduct}
+            disabled={productMutation.isPending}
+          >
+            {productMutation.isPending ? "Saving..." : "Save Product"}
           </button>
           <button
             type="button"
-            className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-3 sm:px-4 rounded-md hover:bg-gray-50 transition-colors text-sm sm:text-base">
+            className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-3 sm:px-4 rounded-md hover:bg-gray-50 transition-colors text-sm sm:text-base"
+          >
             Cancel
           </button>
         </div>

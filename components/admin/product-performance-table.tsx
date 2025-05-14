@@ -55,11 +55,6 @@ export function ProductPerformanceTable() {
     setSortConfig({ key, direction });
   };
 
-  // Format currency helper function
-  const formatCurrency = (value: number) => {
-    return `$${value}`;
-  };
-
   return (
     <div className="bg-white shadow-sm rounded-lg overflow-hidden">
       {/* Desktop Table - Hidden on small screens */}
@@ -114,8 +109,8 @@ export function ProductPerformanceTable() {
                   <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">{product.name}</td>
                   <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">{product.category}</td>
                   <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">{product.sales}</td>
-                  <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">{formatCurrency(product.revenue)}</td>
-                  <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">{formatCurrency(product.profit)}</td>
+                  <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">₹{product.revenue}</td>
+                  <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">₹{product.profit}</td>
                 </tr>
               ))
             ) : (
@@ -176,7 +171,7 @@ export function ProductPerformanceTable() {
                     onClick={() => requestSort("revenue")}
                   >
                     <div className="text-xs text-gray-500">Revenue</div>
-                    <div className="text-sm font-medium">{formatCurrency(product.revenue)}</div>
+                    <div className="text-sm font-medium">₹{product.revenue}</div>
                   </div>
                   
                   <div 
@@ -184,7 +179,7 @@ export function ProductPerformanceTable() {
                     onClick={() => requestSort("profit")}
                   >
                     <div className="text-xs text-gray-500">Profit</div>
-                    <div className="text-sm font-medium">{formatCurrency(product.profit)}</div>
+                    <div className="text-sm font-medium">₹{product.profit}</div>
                   </div>
                 </div>
               </div>

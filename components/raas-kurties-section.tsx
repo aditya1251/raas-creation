@@ -1,8 +1,50 @@
+import { analyticApi } from "@/lib/api/analytic";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function RaasKurtiesSection() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["newArrivals"],
+    queryFn: analyticApi.getNewArrivals,
+  });
+
+  // Default image paths to use as fallback
+  const defaultImages = [
+    "/lot_0016__PUN0716.png",
+    "/lot_0009__PUN0747.png",
+    "/image 107.png",
+    "/lot_0033__PUN0670.png",
+    "/lot_0028__PUN0687.png",
+    "/lot_0015__PUN0717.png",
+    "/lot_0000__PUN0768.png",
+    "/lot_0005__PUN0762.png",
+    "/lot_0019__PUN0710.png",
+  ];
+
+  // Function to get image source with fallback
+  const getImageSource = (index: number) => {
+    if (!data || !data[index] || !data[index].img) {
+      return defaultImages[index];
+    }
+    return data[index].img;
+  };
+
+  const renderImage = (index: number, aspectRatio: string) => {
+    return (
+      <div className={`aspect-[${aspectRatio}] relative mb-3`}>
+        <Image
+          src={getImageSource(index)}
+          fill
+          alt={data && data[index] ? data[index].name || "Kurti" : "Kurti"}
+          className="object-cover object-center"
+        />
+      </div>
+    );
+  };
+
   return (
-    <section className="py-12 ">
+    <section className="py-12">
       <div className="w-full lg:min-h-screen px-4">
         {/* Heading */}
         <div className="text-center mb-8">
@@ -16,51 +58,31 @@ export default function RaasKurtiesSection() {
 
         {/* Image Grid */}
         <div className="grid grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-4">
-          {/* 1 */}
+          {/* Column 1 - hidden on mobile */}
           <div className="col-span-1 hidden lg:block">
-            <div className="aspect-[3/4] relative mb-3">
-              <Image src="/lot_0016__PUN0716.png" fill alt="kurti" className="object-cover" />
-            </div>
-            <div className="aspect-[3/2] relative mb-3">
-            <Image src="/lot_0009__PUN0747.png" fill alt="kurti" className="object-cover" />
-            </div>
+            {isLoading ? <Skeleton className="mb-3 aspect-[3/4]"  /> : renderImage(0, "3/4")}
+            {isLoading ? <Skeleton className="mb-3 aspect-[3/2]"  /> : renderImage(1, "3/2")}
           </div>
 
-          {/* 2 */}
+          {/* Column 2 */}
           <div className="col-span-1 mt-16">
-            <div className="aspect-[3/4] relative mb-3">
-              <Image src="/image 107.png" fill alt="kurti" className="object-cover" />
-            </div>
-            <div className="aspect-[3/2] relative mb-3">
-            <Image src="/lot_0033__PUN0670.png" fill alt="kurti" className="object-cover" />
-            </div>
+            {isLoading ? <Skeleton className="mb-3 aspect-[3/4]"  /> : renderImage(2, "3/4")}
+            {isLoading ? <Skeleton className="mb-3 aspect-[3/2]"  /> : renderImage(3, "3/2")}
           </div>
 
-          {/* 3 */}
-          <div className="col-span-1 mt-32">
-            <div className="aspect-[3/4] relative mb-3">
-            <Image src="/lot_0028__PUN0687.png" fill alt="kurti" className="object-cover" />
-            </div>
-          </div>
+          {/* Column 3 */}
+          <div className="col-span-1 mt-32">{isLoading?<Skeleton className="mb-3 aspect-[3/4]" />:renderImage(4, "3/4")}</div>
 
-          {/* 4 */}
+          {/* Column 4 */}
           <div className="col-span-1 mt-16">
-            <div className="aspect-[3/4] relative mb-3">
-            <Image src="/lot_0015__PUN0717.png" fill alt="kurti" className="object-cover" />
-            </div>
-            <div className="aspect-[3/2] relative mb-3">
-            <Image src="/lot_0000__PUN0768.png" fill alt="kurti" className="object-cover" />
-            </div>
+            {isLoading ? <Skeleton className="mb-3 aspect-[3/4]"  /> : renderImage(5, "3/4")}
+            {isLoading ? <Skeleton className="mb-3 aspect-[3/2]"  /> : renderImage(6, "3/2")}
           </div>
 
-          {/* 5 */}
+          {/* Column 5 - hidden on mobile */}
           <div className="col-span-1 hidden lg:block">
-            <div className="aspect-[3/4] relative mb-3">
-            <Image src="/lot_0005__PUN0762.png" fill alt="kurti" className="object-cover" />
-            </div>
-            <div className="aspect-[3/2] relative mb-3">
-            <Image src="/lot_0019__PUN0710.png" fill alt="kurti" className="object-cover" />
-            </div>
+            {isLoading ? <Skeleton className="mb-3 aspect-[3/4]"  /> : renderImage(7, "3/4")}
+            {isLoading ? <Skeleton className="mb-3 aspect-[3/2]"  /> : renderImage(8, "3/2")}
           </div>
         </div>
       </div>
