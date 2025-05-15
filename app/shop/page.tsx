@@ -71,8 +71,6 @@ export default function ShopPage() {
   });
   const searchParams = useSearchParams();
 
-  // setSearchQuery(searchParams.get("q") || "");
-
   useEffect(() => {
     if (searchParams.get("q")) {
       setSearchQuery(searchParams.get("q") || "");
@@ -86,8 +84,6 @@ export default function ShopPage() {
       }));
     }
   }, [searchParams]);
-
- 
 
   const [colors, setColors] = useState<
     { id: string; name: string; hex: string }[]
@@ -112,6 +108,7 @@ export default function ShopPage() {
       );
     }
   }, [ColorsData]);
+  
   const { data: productResponse, isLoading } = useQuery({
     queryKey: [
       "filteredProducts",
@@ -135,6 +132,9 @@ export default function ShopPage() {
       }),
   });
 
+  const [products, setProducts] = useState<Products[]>([]);
+
+  // FIXED: Only use one useEffect to handle product updates
   useEffect(() => {
     if (!productResponse?.products) return;
 
@@ -146,12 +146,13 @@ export default function ShopPage() {
 
     const totalPages = productResponse?.pagination?.totalPages || 1;
     setHasMore(currentPage < totalPages);
-  }, [productResponse]);
+  }, [productResponse, currentPage]);
 
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
   });
+  
   const { data: wishlistProducts } = useQuery({
     queryKey: ["wishlistProducts"],
     queryFn: wishlistApi.getProductList,
@@ -163,15 +164,6 @@ export default function ShopPage() {
     queryFn: categoryApi.getAll,
   });
   
-  const [products, setProducts] = useState<Products[]>([]);
-  
-  useEffect(() => {
-    if (productResponse) {
-      setProducts(productResponse.products);
-      console.log("Products:", productResponse.products);
-    }
-  }, [productResponse]);
-
   const lastProductRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -210,30 +202,37 @@ export default function ShopPage() {
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newSortValue = e.target.value;
     setSortBy(newSortValue);
+    
+    // Apply sorting to the current products array
+    const sortedProducts = [...products];
+    
     switch(newSortValue) {
       case "latest":
-        setProducts([...products].sort((a, b) => 
+        sortedProducts.sort((a, b) => 
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ));
+        );
         break;
       case "price-low-high":
-        setProducts([...products].sort((a, b) => {
+        sortedProducts.sort((a, b) => {
           const priceA = a.discountPrice || a.price;
           const priceB = b.discountPrice || b.price;
           return priceA - priceB;
-        }));
+        });
         break;
       case "price-high-low":
-        setProducts([...products].sort((a, b) => {
+        sortedProducts.sort((a, b) => {
           const priceA = a.discountPrice || a.price;
           const priceB = b.discountPrice || b.price;
           return priceB - priceA;
-        }));
+        });
         break;
         
       default:
         break;
     }
+    
+    setProducts(sortedProducts);
+    // Reset to first page when sorting changes
     setCurrentPage(1);
   };
 
@@ -274,7 +273,7 @@ export default function ShopPage() {
     setIsMobileFilterOpen(false);
   };
 
-  if (isLoading) {
+  if (isLoading && currentPage === 1) {
     return (
       <main className="min-h-screen bg-white">
         <Navbar />
@@ -501,7 +500,7 @@ export default function ShopPage() {
           <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
               <div className="text-sm text-gray-500">
-                Showing {products.length} of {products?.length || 0} products
+                Showing {products.length} of {productResponse?.pagination?.totalItems || 0} products
               </div>
 
               <div>
@@ -510,6 +509,7 @@ export default function ShopPage() {
                     className="appearance-none border rounded-md px-4 py-2 pr-8 focus:outline-none text-sm"
                     value={sortBy}
                     onChange={handleSortChange}>
+                    <option value="">Sort by</option>
                     {sortOptions.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
@@ -520,11 +520,11 @@ export default function ShopPage() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {isLoading ? (
+              {products.length === 0 && !isLoading ? (
                 <div className="col-span-3 text-center py-10">
-                  Loading products...
+                  No products found with the selected filters
                 </div>
-              ) : products?.length ? (
+              ) : (
                 products.map((product, index) => (
                   <ProductCard
                     key={product.id || index}
@@ -532,21 +532,15 @@ export default function ShopPage() {
                     wishlistProducts={wishlistProducts || []}
                   />
                 ))
-              ) : (
-                <div className="col-span-3 text-center py-10">
-                  No products found with the selected filters
-                </div>
               )}
             </div>
-            {/* Infinite Scroll Observer Trigger */}
-            <div
-              ref={lastProductRef}
-              className="mt-10 text-center text-sm text-gray-500">
-              {isLoading
-                ? "Loading more..."
-                : hasMore
-                ? "Scroll down to load more"
-                : "No more products"}
+            {/* Loading indicator for infinite scroll */}
+            <div ref={lastProductRef} className="mt-10 text-center text-sm text-gray-500">
+              {isLoading && currentPage > 1 
+                ? "Loading more products..." 
+                : hasMore 
+                ? "Scroll down to load more" 
+                : products.length > 0 ? "No more products" : ""}
             </div>
           </div>
         </div>
