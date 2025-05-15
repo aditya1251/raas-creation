@@ -63,11 +63,6 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <h3 className="font-medium mb-1">Phone</h3>
-                <p className="text-gray-600">+91 97116 20050</p>
-              </div>
-
-              <div>
                 <h3 className="font-medium mb-1">Store Address</h3>
                 <p className="text-gray-600">
                   204/2-c & d, basement, jeewan nagar,

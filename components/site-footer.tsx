@@ -14,31 +14,14 @@ export default function SiteFooter() {
               />
             </a>
             <p className="text-sm text-gray-700 mb-6 max-w-xs">
-              Lorem Ipsum Dolor Sit Amet. Lorem Ipsum Dolor Sit Amet. Lorem
-              Ipsum Dolor Sit Amet.
+              Pick up stuff that you'll grow to absolutely love, love, love!
+              Trending designs, soothing colours, fashionable prints and
+              oh-so-soft fabrics that will fit you, fit into your wardrobe and
+              your budget.
             </p>
             <div className="flex space-x-3">
               <a
-                href="#"
-                className="w-8 h-8 rounded-full border border-[#795d2a] flex items-center justify-center text-[#795d2a] hover:bg-[#795d2a] hover:text-white transition-colors"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
-                </svg>
-                <span className="sr-only">Twitter</span>
-              </a>
-              <a
-                href="#"
+                href="https://www.instagram.com/raaskurties"
                 className="w-8 h-8 rounded-full border border-[#795d2a] flex items-center justify-center text-[#795d2a] hover:bg-[#795d2a] hover:text-white transition-colors"
               >
                 <svg
@@ -56,10 +39,9 @@ export default function SiteFooter() {
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                   <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
                 </svg>
-                <span className="sr-only">Instagram</span>
               </a>
               <a
-                href="#"
+                href="https://www.youtube.com/@RaasThecreation"
                 className="w-8 h-8 rounded-full border border-[#795d2a] flex items-center justify-center text-[#795d2a] hover:bg-[#795d2a] hover:text-white transition-colors"
               >
                 <svg
@@ -76,7 +58,6 @@ export default function SiteFooter() {
                   <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path>
                   <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
                 </svg>
-                <span className="sr-only">YouTube</span>
               </a>
             </div>
           </div>
@@ -111,6 +92,14 @@ export default function SiteFooter() {
               </li>
               <li>
                 <a
+                  href="/contact"
+                  className="text-gray-700 hover:text-[#795d2a] transition-colors"
+                >
+                  Contact
+                </a>
+              </li>
+              <li>
+                <a
                   href="/privacy"
                   className="text-gray-700 hover:text-[#795d2a] transition-colors"
                 >
@@ -119,10 +108,10 @@ export default function SiteFooter() {
               </li>
               <li>
                 <a
-                  href="/contact"
+                  href="/terms&cond"
                   className="text-gray-700 hover:text-[#795d2a] transition-colors"
                 >
-                  Contact
+                  Terms & Conditions
                 </a>
               </li>
             </ul>

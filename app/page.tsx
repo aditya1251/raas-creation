@@ -112,12 +112,12 @@ export default function Home() {
             <Feature
               icon={<Package />}
               title="Free Shipping"
-              text="Free shipping for order above $100"
+              text=""
             />
             <Feature
               icon={<RefreshCw />}
-              title="Money Guarantee"
-              text="Within 30 days for exchange"
+              title="Quality Assurance"
+              text="100% quality guarantee"
             />
             <Feature
               icon={<HeadphonesIcon />}

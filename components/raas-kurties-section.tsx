@@ -49,10 +49,10 @@ export default function RaasKurtiesSection() {
         {/* Heading */}
         <div className="text-center mb-8">
           <h2 className="text-xl text-[#a08452] mb-1">
-            Buy Your Next Wedding Dress From
+            Pure Cotton, Pure You.
           </h2>
           <h3 className="text-4xl font-bold text-[#795d2a] mb-8">
-            #RaasKurties
+            #WowRaas
           </h3>
         </div>
 
