@@ -1,4 +1,3 @@
-import { ProductPerformanceTable } from "@/components/admin/product-performance-table"
 import { ProductCategoryChart } from "@/components/admin/product-category-chart"
 import { Topperfomer } from "@/components/admin/Topperfomer"
 
