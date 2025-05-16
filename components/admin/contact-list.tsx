@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { Eye, Mail, Trash2, Calendar, User, MessageSquare, X, Send, Info } from "lucide-react"
-import axios from "axios"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { apiClient } from "@/lib/axiosClient"
 
 export interface Contact {
   id: number
@@ -16,12 +16,12 @@ export interface Contact {
 }
 // Fetch contacts
 const fetchContacts = async (): Promise<Contact[]> => {
-  const { data } = await axios.get<Contact[]>(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/send`)
+  const { data } = await apiClient.get<Contact[]>(`/api/send`)
   return data
 }
 // Delete contact
 const deleteContact = async (id: number): Promise<void> => {
-  await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/send/${id}`)
+  await apiClient.delete(`/api/send/${id}`)
 }
 
 export function ContactList() {
@@ -74,7 +74,7 @@ export function ContactList() {
   const handleSendMessage = async () => {
     if (selectedContact) {
       try {
-        await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/send/${selectedContact.id}`, {
+        await apiClient.put(`/api/send/${selectedContact.id}`, {
           message: message,
           Status: "Responded",
         })
