@@ -126,10 +126,6 @@ export default function SiteFooter() {
                 <span>Raasthecreation@gmail.com</span>
               </li>
               <li className="text-gray-700 flex items-center">
-                <PhoneCall className="mr-2 text-lg" />
-                <span>+91 97116 20050</span>
-              </li>
-              <li className="text-gray-700 flex items-center">
                 <MapPin className="mr-2 text-lg" />
                 <span className="flex-1">
                   204/2-c & d, basement, jeewan nagar, ashram, New Delhi-110014

@@ -1,40 +1,48 @@
 "use client";
-
 import { ProductPerformanceApi } from "@/lib/api/productperformance";
 import { useQuery } from "@tanstack/react-query";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 
 export function ProductCategoryChart() {
-  // Fetch products using React Query
-  const { data: products, isLoading, isError } = useQuery({
+  const {
+    data: products,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["productPerformance"],
     queryFn: async () => {
       try {
         const data = await ProductPerformanceApi.getAll();
-        console.log("Fetched products:", data);
-        if (!Array.isArray(data)) {
-          throw new Error("API response is not an array");
-        }
         return data;
       } catch (error) {
-        console.error("Error fetching products:", error);
         return [];
       }
     },
   });
 
   // Ensure products is an array before applying reduce
-  const categorySales = Array.isArray(products) ? products.reduce((acc, product) => {
-    const existingCategory = acc.find((item) => item.name === product.category);
+  const categorySales = Array.isArray(products)
+    ? products.reduce((acc, product) => {
+        const existingCategory = acc.find(
+          (item) => item.name === product.category
+        );
 
-    if (existingCategory) {
-      existingCategory.value += product.sales;
-    } else {
-      acc.push({ name: product.category, value: product.sales });
-    }
+        if (existingCategory) {
+          existingCategory.value += product.sales;
+        } else {
+          acc.push({ name: product.category, value: product.sales });
+        }
 
-    return acc;
-  }, [] as { name: string; value: number }[]) : [];
+        return acc;
+      }, [] as { name: string; value: number }[])
+    : [];
 
   console.log("Processed category sales:", categorySales);
 
@@ -42,7 +50,9 @@ export function ProductCategoryChart() {
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm">
-      <h2 className="text-lg font-medium mb-4 text-[#4f507f]">Sales by Category</h2>
+      <h2 className="text-lg font-medium mb-4 text-[#4f507f]">
+        Sales by Category
+      </h2>
       <div className="h-[300px]">
         {isLoading ? (
           <p className="text-gray-500 text-center">Loading...</p>
@@ -51,9 +61,20 @@ export function ProductCategoryChart() {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={categorySales} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value">
+              <Pie
+                data={categorySales}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
                 {categorySales.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip />

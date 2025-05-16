@@ -26,12 +26,6 @@ export default function AdminLayout({
         <main className="flex-1 overflow-auto">
           <div className="sticky top-0 z-10 bg-white shadow-sm p-4 flex justify-between items-center">
             <h1 className="text-xl font-semibold text-gray-800">Admin Dashboard</h1>
-            <button
-              onClick={() => setIsNotificationSidebarOpen(!isNotificationSidebarOpen)}
-              className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
-            >
-              <Bell size={20} />
-            </button>
           </div>
           <div className="p-6">
             {children}

@@ -220,30 +220,43 @@ export function AddProductForm() {
     ]);
   };
   const getAvailableSizesForOption = (variantId: string, sizeName: string) => {
-    return Sizes.filter((size) => !variants.find((v) => v.id === variantId && v.sizes.find((s) => s.name === size && s.name !== sizeName)));
+    return Sizes.filter(
+      (size) =>
+        !variants.find(
+          (v) =>
+            v.id === variantId &&
+            v.sizes.find((s) => s.name === size && s.name !== sizeName)
+        )
+    );
   };
 
   const addSize = (variantId: string) => {
-      const availableSizes = getAvailableSizesForOption(variantId, "abc");
-      if (availableSizes.length === 0) {
-        toast.error("No available sizes for this option");
-        return;
-      }
-      setVariants(
-        variants.map((variant) => {
-          if (variant.id === variantId) {
-            return {
-              ...variant,
-              sizes: [
-                ...variant.sizes,
-                { id: cuid(), name: availableSizes[0], quantity: 0, isNew: true, isDeleted: false },
-              ],
-            };
-          }
-          return variant;
-        })
-      );
-    };
+    const availableSizes = getAvailableSizesForOption(variantId, "abc");
+    if (availableSizes.length === 0) {
+      toast.error("No available sizes for this option");
+      return;
+    }
+    setVariants(
+      variants.map((variant) => {
+        if (variant.id === variantId) {
+          return {
+            ...variant,
+            sizes: [
+              ...variant.sizes,
+              {
+                id: cuid(),
+                name: availableSizes[0],
+                quantity: 0,
+                isNew: true,
+                isDeleted: false,
+              },
+            ],
+          };
+        }
+        return variant;
+      })
+    );
+  };
 
   const removeVariant = (variantId: string) => {
     setVariants(variants.filter((v) => v.id !== variantId));
@@ -387,9 +400,9 @@ export function AddProductForm() {
     setSaving(true);
     if (!validateProduct()) {
       setSaving(false);
-      toast.error("You are missing a field")
+      toast.error("You are missing a field");
       return;
-    };
+    }
     productMutation.mutate(product as Product);
   };
 
@@ -582,7 +595,7 @@ export function AddProductForm() {
             Add different color variants and their corresponding sizes and
             quantities for your product.
           </p>
-          { errors.variants && (
+          {errors.variants && (
             <p className="text-red-500 text-xs mt-2">{errors.variants}</p>
           )}
           <div className="grid gap-4 md:gap-6">
@@ -885,8 +898,12 @@ export function AddProductForm() {
                                       return v;
                                     })
                                   );
-                                }}>
-                                {getAvailableSizesForOption(variant.id , size.name).map((size) => (
+                                }}
+                              >
+                                {getAvailableSizesForOption(
+                                  variant.id,
+                                  size.name
+                                ).map((size) => (
                                   <option key={size} value={size}>
                                     {size.replace(/[^0-9]/g, "")}
                                   </option>
@@ -1095,11 +1112,25 @@ export function AddProductForm() {
             type="submit"
             className="flex-1 bg-[#4f507f] text-white py-2 px-3 sm:px-4 rounded-md hover:bg-[#3e3f63] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             onClick={saveProduct}
-            disabled={saving || productMutation.isPending}>
+            disabled={saving || productMutation.isPending}
+          >
             {saving ? "Saving..." : "Save Product"}
           </button>
           <button
             type="button"
+            onClick={() =>
+              setProduct({
+                name: "",
+                description: "",
+                price: 0,
+                discountPrice: 1,
+                category_id: "",
+                assets: [],
+                status: "DRAFT",
+                sku: "",
+                tags: [],
+              })
+            }
             className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-3 sm:px-4 rounded-md hover:bg-gray-50 transition-colors text-sm sm:text-base"
           >
             Cancel
