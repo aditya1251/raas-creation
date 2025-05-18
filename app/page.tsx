@@ -109,11 +109,7 @@ export default function Home() {
       <section className="py-12 border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <Feature
-              icon={<Package />}
-              title="Free Shipping"
-              text=""
-            />
+            <Feature icon={<Package />} title="Free Shipping" text="" />
             <Feature
               icon={<RefreshCw />}
               title="Quality Assurance"
@@ -239,6 +235,7 @@ export function ProductCard({
 
   const [isProductInWishlist, setIsProductInWishlist] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (wishlistProducts) {
@@ -248,6 +245,9 @@ export function ProductCard({
 
   const addToWishlist = useMutation({
     mutationFn: () => wishlistApi.addtoWishlist(product.id),
+    onMutate: () => {
+      setLoading(true);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlistProducts"] });
       toast.success(`${product.name} has been added to your wishlist.`);
@@ -255,10 +255,16 @@ export function ProductCard({
     onError: () => {
       toast.error("Failed to add product to wishlist.");
     },
+    onSettled: () => {
+      setLoading(false);
+    },
   });
 
   const removeFromWishlist = useMutation({
     mutationFn: () => wishlistApi.removeFromWishlist(product.id),
+    onMutate: () => {
+      setLoading(true);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlistProducts"] });
       toast.success(`${product.name} has been removed from your wishlist.`);
@@ -266,14 +272,17 @@ export function ProductCard({
     onError: () => {
       toast.error("Failed to remove product from wishlist.");
     },
+    onSettled: () => {
+      setLoading(false);
+    },
   });
 
   const handleWishlistToggle = () => {
+    if (loading) return;
     if (!user) {
       toast.error("You need to login to manage your wishlist.");
       return;
     }
-
     if (isProductInWishlist) {
       removeFromWishlist.mutate();
     } else {
@@ -299,7 +308,6 @@ export function ProductCard({
       const defaultVariantId = defaultSizeData?.id || "ID_NOT_FOUND";
       const defaultImage =
         productData.assets?.[0]?.asset_url || "/placeholder.svg";
-
       const cartItem = {
         id: productData.id,
         name: productData.name,
@@ -311,7 +319,6 @@ export function ProductCard({
         productVariantId: defaultVariantId,
         image: defaultImage,
       };
-
       addToCart(cartItem);
       toast.success(`${product.name} has been added to your cart.`);
     } catch (error) {
@@ -336,6 +343,7 @@ export function ProductCard({
         {/* Wishlist Heart Button */}
         <button
           onClick={handleWishlistToggle}
+          disabled={loading}
           className="absolute top-3 right-3 aspect-square w-8 lg:w-10 bg-[#a08452] hover:bg-[#8c703d] rounded-full flex items-center justify-center
             opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 
             transform translate-x-0 lg:translate-x-[100%] lg:group-hover:translate-x-0"

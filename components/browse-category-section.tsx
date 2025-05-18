@@ -48,28 +48,36 @@ export default function BrowseCategorySection() {
 
         {/* Single row of categories with auto-adjusted width */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {categories?.map((category) => (
-            <div key={category.name} className="w-full">
-              <div className="bg-white rounded-xl overflow-hidden shadow-lg h-full">
-                <div className="aspect-[3/4] relative rounded-xl overflow-hidden">
-                  <Image
-                    // @ts-ignore
-                    src={category?.Product[0]?.assets[0].asset_url}
-                    alt={category.name}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute bottom-5 w-11/12 left-1/2 transform -translate-x-1/2">
-                    <Link href={`/shop?c=${category.id}`}>
-                      <button className="rounded-lg bg-white text-gray-800 border-none px-3 py-1.5 text-xs sm:text-sm md:text-base font-medium w-full shadow-md hover:bg-gray-100 truncate">
-                        {category.name}
-                      </button>
-                    </Link>
+          {categories?.map((category) => {
+            // Get image URL safely with fallback
+            const imageUrl =
+              (category.products &&
+                category.products[0]?.assets[0]?.asset_url) || // Check if products array exists
+              (category.Product && category.Product[0]?.assets[0]?.asset_url) || // Check original path
+              "/placeholder-image.jpg"; // Fallback image
+
+            return (
+              <div key={category.name} className="w-full">
+                <div className="bg-white rounded-xl overflow-hidden shadow-lg h-full">
+                  <div className="aspect-[3/4] relative rounded-xl overflow-hidden">
+                    <Image
+                      src={imageUrl}
+                      alt={category.name}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute bottom-5 w-11/12 left-1/2 transform -translate-x-1/2">
+                      <Link href={`/shop?c=${category.id}`}>
+                        <button className="rounded-lg bg-white text-gray-800 border-none px-3 py-1.5 text-xs sm:text-sm md:text-base font-medium w-full shadow-md hover:bg-gray-100 truncate">
+                          {category.name}
+                        </button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

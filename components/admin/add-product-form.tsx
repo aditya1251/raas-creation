@@ -141,11 +141,10 @@ export function AddProductForm() {
       const hasInvalidVariant = variants.some(
         (variant) =>
           !variant.color ||
-          variant.images.length === 0 ||
           variant.sizes.length === 0
       );
       if (hasInvalidVariant) {
-        newErrors.variants = "All variants must have color, images and sizes";
+        newErrors.variants = "All variants must have color and sizes";
       }
     }
 
