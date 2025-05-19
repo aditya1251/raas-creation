@@ -51,7 +51,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
   const [stockCount, setStockCount] = useState<number>(0);
   // New state to track the currently selected image
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
-
+  const [loading, setLoading] = useState(false);
   const decreaseQuantity = () => {
     if (quantity > 1) {
       setQuantity(quantity - 1);
@@ -273,6 +273,9 @@ export default function ProductDetails({ slug }: { slug: string }) {
   // Add these mutations
   const addToWishlist = useMutation({
     mutationFn: () => wishlistApi.addtoWishlist(product?.id || ""),
+    onMutate: () => {
+      setLoading(true);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlistProducts"] });
       toast.success(`${product?.name} added to wishlist`);
@@ -280,16 +283,25 @@ export default function ProductDetails({ slug }: { slug: string }) {
     onError: () => {
       toast.error("Failed to add product to wishlist");
     },
+    onSettled: () => {
+      setLoading(false);
+    },
   });
 
   const removeFromWishlist = useMutation({
     mutationFn: () => wishlistApi.removeFromWishlist(product?.id || ""),
+    onMutate: () => {
+      setLoading(true);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlistProducts"] });
       toast.success(`${product?.name} removed from wishlist`);
     },
     onError: () => {
       toast.error("Failed to remove product from wishlist");
+    },
+    onSettled: () => {
+      setLoading(false);
     },
   });
 
@@ -313,6 +325,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
 
   // Add this handler function
   const handleWishlistToggle = () => {
+    if (loading) return;
     if (!user) {
       toast.error("Please log in to add products to your wishlist.");
       return;
@@ -587,6 +600,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                 variant="outline"
                 className="border-gray-300 hover:bg-gray-50 transition-colors w-8 h-8 p-0 flex items-center justify-center"
                 onClick={handleWishlistToggle}
+                disabled={loading}
               >
                 <Heart
                   className={`h-4 w-4 ${

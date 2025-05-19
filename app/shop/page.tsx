@@ -76,7 +76,7 @@ export default function ShopPage() {
       setSearchQuery(searchParams.get("q") || "");
     }
 
-    if(searchParams.get("c")) {
+    if (searchParams.get("c")) {
       setSelectedCategories([searchParams.get("c") || ""]);
       setFilterValues((prev) => ({
         ...prev,
@@ -108,7 +108,7 @@ export default function ShopPage() {
       );
     }
   }, [ColorsData]);
-  
+
   const { data: productResponse, isLoading } = useQuery({
     queryKey: [
       "filteredProducts",
@@ -152,18 +152,18 @@ export default function ShopPage() {
     queryKey: ["user"],
     queryFn: customerApi.getCustomer,
   });
-  
+
   const { data: wishlistProducts } = useQuery({
     queryKey: ["wishlistProducts"],
     queryFn: wishlistApi.getProductList,
     enabled: !!user?.id,
   });
-  
+
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: categoryApi.getAll,
   });
-  
+
   const lastProductRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -202,14 +202,15 @@ export default function ShopPage() {
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newSortValue = e.target.value;
     setSortBy(newSortValue);
-    
+
     // Apply sorting to the current products array
     const sortedProducts = [...products];
-    
-    switch(newSortValue) {
+
+    switch (newSortValue) {
       case "latest":
-        sortedProducts.sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        sortedProducts.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         break;
       case "price-low-high":
@@ -226,11 +227,11 @@ export default function ShopPage() {
           return priceB - priceA;
         });
         break;
-        
+
       default:
         break;
     }
-    
+
     setProducts(sortedProducts);
     // Reset to first page when sorting changes
     setCurrentPage(1);
@@ -303,7 +304,8 @@ export default function ShopPage() {
       <div className="md:hidden px-6 mb-4">
         <Button
           onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-          className="w-full flex items-center justify-center gap-2 bg-[#795d2a] text-white">
+          className="w-full flex items-center justify-center gap-2 bg-[#795d2a] text-white"
+        >
           {isMobileFilterOpen ? (
             <>
               <X className="h-5 w-5" /> Close Filters
@@ -324,16 +326,19 @@ export default function ShopPage() {
           ${isMobileFilterOpen ? "block" : "hidden md:block"}
           absolute md:static z-20 bg-white md:bg-transparent 
           left-0 right-0 px-6 md:px-0
-        `}>
+        `}
+          >
             <Button
               onClick={applyFilters}
-              className="w-full mb-4 bg-[#795d2a] text-white">
+              className="w-full mb-4 bg-[#795d2a] text-white"
+            >
               Apply Filters
             </Button>
             <div className="mb-6 bg-gray-50 rounded-lg p-4">
               <div
                 className="flex items-center justify-between mb-3 cursor-pointer"
-                onClick={() => setIsExpandedCategories(!isExpandedCategories)}>
+                onClick={() => setIsExpandedCategories(!isExpandedCategories)}
+              >
                 <h3 className="font-medium">Product Categories</h3>
                 <ChevronDown
                   className={`h-4 w-4 transition-transform duration-200 ${
@@ -344,7 +349,8 @@ export default function ShopPage() {
               <div
                 className={`space-y-2 overflow-hidden transition-all duration-300 ${
                   isExpandedCategories ? "max-h-[400px]" : "max-h-48"
-                } overflow-y-auto scrollbar-thin scrollbar-thumb-[#795d2a] scrollbar-track-gray-100 pr-2`}>
+                } overflow-y-auto scrollbar-thin scrollbar-thumb-[#795d2a] scrollbar-track-gray-100 pr-2`}
+              >
                 {isLoading ? (
                   <p className="text-sm text-gray-500">Loading categories...</p>
                 ) : (
@@ -352,7 +358,8 @@ export default function ShopPage() {
                     {categories?.map((category, index) => (
                       <div
                         key={index}
-                        className="flex items-center space-x-2 hover:bg-white p-2 rounded-md transition-colors">
+                        className="flex items-center space-x-2 hover:bg-white p-2 rounded-md transition-colors"
+                      >
                         <Checkbox
                           id={category.id}
                           checked={selectedCategories.includes(category.id)}
@@ -361,7 +368,8 @@ export default function ShopPage() {
                         />
                         <label
                           htmlFor={category.id}
-                          className="text-sm cursor-pointer hover:text-[#795d2a] transition-colors flex-1">
+                          className="text-sm cursor-pointer hover:text-[#795d2a] transition-colors flex-1"
+                        >
                           {category.name}
                         </label>
                         <span className="text-xs text-gray-500">
@@ -375,7 +383,8 @@ export default function ShopPage() {
               {categories && categories.length > 6 && (
                 <button
                   onClick={() => setIsExpandedCategories(!isExpandedCategories)}
-                  className="text-sm text-[#795d2a] hover:text-[#5d4720] mt-2 w-full text-center">
+                  className="text-sm text-[#795d2a] hover:text-[#5d4720] mt-2 w-full text-center"
+                >
                   {isExpandedCategories ? "Show Less" : "Show More"}
                 </button>
               )}
@@ -392,7 +401,7 @@ export default function ShopPage() {
                   min="0"
                   max={maxPriceValue}
                   value={priceRange}
-                  onChange={(e)=>setPriceRange(Number(e.target.value))}
+                  onChange={(e) => setPriceRange(Number(e.target.value))}
                   className="w-full h-1 bg-[#A08452] rounded-lg appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -416,7 +425,8 @@ export default function ShopPage() {
                       selectedSizes.includes(size)
                         ? "bg-[#795d2a] text-white border-[#795d2a]"
                         : "border-gray-300 hover:border-[#795d2a]"
-                    }`}>
+                    }`}
+                  >
                     {size.split("SIZE_")[1]}
                   </div>
                 ))}
@@ -443,7 +453,8 @@ export default function ShopPage() {
                       .map((color, index) => (
                         <div
                           key={index}
-                          className="flex items-center space-x-2">
+                          className="flex items-center space-x-2"
+                        >
                           <Checkbox
                             id={`color-${color.id}`}
                             checked={selectedColors.includes(color.name)}
@@ -453,13 +464,15 @@ export default function ShopPage() {
                           />
                           <label
                             htmlFor={`color-${color.id}`}
-                            className="text-sm cursor-pointer flex items-center">
+                            className="text-sm cursor-pointer flex items-center"
+                          >
                             <div
                               className="w-4 h-4 rounded-sm mr-2"
                               style={{
                                 backgroundColor: color.hex,
                                 border: "1px solid #e2e8f0",
-                              }}></div>
+                              }}
+                            ></div>
                             {color.name}
                           </label>
                         </div>
@@ -467,7 +480,8 @@ export default function ShopPage() {
                     {colors.length > 6 && (
                       <button
                         onClick={() => setShowAllColors(!showAllColors)}
-                        className="text-sm text-[#795d2a] hover:underline">
+                        className="text-sm text-[#795d2a] hover:underline"
+                      >
                         {showAllColors ? "Show Less" : "Show More"}
                       </button>
                     )}
@@ -480,7 +494,8 @@ export default function ShopPage() {
               <Button
                 onClick={clearAllFilters}
                 variant="outline"
-                className="w-full border-[#795d2a] text-[#795d2a] hover:bg-[#795d2a] hover:text-white">
+                className="w-full border-[#795d2a] text-[#795d2a] hover:bg-[#795d2a] hover:text-white"
+              >
                 Clear All Filters
               </Button>
             </div>
@@ -491,7 +506,8 @@ export default function ShopPage() {
                   setIsMobileFilterOpen(false);
                   applyFilters();
                 }}
-                className="w-full bg-[#795d2a] text-white">
+                className="w-full bg-[#795d2a] text-white"
+              >
                 Apply Filters
               </Button>
             </div>
@@ -500,7 +516,8 @@ export default function ShopPage() {
           <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
               <div className="text-sm text-gray-500">
-                Showing {products.length} of {productResponse?.pagination?.totalItems || 0} products
+                Showing {products.length} of{" "}
+                {productResponse?.pagination?.totalItems || 0} products
               </div>
 
               <div>
@@ -508,7 +525,8 @@ export default function ShopPage() {
                   <select
                     className="appearance-none border rounded-md px-4 py-2 pr-8 focus:outline-none text-sm"
                     value={sortBy}
-                    onChange={handleSortChange}>
+                    onChange={handleSortChange}
+                  >
                     <option value="">Sort by</option>
                     {sortOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -535,12 +553,17 @@ export default function ShopPage() {
               )}
             </div>
             {/* Loading indicator for infinite scroll */}
-            <div ref={lastProductRef} className="mt-10 text-center text-sm text-gray-500">
-              {isLoading && currentPage > 1 
-                ? "Loading more products..." 
-                : hasMore 
-                ? "Scroll down to load more" 
-                : products.length > 0 ? "No more products" : ""}
+            <div
+              ref={lastProductRef}
+              className="mt-10 text-center text-sm text-gray-500"
+            >
+              {isLoading && currentPage > 1
+                ? "Loading more products..."
+                : hasMore
+                ? "Scroll down to load more"
+                : products.length > 0
+                ? "No more products"
+                : ""}
             </div>
           </div>
         </div>
@@ -606,7 +629,7 @@ function ProductCard({
 
   const [isProductInWishlist, setIsProductInWishlist] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (wishlistProducts) {
       setIsProductInWishlist(wishlistProducts.includes(product.id));
@@ -615,6 +638,9 @@ function ProductCard({
 
   const addToWishlist = useMutation({
     mutationFn: () => wishlistApi.addtoWishlist(product.id),
+    onMutate: () => {
+      setLoading(true);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlistProducts"] });
       toast.success(`${product.name} has been added to your wishlist.`);
@@ -622,10 +648,16 @@ function ProductCard({
     onError: () => {
       toast.error("Failed to add product to wishlist.");
     },
+    onSettled: () => {
+      setLoading(false);
+    },
   });
 
   const removeFromWishlist = useMutation({
     mutationFn: () => wishlistApi.removeFromWishlist(product.id),
+    onMutate: () => {
+      setLoading(true);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlistProducts"] });
       toast.success(`${product.name} has been removed from your wishlist.`);
@@ -633,9 +665,13 @@ function ProductCard({
     onError: () => {
       toast.error("Failed to remove product from wishlist.");
     },
+    onSettled: () => {
+      setLoading(false);
+    },
   });
 
   const handleWishlistToggle = () => {
+    if (loading) return;
     if (!user) {
       toast.error("You need to login to manage your wishlist.");
       return;
@@ -702,8 +738,10 @@ function ProductCard({
         </Link>
         <button
           onClick={handleWishlistToggle}
+          disabled={loading}
           className="absolute top-3 right-3 aspect-square w-8 bg-[#795D2A] rounded-full flex items-center justify-center 
-          opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[100%] group-hover:translate-x-0">
+          opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[100%] group-hover:translate-x-0"
+        >
           {isProductInWishlist ? (
             <HeartOff className="aspect-square w-4 lg:w-6 text-white" />
           ) : (
@@ -714,12 +752,14 @@ function ProductCard({
         <div
           className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
           transform translate-y-full group-hover:translate-y-0 
-          transition-transform duration-300 ease-in-out">
+          transition-transform duration-300 ease-in-out"
+        >
           <button
             onClick={handleAddToCart}
             disabled={isAddingToCart}
             className="w-full flex justify-center gap-4 items-center rounded-lg bg-[#795D2A] text-white text-lg font-normal py-2 
-            opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          >
             {isAddingToCart ? (
               <>
                 Adding...
@@ -740,7 +780,7 @@ function ProductCard({
         <Link href={`/product/${product.slug}`} className="block">
           <h3 className="text-sm font-medium">{product.name}</h3>
         </Link>
-          <h3 className="text-sm font-medium">{product.sku}</h3>
+        <h3 className="text-sm font-medium">{product.sku}</h3>
         <div className="flex items-center mt-1">
           <span className="text-sm font-medium">
             ₹{product.discountPrice || product.price}
