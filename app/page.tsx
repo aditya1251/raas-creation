@@ -345,7 +345,7 @@ export function ProductCard({
           onClick={handleWishlistToggle}
           disabled={loading}
           className="absolute top-3 right-3 aspect-square w-8 lg:w-10 bg-[#a08452] hover:bg-[#8c703d] rounded-full flex items-center justify-center
-            opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300 
+            opacity-100 lg:opacity-0 group-hover:opacity-100 transition-all duration-300 
             transform translate-x-0 lg:translate-x-[100%] lg:group-hover:translate-x-0"
         >
           {isProductInWishlist ? (
@@ -356,14 +356,14 @@ export function ProductCard({
         </button>
         <div
           className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 w-full
-                transform translate-y-full group-hover:translate-y-0 
+                transform lg:translate-y-full group-hover:translate-y-0 
                 transition-transform duration-300 ease-in-out"
         >
           <button
             onClick={handleAddToCart}
             disabled={isAddingToCart}
             className="w-full flex justify-center gap-4 items-center rounded-lg bg-[#795D2A] text-white text-lg font-normal py-2 
-                  opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  lg:opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           >
             {isAddingToCart ? (
               <>
