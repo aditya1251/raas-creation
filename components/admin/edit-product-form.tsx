@@ -73,7 +73,6 @@ export function EditProductForm({ productId }: { productId: string }) {
     images: "",
     sku: "",
     category: "",
-    sku: ""
   });
 
   const [product, setProduct] = useState<Product>({
@@ -748,6 +747,7 @@ export function EditProductForm({ productId }: { productId: string }) {
           )}
           <div className="grid gap-4 md:gap-6">
             {variants.map((variant) => (
+              variant.isDeleted ? null :
               <div
                 key={variant.id}
                 className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm hover:border-[#4f507f] transition-colors duration-200"
