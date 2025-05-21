@@ -30,6 +30,7 @@ export function InventoryTable() {
       inventoryApi.getInventory(currentPage, itemsPerPage, debouncedSearchTerm),
   });
 
+
   // When backend data returns update local inventory state (if needed)
   useEffect(() => {
     if (data && data.products) {

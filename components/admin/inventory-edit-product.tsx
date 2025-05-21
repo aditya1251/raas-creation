@@ -9,6 +9,7 @@ import { Products } from "./products-table";
 import MultiUploadPopup from "../MultiUploadPopup";
 import { inventoryApi } from "@/lib/api/inventory";
 import Image from "next/image";
+import { set } from "zod";
 
 // Define types based on the provided JSON structure
 interface Size {
@@ -29,27 +30,32 @@ const availableSizes = [
 ];
 
 const colorswithHex = {
-  "red": "#FF0000",
-  "blue": "#0000FF",
-  "green": "#00FF00",
-  "white": "#FFFFFF",
-  "black": "#000000",
-  "yellow": "#FFFF00",
-  "orange": "#FFA500",
-  "purple": "#800080",
-  "pink": "#FFC0CB",
-  "brown": "#A52A2A",
-  "grey": "#808080",
-}
+  red: "#FF0000",
+  blue: "#0000FF",
+  green: "#00FF00",
+  white: "#FFFFFF",
+  black: "#000000",
+  yellow: "#FFFF00",
+  orange: "#FFA500",
+  purple: "#800080",
+  pink: "#FFC0CB",
+  brown: "#A52A2A",
+  grey: "#808080",
+};
 
 export function ProductInventoryEditor({ productId }: { productId: string }) {
   const [product, setProduct] = useState<Products | null>(null);
+  const [deletedColors, setDeletedColors] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [stockUpdates, setStockUpdates] = useState<Record<string, number>>({});
   const [successMessage, setSuccessMessage] = useState("");
   const [showAddColorForm, setShowAddColorForm] = useState(false);
   const [isCustomColor, setIsCustomColor] = useState(false);
-  const [newColor, setNewColor] = useState<{ name: string; imageUrl: string[]; hex: string }>({ name: "", imageUrl: [], hex: "#000000" });
+  const [newColor, setNewColor] = useState<{
+    name: string;
+    imageUrl: string[];
+    hex: string;
+  }>({ name: "", imageUrl: [], hex: "#000000" });
   const [newColors, setNewColors] = useState<
     Array<{
       name: string;
@@ -92,7 +98,6 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
     });
   };
 
-
   const getStockValue = (size: Size) => {
     return stockUpdates[size.id] !== undefined
       ? stockUpdates[size.id]
@@ -104,17 +109,18 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
       alert("Please enter a color name");
       return;
     }
-
-    if (!newColor.imageUrl.length) {
-      alert("Please upload an image");
-      return;
-    }
     if (!newColor.hex) {
       alert("Please select a color hex");
       return;
     }
 
-    setNewColors([...newColors, { ...newColor, sizes: availableSizes.map((size) => ({ size, stock: 0 })) }]);
+    setNewColors([
+      ...newColors,
+      {
+        ...newColor,
+        sizes: availableSizes.map((size) => ({ size, stock: 0 })),
+      },
+    ]);
     setNewColor({ name: "", imageUrl: [], hex: "" });
     setShowAddColorForm(false);
   };
@@ -151,6 +157,22 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
     const updatedNewColors = [...newColors];
     updatedNewColors.splice(index, 1);
     setNewColors(updatedNewColors);
+  };
+  const removeOldColorMutation = useMutation({
+    mutationFn: async (colorId: string) => {
+      return inventoryApi.deleteColor(colorId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["product", productId] });
+      setDeletedColors([]);
+    },
+    onError: (error) => {
+      console.error("Failed to remove color:", error);
+    },
+  });
+
+  const handleRemoveOldColor = (colorId: string) => {
+    setDeletedColors([...deletedColors, colorId]);
   };
 
   const handleRemoveNewSize = (colorId: string, sizeIndex: number) => {
@@ -252,7 +274,16 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
         setSaving(false);
         return;
       }
-
+      // Remove deleted colors
+      for (const colorId of deletedColors) {
+        try {
+          await removeOldColorMutation.mutateAsync(colorId);
+        } catch (error) {
+          console.error("Failed to remove color:", error);
+          setSaving(false);
+          return;
+        }
+      }
       try {
         await NewSizeMutation.mutateAsync(newSizes);
       } catch (error) {
@@ -290,7 +321,9 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
       <div className="bg-white rounded-lg p-4 sm:p-6 md:p-8 shadow-sm flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-[#4f507f] mx-auto"></div>
-          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-gray-600">Loading product inventory...</p>
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-gray-600">
+            Loading product inventory...
+          </p>
         </div>
       </div>
     );
@@ -302,7 +335,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
         <p className="text-red-500 text-sm sm:text-base">Product not found</p>
         <Link
           href="/admin/products/inventory"
-          className="text-[#4f507f] hover:underline mt-3 sm:mt-4 inline-block text-sm sm:text-base">
+          className="text-[#4f507f] hover:underline mt-3 sm:mt-4 inline-block text-sm sm:text-base"
+        >
           Back to Inventory
         </Link>
       </div>
@@ -312,10 +346,13 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
   if (error) {
     return (
       <div className="bg-white rounded-lg p-4 sm:p-6 md:p-8 shadow-sm">
-        <p className="text-red-500 text-sm sm:text-base">Error loading product inventory</p>
+        <p className="text-red-500 text-sm sm:text-base">
+          Error loading product inventory
+        </p>
         <Link
           href="/admin/products/inventory"
-          className="text-[#4f507f] hover:underline mt-3 sm:mt-4 inline-block text-sm sm:text-base">
+          className="text-[#4f507f] hover:underline mt-3 sm:mt-4 inline-block text-sm sm:text-base"
+        >
           Back to Inventory
         </Link>
       </div>
@@ -325,7 +362,7 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
   const hasChanges =
     Object.keys(stockUpdates).length > 0 ||
     newColors.length > 0 ||
-    Object.values(newSizes).some((sizes) => sizes.length > 0);
+    Object.values(newSizes).some((sizes) => sizes.length > 0)|| deletedColors.length > 0;
 
   // Get available sizes that aren't already used for a specific color
   const getAvailableSizesForColor = (colorId: string) => {
@@ -355,14 +392,17 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
           <div className="flex items-center">
             <Link
               href="/admin/products/inventory"
-              className="mr-2 sm:mr-4 text-gray-500 hover:text-gray-700">
+              className="mr-2 sm:mr-4 text-gray-500 hover:text-gray-700"
+            >
               <ArrowLeft size={20} />
             </Link>
             <div>
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900 line-clamp-1">
                 {product?.name}
               </h2>
-              <p className="text-xs sm:text-sm text-gray-500">ID: {product?.id}</p>
+              <p className="text-xs sm:text-sm text-gray-500">
+                ID: {product?.id}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-0">
@@ -378,7 +418,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                 hasChanges && !saving
                   ? "bg-[#4f507f] text-white hover:bg-[#3e3f63]"
                   : "bg-gray-200 text-gray-500 cursor-not-allowed"
-              }`}>
+              }`}
+            >
               <Save size={14} className="sm:size-8" />
               <span>{saving ? "Saving..." : "Save Changes"}</span>
             </button>
@@ -392,7 +433,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
         {!showAddColorForm && (
           <button
             onClick={() => setShowAddColorForm(true)}
-            className="mb-4 sm:mb-6 flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs sm:text-sm">
+            className="mb-4 sm:mb-6 flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs sm:text-sm"
+          >
             <Plus size={14} className="sm:size-8" />
             <span>Add New Color</span>
           </button>
@@ -401,7 +443,9 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
         {/* Add New Color Form */}
         {showAddColorForm && (
           <div className="mb-4 sm:mb-6 p-3 sm:p-4 border border-gray-200 rounded-lg">
-            <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4">Add New Color</h3>
+            <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4">
+              Add New Color
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
@@ -420,8 +464,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                     />
                     <button
                       onClick={() => {
-                        setIsCustomColor(false)
-                        setNewColor({ ...newColor, name: "" })
+                        setIsCustomColor(false);
+                        setNewColor({ ...newColor, name: "" });
                       }}
                       className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 text-sm"
                     >
@@ -432,16 +476,18 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                   <select
                     value={newColor.name}
                     onChange={(e) => {
-                      const selectedColor = e.target.value
+                      const selectedColor = e.target.value;
                       if (selectedColor === "custom") {
-                        setIsCustomColor(true)
-                        setNewColor({ ...newColor, name: "", hex: "#000000" })
+                        setIsCustomColor(true);
+                        setNewColor({ ...newColor, name: "", hex: "#000000" });
                       } else {
-                        setNewColor({ 
-                          ...newColor, 
-                          name: selectedColor, 
-                          hex: colorswithHex[selectedColor as keyof typeof colorswithHex] 
-                        })
+                        setNewColor({
+                          ...newColor,
+                          name: selectedColor,
+                          hex: colorswithHex[
+                            selectedColor as keyof typeof colorswithHex
+                          ],
+                        });
                       }
                     }}
                     className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-sm"
@@ -470,7 +516,6 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                     className="w-12 h-8 p-0 border border-gray-300 rounded"
                     disabled={!isCustomColor && newColor.name !== ""}
                   />
-                  
                 </div>
               </div>
               <div>
@@ -478,25 +523,25 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                   Color Image
                 </label>
                 <div className="flex items-center gap-3 sm:gap-4">
-                  {newColor.imageUrl.length !== 0 ? (
-                    newColor.imageUrl.map((imageUrl) => (
-                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 border border-gray-200 rounded-md overflow-hidden flex-shrink-0">
-                      <Image
-                        width={100}
-                        height={100}
-                        src={imageUrl || "/logo.svg"}
-                        alt="Color"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    )
-                  )
-                  ) : null}
+                  {newColor.imageUrl.length !== 0
+                    ? newColor.imageUrl.map((imageUrl) => (
+                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 border border-gray-200 rounded-md overflow-hidden flex-shrink-0">
+                          <Image
+                            width={100}
+                            height={100}
+                            src={imageUrl || "/logo.svg"}
+                            alt="Color"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))
+                    : null}
 
                   <button
                     type="button"
                     onClick={() => setUpload(true)}
-                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 flex items-center text-xs sm:text-sm">
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 flex items-center text-xs sm:text-sm"
+                  >
                     <Upload size={14} className="sm:size-5 mr-1 sm:mr-2" />
                     <span>Upload Image</span>
                   </button>
@@ -507,45 +552,48 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
               <button
                 type="button"
                 onClick={() => setShowAddColorForm(false)}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-xs sm:text-sm">
+                className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-xs sm:text-sm"
+              >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleAddColor}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] text-xs sm:text-sm">
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] text-xs sm:text-sm"
+              >
                 Add Color
               </button>
             </div>
           </div>
         )}
-       
 
         {/* New Colors */}
         {newColors.length > 0 && (
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4">New Colors</h3>
+            <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4">
+              New Colors
+            </h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {newColors.map((newColorData, index) => (
                 <div
                   key={index}
-                  className="border border-gray-200 rounded-lg overflow-hidden">
+                  className="border border-gray-200 rounded-lg overflow-hidden"
+                >
                   <div className="bg-gray-50 p-3 sm:p-4 border-b border-gray-200 flex justify-between items-center">
                     <div className="flex items-center gap-2 sm:gap-3">
-                    {newColor.imageUrl.length !== 0 ? (
-                    newColor.imageUrl.map((imageUrl) => (
-                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 border border-gray-200 rounded-md overflow-hidden flex-shrink-0">
-                      <Image
-                        width={100}
-                        height={100}
-                        src={imageUrl || "/logo.svg"}
-                        alt="Color"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    )
-                  )
-                  ) : null}
+                      {newColor.imageUrl.length !== 0
+                        ? newColor.imageUrl.map((imageUrl) => (
+                            <div className="relative w-10 h-10 sm:w-12 sm:h-12 border border-gray-200 rounded-md overflow-hidden flex-shrink-0">
+                              <Image
+                                width={100}
+                                height={100}
+                                src={imageUrl || "/logo.svg"}
+                                alt="Color"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))
+                        : null}
                       <div>
                         <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                           {newColorData.name}
@@ -557,7 +605,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                     </div>
                     <button
                       onClick={() => handleRemoveNewColor(index)}
-                      className="text-red-600 hover:text-red-800 p-1 sm:p-2">
+                      className="text-red-600 hover:text-red-800 p-1 sm:p-2"
+                    >
                       <X size={16} className="sm:size-18" />
                     </button>
                   </div>
@@ -608,7 +657,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                                         sizeIndex
                                       )
                                     }
-                                    className="text-red-600 hover:text-red-800 p-1">
+                                    className="text-red-600 hover:text-red-800 p-1"
+                                  >
                                     <X size={14} />
                                   </button>
                                 </td>
@@ -635,7 +685,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                               onChange={(e) =>
                                 setNewSize({ ...newSize, size: e.target.value })
                               }
-                              className="w-full px-2 sm:px-3 bg-white py-1.5 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-xs sm:text-sm">
+                              className="w-full px-2 sm:px-3 bg-white py-1.5 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-xs sm:text-sm"
+                            >
                               <option value="">Select Size</option>
                               {getAvailableSizesForNewColor(
                                 newColorData.name
@@ -668,13 +719,15 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                           <button
                             type="button"
                             onClick={() => setShowAddSizeForm(null)}
-                            className="px-2 sm:px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-xs">
+                            className="px-2 sm:px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-xs"
+                          >
                             Cancel
                           </button>
                           <button
                             type="button"
                             onClick={() => handleAddSize(newColorData.name)}
-                            className="px-2 sm:px-3 py-1 bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] text-xs">
+                            className="px-2 sm:px-3 py-1 bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] text-xs"
+                          >
                             Add Size
                           </button>
                         </div>
@@ -685,7 +738,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                           setShowAddSizeForm(newColorData.name);
                           setNewSize({ size: "", stock: 0 });
                         }}
-                        className="mt-3 sm:mt-4 w-full flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 border border-dashed border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 text-xs sm:text-sm">
+                        className="mt-3 sm:mt-4 w-full flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 border border-dashed border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 text-xs sm:text-sm"
+                      >
                         <Plus size={14} className="sm:size-16" />
                         <span>Add Size</span>
                       </button>
@@ -699,11 +753,13 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
 
         {/* Existing Colors */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {product?.colors.map((color) => (
+          {product?.colors.filter((color) => !deletedColors.includes(color.id))
+            .map((color) => (
             <div
               key={color.id}
-              className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 sm:p-4 border-b border-gray-200">
+              className="border border-gray-200 rounded-lg overflow-hidden"
+            >
+              <div className="bg-gray-50 flex justify-between items-center p-3 sm:p-4 border-b border-gray-200">
                 <div className="flex items-center gap-2 sm:gap-3">
                   {color.assets.length > 0 && (
                     <Image
@@ -715,13 +771,21 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                     />
                   )}
                   <div>
-                    <h3 className="font-medium text-gray-900 text-sm sm:text-base">{color.color}</h3>
+                    <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+                      {color.color}
+                    </h3>
                     <p className="text-xs sm:text-sm text-gray-500">
                       {color.sizes.length + (newSizes[color.id]?.length || 0)}{" "}
                       size variants
                     </p>
                   </div>
                 </div>
+                  <button
+                    onClick={() => handleRemoveOldColor(color.id)}
+                    className="text-red-600 hover:text-red-800 p-1 sm:p-2"
+                  >
+                    <X size={16} className="sm:size-18" />
+                  </button>
               </div>
               <div className="p-3 sm:p-4">
                 <div className="overflow-x-auto -mx-3">
@@ -770,7 +834,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                                   )
                                 }
                                 className="p-1 rounded-md hover:bg-gray-100"
-                                disabled={getStockValue(size) <= 0}>
+                                disabled={getStockValue(size) <= 0}
+                              >
                                 <Minus
                                   size={14}
                                   className={
@@ -787,7 +852,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                                     getStockValue(size) + 1
                                   )
                                 }
-                                className="p-1 rounded-md hover:bg-gray-100">
+                                className="p-1 rounded-md hover:bg-gray-100"
+                              >
                                 <Plus size={14} className="text-gray-600" />
                               </button>
                             </div>
@@ -823,7 +889,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                               onClick={() =>
                                 handleRemoveNewSize(color.id, sizeIndex)
                               }
-                              className="text-red-600 hover:text-red-800 p-1">
+                              className="text-red-600 hover:text-red-800 p-1"
+                            >
                               <X size={14} />
                             </button>
                           </td>
@@ -846,7 +913,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                           onChange={(e) =>
                             setNewSize({ ...newSize, size: e.target.value })
                           }
-                          className="w-full px-2 sm:px-3 bg-white py-1.5 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-xs sm:text-sm">
+                          className="w-full px-2 sm:px-3 bg-white py-1.5 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4f507f] text-xs sm:text-sm"
+                        >
                           <option value="">Select Size</option>
                           {getAvailableSizesForColor(color.id).map((size) => (
                             <option key={size} value={size}>
@@ -877,13 +945,15 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                       <button
                         type="button"
                         onClick={() => setShowAddSizeForm(null)}
-                        className="px-2 sm:px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-xs">
+                        className="px-2 sm:px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-xs"
+                      >
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={() => handleAddSize(color.id)}
-                        className="px-2 sm:px-3 py-1 bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] text-xs">
+                        className="px-2 sm:px-3 py-1 bg-[#4f507f] text-white rounded-md hover:bg-[#3e3f63] text-xs"
+                      >
                         Add Size
                       </button>
                     </div>
@@ -894,7 +964,8 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                       setShowAddSizeForm(color.id);
                       setNewSize({ size: "", stock: 0 });
                     }}
-                    className="mt-3 sm:mt-4 w-full flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 border border-dashed border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 text-xs sm:text-sm">
+                    className="mt-3 sm:mt-4 w-full flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 border border-dashed border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 text-xs sm:text-sm"
+                  >
                     <Plus size={14} className="sm:size-16" />
                     <span>Add Size</span>
                   </button>

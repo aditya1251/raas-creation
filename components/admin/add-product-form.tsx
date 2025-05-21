@@ -9,6 +9,7 @@ import {
   Trash2,
   ChevronRight,
   Palette,
+  Pipette,
 } from "lucide-react";
 import Image from "next/image";
 import { Category, Product } from "@/types/types";
@@ -21,6 +22,7 @@ import { productApi } from "@/lib/api/productdetails";
 import MultiUploadPopup from "../MultiUploadPopup";
 import toast from "react-hot-toast";
 
+// Expanded color map with more colors for better name detection
 const colorswithHex = {
   red: "#FF0000",
   blue: "#0000FF",
@@ -33,6 +35,58 @@ const colorswithHex = {
   pink: "#FFC0CB",
   brown: "#A52A2A",
   grey: "#808080",
+  cyan: "#00FFFF",
+  magenta: "#FF00FF",
+  silver: "#C0C0C0",
+  maroon: "#800000",
+  olive: "#808000",
+  teal: "#008080",
+  navy: "#000080",
+};
+
+// Function to convert hex to RGB
+const hexToRgb = (hex) => {
+  // Remove the # if present
+  hex = hex.replace(/^#/, '');
+  
+  // Parse r, g, b values
+  const bigint = parseInt(hex, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  
+  return { r, g, b };
+};
+
+// Function to calculate color distance (weighted Euclidean distance in RGB space)
+const colorDistance = (color1, color2) => {
+  const rmean = (color1.r + color2.r) / 2;
+  const r = color1.r - color2.r;
+  const g = color1.g - color2.g;
+  const b = color1.b - color2.b;
+  // Weighted distance formula for better perception
+  return Math.sqrt((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8));
+};
+
+// Function to get color name from hex
+const getColorNameFromHex = (hex) => {
+  const targetRgb = hexToRgb(hex);
+  let closestColor = "Custom";
+  let minDistance = Number.MAX_VALUE;
+  
+  for (const [name, colorHex] of Object.entries(colorswithHex)) {
+    const currentRgb = hexToRgb(colorHex);
+    const distance = colorDistance(targetRgb, currentRgb);
+    
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestColor = name;
+    }
+  }
+  
+  // If the color is really close to a known color, return that name
+  // Otherwise return "Custom"
+  return minDistance < 50 ? closestColor : "Custom";
 };
 
 export function AddProductForm() {
@@ -166,11 +220,29 @@ export function AddProductForm() {
       setProduct({ ...product, tags: product.tags?.slice(0, -1) });
     }
   };
+  
   const removeTag = (indexToRemove: number) => {
     setProduct({
       ...product,
       tags: product.tags?.filter((_, i) => i !== indexToRemove),
     });
+  };
+
+  // Handle color change with automatic color name detection
+  const handleColorChange = (variantId: string, hexColor: string) => {
+    const colorName = getColorNameFromHex(hexColor);
+    setVariants(
+      variants.map((v) =>
+        v.id === variantId
+          ? { 
+              ...v, 
+              colorHex: hexColor, 
+              color: colorName,
+              customColor: colorName === "Custom"
+            }
+          : v
+      )
+    );
   };
 
   const addVariant = () => {
@@ -218,6 +290,7 @@ export function AddProductForm() {
       },
     ]);
   };
+  
   const getAvailableSizesForOption = (variantId: string, sizeName: string) => {
     return Sizes.filter(
       (size) =>
@@ -242,12 +315,10 @@ export function AddProductForm() {
             ...variant,
             sizes: [
               ...variant.sizes,
-              {
-                id: cuid(),
-                name: availableSizes[0],
-                quantity: 0,
-                isNew: true,
-                isDeleted: false,
+              { 
+                id: cuid(), 
+                name: availableSizes[0], 
+                quantity: 0 
               },
             ],
           };
@@ -276,7 +347,6 @@ export function AddProductForm() {
   };
 
   const handleAddVarientImage = (Urls: string[]) => {
-    // In a real app, this would open a file picker
     setVariants(
       variants.map((variant) => {
         if (variant.id === varientId) {
@@ -333,15 +403,6 @@ export function AddProductForm() {
       ...product,
       assets: newAssets,
     });
-  };
-
-  // Handle color change from color picker
-  const handleColorChange = (variantId: string, hexColor: string) => {
-    setVariants(
-      variants.map((v) =>
-        v.id === variantId ? { ...v, colorHex: hexColor } : v
-      )
-    );
   };
 
   const variantMutation = useMutation({
@@ -403,15 +464,6 @@ export function AddProductForm() {
       return;
     }
     productMutation.mutate(product as Product);
-  };
-
-  // Find matching color name from hex
-  const getColorNameFromHex = (hex: string) => {
-    const entries = Object.entries(colorswithHex);
-    const matchingEntry = entries.find(
-      ([_, colorHex]) => colorHex.toLowerCase() === hex.toLowerCase()
-    );
-    return matchingEntry ? matchingEntry[0] : "Custom";
   };
 
   return (
@@ -625,104 +677,36 @@ export function AddProductForm() {
                       <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Color Variant
                       </label>
-
-                      {/* Enhanced Color Selection UI */}
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <div className="flex gap-2 w-full items-center">
-                          {/* Color preview box */}
-                          <div
-                            className="w-10 h-10 rounded-md border cursor-pointer shadow-sm"
-                            style={{ backgroundColor: variant.colorHex }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowColorPicker(
-                                showColorPicker === variant.id
-                                  ? null
-                                  : variant.id
-                              );
-                            }}
-                          />
-
-                          {/* Color selector */}
-                          <div className="flex-1 relative">
-                            <select
-                              className="w-fit pl-3 pr-8 py-2 border rounded-md focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm"
-                              value={variant.color}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) => {
-                                const selectedValue = e.target.value;
-                                if (selectedValue === "custom") {
-                                  setVariants(
-                                    variants.map((v) =>
-                                      v.id === variant.id
-                                        ? {
-                                            ...v,
-                                            customColor: true,
-                                            color: "Custom",
-                                          }
-                                        : v
-                                    )
-                                  );
-                                  setShowColorPicker(variant.id);
-                                } else {
-                                  setVariants(
-                                    variants.map((v) =>
-                                      v.id === variant.id
-                                        ? {
-                                            ...v,
-                                            color: selectedValue,
-                                            colorHex:
-                                              colorswithHex[
-                                                selectedValue as keyof typeof colorswithHex
-                                              ],
-                                            customColor: false,
-                                          }
-                                        : v
-                                    )
-                                  );
-                                }
-                              }}
-                            >
-                              <option value="">Select Color</option>
-                              {Object.entries(colorswithHex).map(
-                                ([name, hex]) => (
-                                  <option key={name} value={name}>
-                                    {name.charAt(0).toUpperCase() +
-                                      name.slice(1)}
-                                  </option>
-                                )
-                              )}
-                              <option value="custom">Custom Color...</option>
-                            </select>
-                            <Palette
-                              size={20}
-                              className="absolute right-6 lg:right-3 top-1/2 transform -translate-y-1/2 bg-white text-gray-400"
-                            />
-                          </div>
+                      
+                      {/* Color indicator and selector */}
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="h-9 w-9 rounded-lg cursor-pointer border flex items-center justify-center relative"
+                          style={{ 
+                            backgroundColor: variant.colorHex,
+                            color: parseInt(variant.colorHex.slice(1), 16) > 0x7FFFFF ? '#000' : '#fff'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowColorPicker(variant.id === showColorPicker ? null : variant.id);
+                          }}
+                        >
+                          <Pipette size={16} className="drop-shadow-md" />
                         </div>
-
-                        {/* Color input field for custom colors */}
-                        {variant.customColor && (
-                          <input
-                            type="text"
-                            className="w-fit px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm"
-                            value={variant.color}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => {
-                              setVariants(
-                                variants.map((v) =>
-                                  v.id === variant.id
-                                    ? { ...v, color: e.target.value }
-                                    : v
-                                )
-                              );
-                            }}
-                            placeholder="Color name"
-                          />
-                        )}
+                        
+                        <div 
+                          className="flex-1 px-3 py-2 border rounded-lg cursor-pointer bg-white shadow-sm flex items-center justify-between"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowColorPicker(variant.id === showColorPicker ? null : variant.id);
+                          }}
+                        >
+                          <span className="capitalize">{variant.color}</span>
+                          <Palette size={16} className="text-gray-400" />
+                        </div>
                       </div>
 
-                      {/* Full color picker popup */}
+                      {/* Color picker popup */}
                       {showColorPicker === variant.id && (
                         <div
                           className="absolute z-10 mt-2 p-3 bg-white shadow-xl rounded-lg border"
@@ -742,45 +726,57 @@ export function AddProductForm() {
                               <X size={18} />
                             </button>
                           </div>
+                          
+                          {/* Custom color name input */}
                           <div className="mb-3">
+                            <label className="block text-xs text-gray-500 mb-1">
+                              Color Name
+                            </label>
                             <input
-                              type="color"
-                              className="w-full h-12 p-0 border rounded cursor-pointer"
-                              value={variant.colorHex}
+                              type="text"
+                              className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#4f507f] focus:border-[#4f507f] bg-white shadow-sm text-sm"
+                              value={variant.color}
                               onChange={(e) => {
-                                const newHex = e.target.value;
-                                handleColorChange(variant.id, newHex);
-                                // Try to find a predefined color name or use custom
-                                const colorName = getColorNameFromHex(newHex);
                                 setVariants(
                                   variants.map((v) =>
                                     v.id === variant.id
-                                      ? {
-                                          ...v,
-                                          colorHex: newHex,
-                                          color: colorName,
-                                          customColor: colorName === "Custom",
-                                        }
+                                      ? { ...v, color: e.target.value }
                                       : v
                                   )
                                 );
                               }}
+                              placeholder="Color name"
                             />
                           </div>
-                          <div className="grid grid-cols-5 gap-1">
+                          
+                          {/* Color picker */}
+                          <div className="mb-3">
+                            <label className="block text-xs text-gray-500 mb-1">
+                              Choose Color
+                            </label>
+                            <input
+                              type="color"
+                              className="w-full h-16 p-0 border rounded cursor-pointer"
+                              value={variant.colorHex}
+                              onChange={(e) => {
+                                handleColorChange(variant.id, e.target.value);
+                              }}
+                            />
+                          </div>
+                          
+                          {/* Color swatches */}
+                          <div className="grid grid-cols-6 gap-1.5">
                             {Object.entries(colorswithHex).map(
                               ([name, hex]) => (
                                 <div
                                   key={name}
-                                  className={`w-6 h-6 rounded-full cursor-pointer border hover:scale-110 transition-transform ${
+                                  className={`w-7 h-7 rounded-full cursor-pointer border hover:scale-110 transition-transform ${
                                     variant.colorHex === hex
-                                      ? "ring-2 ring-offset-2 ring-[#4f507f]"
+                                      ? "ring-2 ring-offset-1 ring-[#4f507f]"
                                       : ""
                                   }`}
                                   style={{ backgroundColor: hex }}
-                                  title={
-                                    name.charAt(0).toUpperCase() + name.slice(1)
-                                  }
+                                  title={name.charAt(0).toUpperCase() + name.slice(1)}
                                   onClick={() => {
                                     setVariants(
                                       variants.map((v) =>
@@ -794,12 +790,12 @@ export function AddProductForm() {
                                           : v
                                       )
                                     );
-                                    setShowColorPicker(null);
                                   }}
                                 />
                               )
                             )}
                           </div>
+                          
                           <div className="mt-3 pt-2 border-t">
                             <button
                               onClick={() => setShowColorPicker(null)}

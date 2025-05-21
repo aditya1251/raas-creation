@@ -71,6 +71,9 @@ const addNewColor = async (productId: string, newColorData: {name : string,image
 const deleteSize = async (sizeId: string): Promise<void> => {
   await apiClient.delete(`/api/products/sizes/${sizeId}`);
 };
+const deleteColor = async (colorId: string): Promise<void> => {
+  await apiClient.delete(`/api/products/color/${colorId}`);
+}
 
 export const inventoryApi = {
   getInventoryOverview,
@@ -78,5 +81,6 @@ export const inventoryApi = {
   updateStock,
   addNewSize,
   addNewColor,
-  deleteSize
+  deleteSize,
+  deleteColor
 };
