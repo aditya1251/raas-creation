@@ -45,7 +45,7 @@ const colorswithHex = {
 };
 
 // Function to convert hex to RGB
-const hexToRgb = (hex) => {
+const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
   // Remove the # if present
   hex = hex.replace(/^#/, '');
   
@@ -59,9 +59,8 @@ const hexToRgb = (hex) => {
 };
 
 // Function to calculate color distance (weighted Euclidean distance in RGB space)
-const colorDistance = (color1, color2) => {
-  const rmean = (color1.r + color2.r) / 2;
-  const r = color1.r - color2.r;
+const colorDistance = (color1: { r: number; g: number; b: number }, color2: { r: number; g: number; b: number }): number => {
+  const rmean = (color1.r + color2.r) / 2;  const r = color1.r - color2.r;
   const g = color1.g - color2.g;
   const b = color1.b - color2.b;
   // Weighted distance formula for better perception
@@ -69,7 +68,7 @@ const colorDistance = (color1, color2) => {
 };
 
 // Function to get color name from hex
-const getColorNameFromHex = (hex) => {
+const getColorNameFromHex = (hex: string): string => {
   const targetRgb = hexToRgb(hex);
   let closestColor = "Custom";
   let minDistance = Number.MAX_VALUE;

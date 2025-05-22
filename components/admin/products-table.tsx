@@ -11,27 +11,27 @@ import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 
 export interface Size {
-  id: string
-  size: string
-  stock: number
-  colorId: string
+  id: string;
+  size: string;
+  stock: number;
+  colorId: string;
 }
 
 interface Asset {
-  id: string
-  asset_url: string
-  productId: string | null
-  type: string
-  colorId: string | null
+  id: string;
+  asset_url: string;
+  productId: string | null;
+  type: string;
+  colorId: string | null;
 }
 
 interface Color {
-  id: string
-  color: string
-  colorHex: string
-  productId: string
-  assets: Asset[]
-  sizes: Size[]
+  id: string;
+  color: string;
+  colorHex: string;
+  productId: string;
+  assets: Asset[];
+  sizes: Size[];
 }
 
 export interface Products extends Product {
@@ -43,10 +43,10 @@ export interface Products extends Product {
     type: "IMAGE" | "VIDEO";
     asset_url: string;
     url: string;
-    id: string
+    id: string;
   }[];
   colors: Color[];
-  createdAt : string
+  createdAt: string;
 }
 
 export function ProductsTable() {
@@ -54,8 +54,10 @@ export function ProductsTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [loadingStates, setLoadingStates] = useState<{ [key: string]: boolean }>({});
-  
+  const [loadingStates, setLoadingStates] = useState<{
+    [key: string]: boolean;
+  }>({});
+
   // Debounce search term to avoid excessive API calls
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -66,24 +68,25 @@ export function ProductsTable() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["products", currentPage, itemsPerPage, debouncedSearchTerm],
-    queryFn: () => productApi.getProducts(currentPage, itemsPerPage, debouncedSearchTerm),
+    queryFn: () =>
+      productApi.getProducts(currentPage, itemsPerPage, debouncedSearchTerm),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => {
-      setLoadingStates(prev => ({ ...prev, [`delete_${id}`]: true }));
+      setLoadingStates((prev) => ({ ...prev, [`delete_${id}`]: true }));
       return productApi.deleteProduct(id);
     },
     onSettled: (_, __, id: string) => {
       queryClient.invalidateQueries({ queryKey: ["products"] }).then(() => {
-        setLoadingStates(prev => ({ ...prev, [`delete_${id}`]: false }));
+        setLoadingStates((prev) => ({ ...prev, [`delete_${id}`]: false }));
       });
     },
   });
 
   const copyMutation = useMutation({
     mutationFn: async (product: Products) => {
-      setLoadingStates(prev => ({ ...prev, [`copy_${product.id}`]: true }));
+      setLoadingStates((prev) => ({ ...prev, [`copy_${product.id}`]: true }));
       const newProduct = {
         ...product,
         id: cuid(),
@@ -100,19 +103,25 @@ export function ProductsTable() {
     },
     onSettled: (_, __, product: Products) => {
       queryClient.invalidateQueries({ queryKey: ["products"] }).then(() => {
-        setLoadingStates(prev => ({ ...prev, [`copy_${product.id}`]: false }));
+        setLoadingStates((prev) => ({
+          ...prev,
+          [`copy_${product.id}`]: false,
+        }));
       });
     },
   });
 
   const toggleStatusMutation = useMutation({
     mutationFn: ({ id, newStatus }: { id: string; newStatus: string }) => {
-      setLoadingStates(prev => ({ ...prev, [`status_${id}`]: true }));
+      setLoadingStates((prev) => ({ ...prev, [`status_${id}`]: true }));
       return productApi.updateStatus(id, newStatus);
     },
     onSettled: (_, __, variables) => {
       queryClient.invalidateQueries({ queryKey: ["products"] }).then(() => {
-        setLoadingStates(prev => ({ ...prev, [`status_${variables.id}`]: false }));
+        setLoadingStates((prev) => ({
+          ...prev,
+          [`status_${variables.id}`]: false,
+        }));
       });
     },
   });
@@ -121,7 +130,7 @@ export function ProductsTable() {
   const { totalPages } = data?.pagination || { totalPages: 1 };
 
   const renderActionButtons = (product: Products, isMobile = false) => (
-    <div className={`flex ${isMobile ? 'space-x-3' : 'space-x-2'}`}>
+    <div className={`flex ${isMobile ? "space-x-3" : "space-x-2"}`}>
       <Link
         href={`/admin/products/edit/${product.id}`}
         className="text-indigo-600 hover:text-indigo-900 transition-colors">
@@ -185,7 +194,7 @@ export function ProductsTable() {
         <div className="p-4">No products found</div>
       )}
       {error && <div className="text-red-500 p-4">Error loading products</div>}
-      
+
       {/* Desktop Table - Hidden on mobile */}
       <div className="hidden md:block bg-white shadow-sm rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -201,7 +210,7 @@ export function ProductsTable() {
                 SKU
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Price
+                Selling Price
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Status
@@ -225,10 +234,17 @@ export function ProductsTable() {
                     />
                   </div>
                 </td>
-                <td className="px-6 py-4 text-wrap whitespace-nowrap">{product.name}</td>
-                <td className="px-6 py-4 text-wrap whitespace-nowrap">{product.sku}</td>
+                <td className="px-6 py-4 text-wrap whitespace-nowrap">
+                  {product.name}
+                </td>
+                <td className="px-6 py-4 text-wrap whitespace-nowrap">
+                  {product.sku}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  ₹{product.price.toFixed(2)}
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm text-gray-500 line-through">₹{product.price.toFixed(2)}</span>
+                    <span>₹{product?.discountPrice?.toFixed(2) || "0.00"}</span>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
@@ -265,7 +281,9 @@ export function ProductsTable() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
-                  <h3 className="text-sm text-wrap font-medium text-gray-900 truncate">{product.name}</h3>
+                  <h3 className="text-sm text-wrap font-medium text-gray-900 truncate">
+                    {product.name}
+                  </h3>
                   <span
                     className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       product.status === "PUBLISHED"
@@ -275,8 +293,10 @@ export function ProductsTable() {
                     {product.status}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-gray-500">₹{product.price.toFixed(2)}</p>
-                
+                <p className="mt-1 text-sm text-gray-500">
+                  ₹{product.price.toFixed(2)}
+                </p>
+
                 {/* Action buttons at the bottom of card */}
                 <div className="mt-3 flex justify-between items-center">
                   {renderActionButtons(product, true)}
@@ -304,19 +324,29 @@ export function ProductsTable() {
               <option value="50">50 per page</option>
             </select>
           </div>
-          
+
           {/* Pagination - Simplified on mobile */}
           <div className="flex items-center justify-center w-full sm:w-auto">
             <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               className="px-2 sm:px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
               <span className="hidden sm:inline ml-1">Previous</span>
             </button>
-            
+
             <div className="hidden sm:flex items-center mx-2 space-x-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 let pageNum;
@@ -329,7 +359,7 @@ export function ProductsTable() {
                 } else {
                   pageNum = currentPage - 2 + i;
                 }
-                
+
                 return (
                   <button
                     key={pageNum}
@@ -344,18 +374,30 @@ export function ProductsTable() {
                 );
               })}
             </div>
-            
+
             <span className="mx-2 text-sm sm:hidden">
               Page {currentPage} of {totalPages}
             </span>
-            
+
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
               className="px-2 sm:px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 flex items-center">
               <span className="hidden sm:inline mr-1">Next</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>

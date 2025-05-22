@@ -46,7 +46,7 @@ const colorswithHex = {
 };
 
 // Function to convert hex to RGB
-const hexToRgb = (hex) => {
+const hexToRgb = (hex : string) : { r : number, g : number, b : number } => {
   // Remove the # if present
   hex = hex.replace(/^#/, '');
   
@@ -60,7 +60,7 @@ const hexToRgb = (hex) => {
 };
 
 // Function to calculate color distance (weighted Euclidean distance in RGB space)
-const colorDistance = (color1, color2) => {
+const colorDistance = (color1 : { r : number, g : number, b : number }, color2 : { r : number, g : number, b : number }) : number => {
   const rmean = (color1.r + color2.r) / 2;
   const r = color1.r - color2.r;
   const g = color1.g - color2.g;
@@ -70,7 +70,7 @@ const colorDistance = (color1, color2) => {
 };
 
 // Function to get color name from hex
-const getColorNameFromHex = (hex) => {
+const getColorNameFromHex = (hex: string) => {
   const targetRgb = hexToRgb(hex);
   let closestColor = "Custom";
   let minDistance = Number.MAX_VALUE;
@@ -284,7 +284,7 @@ export function EditProductForm({ productId }: { productId: string }) {
         }) => ({
           id: color.id,
           color: color.color,
-          colorHex: color.colorHex || colorswithHex[color.color] || "#000000",
+          colorHex: color.colorHex || "#000000",
           isNew: false,
           isDeleted: false,
           isOpen: false,
