@@ -30,6 +30,7 @@ import { customerApi } from "@/lib/api/customer";
 import { categoryApi } from "@/lib/api/categories";
 import { Category } from "@/types/types";
 import { useSearchParams } from "next/navigation";
+import { Feature } from "../page";
 
 const sortOptions = [
   { value: "latest", label: "Sort by latest" },
@@ -568,7 +569,28 @@ export default function ShopPage() {
           </div>
         </div>
       </div>
-      <ProductLastSection />
+       <section className="py-12 border-b">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                  <Feature icon={<Package />} title="Free Shipping" text="" />
+                  <Feature
+                    icon={<RefreshCw />}
+                    title="Quality Assurance"
+                    text="100% quality guarantee"
+                  />
+                  <Feature
+                    icon={<HeadphonesIcon />}
+                    title="Online Support"
+                    text="24 hours a day, 7 days a week"
+                  />
+                  <Feature
+                    icon={<CreditCard />}
+                    title="Flexible Payment"
+                    text="Pay with multiple credit cards"
+                  />
+                </div>
+              </div>
+            </section>
       <SiteFooter />
     </main>
   );

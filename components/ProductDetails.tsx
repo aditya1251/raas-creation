@@ -502,7 +502,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
                         ? "ring-2 ring-offset-2 ring-[#a08452]"
                         : "ring-1 ring-gray-300"
                     }`}
-                    style={{ backgroundColor: `${color.color}` }}
+                    style={{ backgroundColor: `${color.colorHex}` }}
                     onClick={() => handleColorSelect(color.color)}
                     aria-label={`Select ${color.color} color`}
                     title={color.color}

@@ -199,7 +199,7 @@ export default function Home() {
   );
 }
 
-function Feature({
+export function Feature({
   icon,
   title,
   text,
