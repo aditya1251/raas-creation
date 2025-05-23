@@ -151,6 +151,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
       );
     }
   }, [customerReviews]);
+
   const relatedProducts = [
     {
       id: "1",
@@ -309,6 +310,7 @@ export default function ProductDetails({ slug }: { slug: string }) {
     queryKey: ["newArrivals"],
     queryFn: analyticApi.getNewArrivals,
   });
+  console.log("New Arrivals", newArrivals);
 
   const { data: wishlist } = useQuery({
     queryKey: ["wishlistProducts"],
