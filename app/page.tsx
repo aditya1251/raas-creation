@@ -387,7 +387,7 @@ export function ProductCard({
         <div className="mt-3">
           <h3 className="text-xs font-medium">{product.name}</h3>
           <p className="text-[#7d6e8b] text-xs font-medium mt-1">
-            ₹{product.price}
+            ₹{product.discountPrice}
           </p>
         </div>
       </Link>
