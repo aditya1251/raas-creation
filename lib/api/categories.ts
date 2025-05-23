@@ -10,7 +10,7 @@ export const categoryApi = {
     const response = await apiClient.get("/api/category");
     return response.data.categories;
   },
-  getAllInDetail: async (): Promise<Category[]> => {
+  getAllInDetail: async (): Promise<{ id: string,name: string, image : string }[]> => {
     const response = await apiClient.get("/api/category/detail");
     return response.data.categories;
   },
