@@ -50,11 +50,7 @@ export default function BrowseCategorySection() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {categories?.map((category) => {
             // Get image URL safely with fallback
-            const imageUrl =
-              (category.products &&
-                category.products[0]?.assets[0]?.asset_url) || // Check if products array exists
-              (category.Product && category.Product[0]?.assets[0]?.asset_url) || // Check original path
-              "/placeholder-image.jpg"; // Fallback image
+            const imageUrl = category.image || "/placeholder.svg";
 
             return (
               <div key={category.name} className="w-full">
