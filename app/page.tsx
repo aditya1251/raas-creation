@@ -79,7 +79,7 @@ export default function Home() {
             {bestSellers?.map((product, index) => (
               <ProductCard
                 key={index}
-                product={product}
+                product={{...product, discountPrice: product.discount}}
                 wishlistProducts={wishlist || []}
               />
             ))}
