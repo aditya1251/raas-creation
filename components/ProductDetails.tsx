@@ -13,6 +13,8 @@ import {
   HeadphonesIcon,
   CreditCard,
   Star,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,9 +51,27 @@ export default function ProductDetails({ slug }: { slug: string }) {
   const [avgRating, setAvgRating] = useState(5);
   const [stockStatus, setStockStatus] = useState<string>("in_stock");
   const [stockCount, setStockCount] = useState<number>(0);
-  // New state to track the currently selected image
+  // State to track the currently selected image
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+  
+  // Functions for image slider navigation
+  const goToNextImage = () => {
+    if (product && product.assets) {
+      setSelectedImageIndex((prev) => 
+        prev === product.assets.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const goToPrevImage = () => {
+    if (product && product.assets) {
+      setSelectedImageIndex((prev) => 
+        prev === 0 ? product.assets.length - 1 : prev - 1
+      );
+    }
+  };
+
   const decreaseQuantity = () => {
     if (quantity > 1) {
       setQuantity(quantity - 1);
@@ -105,11 +125,6 @@ export default function ProductDetails({ slug }: { slug: string }) {
         }
       }
     }
-  };
-
-  // New function to handle thumbnail image click
-  const handleImageClick = (index: number) => {
-    setSelectedImageIndex(index);
   };
 
   // Fetching Product Details
@@ -372,37 +387,62 @@ export default function ProductDetails({ slug }: { slug: string }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Product Detail Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-          {/* Product Images */}
-          <div>
-            <div className="mb-4 aspect-square relative">
-              <Image
-                src={
-                  product?.assets[selectedImageIndex].asset_url ||
-                  "/placeholder.svg"
-                }
-                alt={product?.name || "image"}
-                fill
-                className="object-cover object-top rounded-md w-full h-full"
-              />
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {product?.assets.map((image, index) => (
-                <div
-                  key={index}
-                  className={`aspect-square relative border rounded-md overflow-hidden cursor-pointer ${
-                    selectedImageIndex === index ? "ring-2 ring-[#a08452]" : ""
-                  }`}
-                  onClick={() => handleImageClick(index)}
+          {/* Product Images - Now as a slider */}
+          <div className="relative">
+            <div className="mb-4 aspect-square relative rounded-md overflow-hidden">
+              {product?.assets && product.assets.length > 0 && (
+                <Image
+                  src={
+                    product.assets[selectedImageIndex].asset_url ||
+                    "/placeholder.svg"
+                  }
+                  alt={product.name || "image"}
+                  fill
+                  className="object-cover object-top w-full h-full"
+                />
+              )}
+              
+              {/* Navigation buttons */}
+              <div className="absolute inset-0 flex items-center justify-between p-2">
+                <button 
+                  onClick={goToPrevImage}
+                  className="bg-white/70 hover:bg-white text-gray-800 rounded-full p-1 shadow-md transition-all"
+                  aria-label="Previous image"
                 >
-                  <Image
-                    src={image.asset_url || "/placeholder.svg"}
-                    alt={`${product?.name || "image"} view ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button 
+                  onClick={goToNextImage}
+                  className="bg-white/70 hover:bg-white text-gray-800 rounded-full p-1 shadow-md transition-all"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              </div>
+              
+              {/* Image counter indicator */}
+              {product?.assets && product.assets.length > 0 && (
+                <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 text-xs rounded-md">
+                  {selectedImageIndex + 1} / {product.assets.length}
                 </div>
-              ))}
+              )}
             </div>
+            
+            {/* Slider pagination dots */}
+            {product?.assets && product.assets.length > 1 && (
+              <div className="flex justify-center mt-4 space-x-2">
+                {product.assets.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      selectedImageIndex === index ? "bg-[#a08452] w-4" : "bg-gray-300"
+                    }`}
+                    aria-label={`Go to image ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
