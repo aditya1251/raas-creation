@@ -6,9 +6,9 @@ import Link from "next/link";
 import { inventoryApi } from "@/lib/api/inventory";
 
 export function InventoryAlerts() {
-  const [lowStockItems, setLowStockItems] = useState(0);
-  const [outOfStock, setOutOfStock] = useState(0);
-  const [inStock, setInStock] = useState(0);
+  const [animatedLowStock, setAnimatedLowStock] = useState(0);
+  const [animatedOutOfStock, setAnimatedOutOfStock] = useState(0);
+  const [animatedInStock, setAnimatedInStock] = useState(0);
   
   const { data:inve, isLoading } = useQuery({
     queryKey: ["inventoryOverview"],
@@ -17,38 +17,48 @@ export function InventoryAlerts() {
   
   useEffect(() => {
     if (inve) {
-      setLowStockItems(inve.lowStockItems);
-      setOutOfStock(inve.outOfStock);
-      setInStock(inve.restockAlerts); // assuming restockAlerts indicates In Stock
+
+      const duration = 1000;
+      const steps = 60;
+      const interval = duration / steps;
+
+      let currentStep = 0;
+      const timer = setInterval(() => {
+        currentStep++;
+        const progress = currentStep / steps;
+
+        setAnimatedLowStock(Math.floor(inve.lowStockItems * progress));
+        setAnimatedOutOfStock(Math.floor(inve.outOfStock * progress));
+        setAnimatedInStock(Math.floor(inve.restockAlerts * progress));
+
+        if (currentStep === steps) {
+          clearInterval(timer);
+        }
+      }, interval);
+
+      return () => clearInterval(timer);
     }
   }, [inve]);
-  
-  if (isLoading) {
-    return <div className="bg-white rounded-xl p-4 shadow-lg text-center py-8">Loading...</div>;
-  }
-  
-  if (!inve) {
-    return <div className="bg-white rounded-xl p-4 shadow-lg text-center py-8">No data</div>;
-  }
+
   
   const metrics = [
     {
       title: "Low Stock Items",
-      value: lowStockItems,
+      value: animatedLowStock,
       icon: AlertTriangle,
       bgColor: "bg-[#fff5e6]",
       iconColor: "text-[#d97706]",
     },
     {
       title: "Out of Stock",
-      value: outOfStock,
+      value: animatedOutOfStock,
       icon: TrendingDown,
       bgColor: "bg-[#ffe6e6]",
       iconColor: "text-[#ff4d4d]",
     },
     {
       title: "In Stock",
-      value: inStock,
+      value: animatedInStock,
       icon: TrendingUp,
       bgColor: "bg-[#e6fdf1]",
       iconColor: "text-[#4fc48a]",

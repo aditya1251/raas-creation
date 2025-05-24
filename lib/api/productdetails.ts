@@ -70,7 +70,8 @@ export const productApi = {
     totalProducts: number;
     revenue: number,
     growth: string,
-    usersCount: number
+    usersCount: number,
+    pendingRevenue: number,
   }> => {
     const response = await apiClient.get("/api/products/overview");
     return response.data;

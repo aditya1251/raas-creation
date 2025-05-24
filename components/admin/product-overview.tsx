@@ -5,10 +5,11 @@ import { Package, DollarSign, TrendingUp, Users, TrendingDown } from "lucide-rea
 import { useEffect, useState } from "react";
 
 export function ProductOverview() {
-  const [totalProducts, setTotalProducts] = useState(0);
   const [totalSales, setTotalSales] = useState("0%");
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [animatedProducts, setAnimatedProducts] = useState(0);
+  const [animatedRevenue, setAnimatedRevenue] = useState(0);
+  const [animatedCustomers, setAnimatedCustomers] = useState(0);
+  const [animatedPending, setAnimatedPending] = useState(0);
   
   const { data } = useQuery({
     queryKey: ["ProductOverview"],
@@ -17,10 +18,28 @@ export function ProductOverview() {
   
   useEffect(() => {
     if (data) {
-      setTotalCustomers(data.usersCount);
-      setTotalProducts(data.totalProducts);
       setTotalSales(data.growth);
-      setTotalRevenue(data.revenue);
+      // Animation logic
+      const duration = 1000; // 1 second animation
+      const steps = 60; // 60 steps for smooth animation
+      const interval = duration / steps;
+
+      let currentStep = 0;
+      const timer = setInterval(() => {
+        currentStep++;
+        const progress = currentStep / steps;
+        
+        setAnimatedProducts(Math.floor(data.totalProducts * progress));
+        setAnimatedRevenue(Math.floor(data.revenue * progress));
+        setAnimatedCustomers(Math.floor(data.usersCount * progress));
+        setAnimatedPending(Math.floor(data.pendingRevenue * progress));
+
+        if (currentStep === steps) {
+          clearInterval(timer);
+        }
+      }, interval);
+
+      return () => clearInterval(timer);
     }
   }, [data]);
   
@@ -35,7 +54,7 @@ export function ProductOverview() {
           </div>
           <div>
             <p className="text-xs md:text-sm font-medium text-gray-500">Total Products</p>
-            <p className="text-xl md:text-2xl font-bold text-gray-800">{totalProducts}</p>
+            <p className="text-xl md:text-2xl font-bold text-gray-800">{animatedProducts}</p>
           </div>
         </div>
         
@@ -45,7 +64,8 @@ export function ProductOverview() {
           </div>
           <div>
             <p className="text-xs md:text-sm font-medium text-gray-500">Revenue</p>
-            <p className="text-xl md:text-2xl font-bold text-gray-800">{totalRevenue}</p>
+            <p className="text-xl md:text-2xl font-bold text-gray-800">{animatedRevenue}</p>
+            <p className="text-xs text-gray-500">Pending: {animatedPending}</p>
           </div>
         </div>
         
@@ -69,7 +89,7 @@ export function ProductOverview() {
           </div>
           <div>
             <p className="text-xs md:text-sm font-medium text-gray-500">Users</p>
-            <p className="text-xl md:text-2xl font-bold text-gray-800">{totalCustomers}</p>
+            <p className="text-xl md:text-2xl font-bold text-gray-800">{animatedCustomers}</p>
           </div>
         </div>
       </div>
