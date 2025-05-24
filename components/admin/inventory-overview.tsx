@@ -5,10 +5,10 @@ import { Package, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export function InventoryOverview() {
-  const [totalProducts, setTotalProducts] = useState(0)
-  const [lowStockItems, setLowStockItems] = useState(0)
-  const [outOfStock, setOutOfStock] = useState(0)
-  const [restockAlerts, setRestockAlerts] = useState(0)
+  const [animatedTotalProducts, setAnimatedTotalProducts] = useState(0)
+  const [animatedLowStockItems, setAnimatedLowStockItems] = useState(0)
+  const [animatedOutOfStock, setAnimatedOutOfStock] = useState(0)
+  const [animatedRestockAlerts, setAnimatedRestockAlerts] = useState(0)
 
   const { data , isLoading } = useQuery({
     queryKey: ["inventoryOverview"],
@@ -17,23 +17,35 @@ export function InventoryOverview() {
 
   useEffect(() => {
     if (data) {
-      setTotalProducts(data.totalProducts)
-      setLowStockItems(data.lowStockItems)
-      setOutOfStock(data.outOfStock)
-      setRestockAlerts(data.restockAlerts)
+      const duration = 1000; // 1 second animation
+      const steps = 60; // 60 steps for smooth animation
+      const interval = duration / steps
+
+      let currentStep = 0
+      const timer = setInterval(() => {
+        currentStep++
+        const progress = currentStep / steps
+
+        setAnimatedTotalProducts(Math.floor(data.totalProducts * progress))
+        setAnimatedLowStockItems(Math.floor(data.lowStockItems * progress))
+        setAnimatedOutOfStock(Math.floor(data.outOfStock * progress))
+        setAnimatedRestockAlerts(Math.floor(data.restockAlerts * progress))
+
+        if (currentStep === steps) {
+          clearInterval(timer)
+        }
+      }, interval)
+
+      return () => clearInterval(timer)
     }
   }, [data])
 
   const metrics = [
-    { title: "Total Products", value: totalProducts, icon: Package, color: "bg-blue-100 text-blue-800" },
-    { title: "Low Stock Items", value: lowStockItems, icon: AlertTriangle, color: "bg-yellow-100 text-yellow-800" },
-    { title: "Out of Stock", value: outOfStock, icon: TrendingDown, color: "bg-red-100 text-red-800" },
-    { title: "In Stock", value: restockAlerts, icon: TrendingUp, color: "bg-green-100 text-green-800" },
+    { title: "Total Products", value: animatedTotalProducts, icon: Package, color: "bg-blue-100 text-blue-800" },
+    { title: "Low Stock Items", value: animatedLowStockItems, icon: AlertTriangle, color: "bg-yellow-100 text-yellow-800" },
+    { title: "Out of Stock", value: animatedOutOfStock, icon: TrendingDown, color: "bg-red-100 text-red-800" },
+    { title: "In Stock", value: animatedRestockAlerts, icon: TrendingUp, color: "bg-green-100 text-green-800" },
   ]
-
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
 
   if (!data) {
     return <div>No data</div>
@@ -55,4 +67,3 @@ export function InventoryOverview() {
     </div>
   )
 }
-
