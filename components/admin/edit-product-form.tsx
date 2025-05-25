@@ -1289,6 +1289,7 @@ export function EditProductForm({ productId }: { productId: string }) {
         <div className="flex gap-2 sm:gap-3">
           <button
             type="submit"
+            disabled={saving}
             className="flex-1 bg-[#4f507f] text-white py-2 px-3 sm:px-4 rounded-md hover:bg-[#3e3f63] transition-colors text-sm sm:text-base"
             onClick={saveProduct}
           >

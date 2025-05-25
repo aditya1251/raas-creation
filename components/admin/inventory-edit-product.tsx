@@ -211,11 +211,11 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product", productId] });
-      setSaving(false);
+      // setSaving(false);
     },
     onError: (error) => {
       console.error("Failed to update stock:", error);
-      setSaving(false);
+      // setSaving(false);
     },
   });
 
@@ -262,59 +262,55 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
     },
   });
 
-  const handleSave = async () => {
-    setSaving(true);
+  // Replace the handleSave function with this version
+const handleSave = async () => {
+  setSaving(true);
 
-    // Update the local product data with the new stock values
+  try {
     if (product) {
-      try {
+      // Handle stock updates
+      if (Object.keys(stockUpdates).length > 0) {
         await mutation.mutateAsync(stockUpdates);
-      } catch (error) {
-        console.error("Failed to update stock:", error);
-        setSaving(false);
-        return;
-      }
-      // Remove deleted colors
-      for (const colorId of deletedColors) {
-        try {
-          await removeOldColorMutation.mutateAsync(colorId);
-        } catch (error) {
-          console.error("Failed to remove color:", error);
-          setSaving(false);
-          return;
-        }
-      }
-      try {
-        await NewSizeMutation.mutateAsync(newSizes);
-      } catch (error) {
-        console.error("Failed to update stock:", error);
-        setSaving(false);
-        return;
       }
 
-      // Add new colors with their sizes
-      try {
+      // Handle color deletions
+      for (const colorId of deletedColors) {
+        await removeOldColorMutation.mutateAsync(colorId);
+      }
+
+      // Handle new sizes for existing colors
+      if (Object.keys(newSizes).length > 0) {
+        await NewSizeMutation.mutateAsync(newSizes);
+      }
+
+      // Handle new colors
+      if (newColors.length > 0) {
         await NewColorMutation.mutateAsync(newColors);
-      } catch (error) {
-        console.error("Failed to update stock:", error);
-        setSaving(false);
-        return;
       }
     }
 
+    // Show success message
     setSuccessMessage("Inventory updated successfully!");
-    setSaving(false);
-
-    // Clear success message after 3 seconds
-    setTimeout(() => {
-      setSuccessMessage("");
-    }, 3000);
-
+    
     // Clear all updates since they're now applied
     setStockUpdates({});
+    setDeletedColors([]);
     setNewColors([]);
     setNewSizes({});
-  };
+  } catch (error) {
+    console.error("Failed to update inventory:", error);
+  } finally {
+    // Always set saving to false when operations complete
+    setSaving(false);
+    
+    // Clear success message after 3 seconds
+    if (successMessage) {
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+    }
+  }
+};
 
   if (isLoading) {
     return (
@@ -411,6 +407,7 @@ export function ProductInventoryEditor({ productId }: { productId: string }) {
                 {successMessage}
               </span>
             )}
+            {/* Save Button */}
             <button
               onClick={handleSave}
               disabled={!hasChanges || saving}
