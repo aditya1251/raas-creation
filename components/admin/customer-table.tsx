@@ -530,6 +530,9 @@ export function CustomerTable() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    S No.
+                  </th>
+                  <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Name
                   </th>
                   <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -550,8 +553,11 @@ export function CustomerTable() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {data?.data?.map((customer: Customer) => (
+                {data?.data?.map((customer: Customer, index: number) => (
                   <tr key={customer.id} className="hover:bg-gray-50">
+                    <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm text-gray-500">
+                      {index + 1 + (currentPage-1) * itemsPerPage}
+                    </td>
                     <td className="px-4 lg:px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                       {customer.name}
                     </td>
@@ -596,12 +602,15 @@ export function CustomerTable() {
           {/* Mobile Card View - Only visible on small screens */}
           <div className="md:hidden">
             <div className="divide-y divide-gray-200">
-              {data?.data?.map((customer: Customer) => (
+              {data?.data?.map((customer: Customer, index: number) => (
                 <div key={customer.id} className="p-4 hover:bg-gray-50">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-sm font-medium text-gray-900">
-                      {customer.name}
-                    </h3>
+                    <div>
+                      <span className="text-sm text-gray-500 mr-2">#{index + 1 + (currentPage-1) * itemsPerPage}</span>
+                      <h3 className="text-sm font-medium text-gray-900 inline">
+                        {customer.name}
+                      </h3>
+                    </div>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => openPasswordModal(customer.id)}
