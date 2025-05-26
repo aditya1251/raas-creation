@@ -199,7 +199,11 @@ export function ProductsTable() {
       <div className="hidden md:block bg-white shadow-sm rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
+            
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                S No.
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Image
               </th>
@@ -221,8 +225,11 @@ export function ProductsTable() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {products.map((product: Products) => (
+            {products.map((product: Products,index: number) => (
               <tr key={product.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {index + 1 + (currentPage-1) * itemsPerPage}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="relative w-20 h-20">
                     <Image
@@ -267,7 +274,7 @@ export function ProductsTable() {
 
       {/* Mobile Card View - Only visible on mobile */}
       <div className="md:hidden space-y-4">
-        {products.map((product: Products) => (
+        {products.map((product: Products ,index: number) => (
           <div key={product.id} className="bg-white p-4 rounded-lg shadow-sm">
             <div className="flex items-start space-x-3">
               <div className="relative w-20 h-20 flex-shrink-0">
@@ -282,7 +289,7 @@ export function ProductsTable() {
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
                   <h3 className="text-sm text-wrap font-medium text-gray-900 truncate">
-                    {product.name}
+                    {(index + 1) + (currentPage-1) * itemsPerPage}. {product.name}
                   </h3>
                   <span
                     className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
