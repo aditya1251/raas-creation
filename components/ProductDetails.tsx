@@ -30,7 +30,7 @@ import { productReviewApi } from "@/lib/api/productreview";
 import { wishlistApi } from "@/lib/api/wishlist";
 import { customerApi } from "@/lib/api/customer";
 import toast from "react-hot-toast";
-import { ProductCard } from "@/app/page";
+import { Feature, ProductCard } from "@/app/page";
 import { analyticApi } from "@/lib/api/analytic";
 
 export default function ProductDetails({ slug }: { slug: string }) {
@@ -884,38 +884,28 @@ export default function ProductDetails({ slug }: { slug: string }) {
         </section>
 
         {/* Features */}
-        <div className="py-10 border-t border-b">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="flex flex-col items-center">
-              <Package className="h-10 w-10 mb-3 text-[#a08452]" />
-              <h3 className="font-medium text-base mb-1">Free Shipping</h3>
-              <p className="text-sm text-gray-600">
-                Free shipping for order above $150
-              </p>
-            </div>
-            <div className="flex flex-col items-center">
-              <RefreshCw className="h-10 w-10 mb-3 text-[#a08452]" />
-              <h3 className="font-medium text-base mb-1">Money Guarantee</h3>
-              <p className="text-sm text-gray-600">
-                Within 30 days for an exchange
-              </p>
-            </div>
-            <div className="flex flex-col items-center">
-              <HeadphonesIcon className="h-10 w-10 mb-3 text-[#a08452]" />
-              <h3 className="font-medium text-base mb-1">Online Support</h3>
-              <p className="text-sm text-gray-600">
-                24 hours a day, 7 days a week
-              </p>
-            </div>
-            <div className="flex flex-col items-center">
-              <CreditCard className="h-10 w-10 mb-3 text-[#a08452]" />
-              <h3 className="font-medium text-base mb-1">Flexible Payment</h3>
-              <p className="text-sm text-gray-600">
-                Pay with multiple credit cards
-              </p>
-            </div>
-          </div>
-        </div>
+        <section className="py-12 border-b">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                    <Feature icon={<Package />} title="Free Shipping" text="" />
+                    <Feature
+                      icon={<RefreshCw />}
+                      title="Quality Assurance"
+                      text="100% quality guarantee"
+                    />
+                    <Feature
+                      icon={<HeadphonesIcon />}
+                      title="Online Support"
+                      text="24 hours a day, 7 days a week"
+                    />
+                    <Feature
+                      icon={<CreditCard />}
+                      title="Flexible Payment"
+                      text="Pay with multiple credit cards"
+                    />
+                  </div>
+                </div>
+              </section>
       </div>
 
       <SiteFooter />
